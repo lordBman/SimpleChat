@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model User{
+    id            String        @id @unique
+    name          String        @unique
+    password      String
+
+    userOne       Channel[]     @relation("userOne")
+    userTwo       Channel[]     @relation("userTwo")
+
+    notifications Notification[]
+    sent          Chat[]
+}
+
+model Channel{
+    id            String        @id
+    last          DateTime      @default(now())
+
+    userOneID     String
+    userOne       User          @relation("userOne", fields: [userOneID], references: [id])
+
+    userTwoID     String
+    userTwo       User          @relation("userTwo", fields: [userTwoID], references: [id])
+
+    chats         Chat[]
+
+    @@unique([userOneID, userTwoID])
+}
+
+model Chat{
+    id            Int           @id @default(autoincrement())
+    message       String
+    created       DateTime      @default(now())
+    delivered     Boolean       @default(false)
+
+    senderID      String
+    sender        User          @relation(fields: [senderID], references: [id])
+
+    channelID     String
+    channel       Channel       @relation(fields: [channelID], references: [id])
+
+    reply             Chat[]            @relation("reference")
+    referenceID       Int?
+    reference         Chat?             @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
+}
+
+model Notification{
+    id                Int               @id @default(autoincrement())
+    message           String?
+    alert             String  
+    created           DateTime          @default(now())
+    received          Boolean           @default(false)
+
+    reciecver         User              @relation(fields: [recieverID], references: [id], onDelete: Cascade)
+    recieverID        String
+}

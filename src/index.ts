@@ -1,7 +1,30 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
+import jetLogger from "jet-logger";
+import routes from "./routes";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+const port = Number.parseInt(process.env.PORT || "5000");
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+const app = new Elysia();
+
+app.use(routes);
+
+app.ws('/ws', {
+  body: t.Object({ message: t.String() }),
+  open(ws){
+    jetLogger.info(`user connected: ${ws.id}`);
+  },
+  message(ws, message) {
+      ws.send(message)
+  },
+  close(ws){
+    jetLogger.info(`user left: ${ws.id}`);
+  }
+})
+
+app.onStart(()=>{
+  jetLogger.info(
+    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  );
+});
+
+app.listen(port);

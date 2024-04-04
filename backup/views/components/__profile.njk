@@ -1,0 +1,44 @@
+<div class="profile-main-container">
+    <div class="profile-title-container">
+        <h2 class="profile-title">Profile</h2>
+        <span class="circum--menu-kebab profile-title-menu"></span>
+    </div>
+
+    <div class="profile-container">
+        <div style="display: flex; align-items:center; justify-content: center; flex-direction: column; gap: 6px">
+            <div id="profile-picture">{{ user.name.charAt(0).toUpperCase() }}</div>
+            <div id="profile-name">{{user.name}}</div>
+            <div style="display: flex; gap: 10px; align-items:center;">
+                <div style="border: solid 3px #06D6A3; border-radius:50%;">
+                    <div style="width:2px; height:2px; background-color: white; border-radius:50%;"></div>
+                </div>
+                <div style="color: grey; font-size: 16px">Active</div>
+            </div>
+        </div>
+        <p style="color: grey;">
+            If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
+        </p>
+        <div class="about-container">
+            <div class="about-container-section">
+                <span class="guidance--user-1"></span>
+                <div>About</div>
+            </div>
+            <div class="about-container-item">
+                <div class="title">Name</div>
+                <div>{{user.name}}</div>
+            </div>
+            <div class="about-container-item">
+                <div class="title">Email</div>
+                <div>{{user.email}}</div>
+            </div>
+            <div class="about-container-item">
+                <div class="title">Time</div>
+                <div>19:38 AM</div>
+            </div>
+            <div class="about-container-item last">
+                <div class="title">Location</div>
+                <div>Lagos Nigeria</div>
+            </div>
+        </div>
+    </div>
+</div>

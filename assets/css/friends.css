@@ -1,0 +1,51 @@
+.friends-search-result-item-container{
+    display: flex;
+    width: 100%;
+    padding: 4px;
+    flex-direction:row;
+    gap:14px;
+    align-items: start;
+    border-radius: 6px;
+    cursor: pointer;
+    &:hover{
+        background-color: #E6EBF5;
+    }
+}
+
+.friends-search-result-item-details{
+    flex: 1;
+    display: flex;
+    flex-direction:column;
+    gap:6px;
+    align-items: start;
+}
+
+friends-search-result-item-name{
+    font-size: 16px;
+    font-weight: 500;
+    color: gray;
+}
+
+.friends-search-result-item-email{
+    font-size: 14px;
+    color: grey;
+    font-weight: 300;
+    letter-spacing: 1.5;
+}
+
+.friends-search-result-item-button{
+    cursor: pointer;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border: solid 2px #7269EF;
+    color: #7269EF;
+    background-color: transparent;
+    font-size: 12px;
+    border-radius: 6px;
+    &:hover{
+        color: white;
+        background-color: #7269EF;
+    }
+}

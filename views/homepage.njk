@@ -1,0 +1,29 @@
+{% extends "__base.njk" %}
+
+{% block head %}
+    <link rel="stylesheet" href="/assets/css/icons.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/profile.css" />
+    <link rel="stylesheet" href="/assets/css/chats.css" />
+    <link rel="stylesheet" href="/assets/css/chat.css" />
+    <link rel="stylesheet" href="/assets/css/friends.css" />
+{% endblock head %}
+
+{% block body %}
+    <div id="loading" style="display:flex; align-items: center; justify-content: center;">
+        <div class="loading"></div>
+    </div>
+    <div id="content" class="content">
+        {% include "components/__menu.njk" %}
+        <div class="sections">
+            <div id="section-profile" style="display: none">{% include "components/__profile.njk" %}</div>
+            <div id="section-chats">{% include "components/__chats.njk" %} </div>
+            <div id="section-notifications" style="display: none">{% include "components/__notifications.njk" %} </div>
+            <div id="section-groups" style="display: none">{% include "components/__groups.njk" %} </div>
+            <div id="section-friends" style="display: none">{% include "components/__friends.njk" %} </div>
+            <div id="section-settings" style="display: none">{% include "components/__settings.njk" %} </div>
+            <div id="section-info" style="display: none">{% include "components/__info.njk" %} </div>
+        </div>
+        {% include "components/__chat.njk" %}
+    </div>
+{% endblock body %}

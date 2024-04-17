@@ -1,2 +1,3 @@
 declare const findElement: (id: string) => HTMLElement;
-export { findElement };
+declare const axiosInstance: import("axios").AxiosInstance;
+export { findElement, axiosInstance };

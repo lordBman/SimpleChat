@@ -1,6 +1,7 @@
 import React from "react";
-import { io } from "socket.io-client";
-import { findElement } from "./utils";
+import { Socket, io } from "socket.io-client";
+import ReactDOMClient from "react-dom/client";
+import ReactDOMServer from "react-dom/server";
 
 const getCookie = (cname: string) =>{
     let name = cname + "=";
@@ -25,41 +26,56 @@ const formatTime = (date: Date) =>{
     return `${ hours > 12 ? (hours % 12) : hours }:${minutes}${(hours / 12) === 0 ? "am" : "pm" }`;
 }
 
-const mychat = (name: string, message: string) =>{
+const init = () =>alert("I was clicked");
+
+const Mychat = (props: { name: string, message: string }) =>{
     return (
-        <div className="my-chat-container">
+        <div onClick={init} className="my-chat-container">
             <div className="chat-container-content">
                 <div className="my-chat-name">Me</div>
-                <div className="my-chat">{message}</div>
+                <div className="my-chat">{props.message}</div>
                 <div className="my-chat-time">{formatTime(new Date())}</div>
             </div>
             <div className="messages-item-profile-container">
-                <div className="messages-item-profile">{name.charAt(0).toUpperCase()}</div>
+                <div className="messages-item-profile">{props.name.charAt(0).toUpperCase()}</div>
             </div>
         </div>
     );
 }
 
-const token = getCookie("token");
-
-// Make connection
-const socket = io("http://localhost:5000", {
-    auth: {
-        token,
-        access: "access-key"
-    }
-});
-
-const chatContainer = findElement("chats-container");
-const message  = findElement("message") as HTMLInputElement;
+let chatContainer = document.getElementById("chats-container");
+let message : HTMLInputElement | null = null;
+let sendBtn: HTMLButtonElement | null;
+let socket: Socket<any> | undefined = undefined;
 
 const send = () =>{
-    const value = message.value;
-    if(value.length){
-        chatContainer.innerHTML += mychat("Nobel", value);
-        message.value = "";
+    if(chatContainer && message){
+        const value = message.value;
+        if(value.length){
+            chatContainer.innerHTML += ReactDOMServer.renderToString(<Mychat name= "Nobel" message= {value} />);
+            let init = chatContainer.lastElementChild!;
+            ReactDOMClient.hydrateRoot(init, <Mychat name= "Nobel" message= {value} />);
+            
+            message.value = "";
+        }
     }
 }
+
+const initChats = () =>{
+    message = document.getElementById("message") as HTMLInputElement;
+    chatContainer = document.getElementById("chats-container");
+    sendBtn = document.getElementById("sendBtn") as HTMLButtonElement;
+    sendBtn.onclick = send;
+
+    const token = getCookie("token");
+
+    // Make connection
+    if(socket === undefined){
+        socket = io("http://localhost:5000", { auth: { token, access: "access-key" } });   
+    }
+}
+
+export { send, initChats }
 
     // Query Dom
     /*

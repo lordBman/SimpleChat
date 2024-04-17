@@ -1,51 +1,5 @@
-import axios from "axios";
-import { findElement } from "./utils";
+import { axiosInstance, findElement } from "./utils";
 import React from "react";
-
-const content = findElement("content");
-const loading = findElement("loading");
-window.onload = () =>{
-    loading.style.display = "none";
-    content.style.display = "flex";
-}
-
-const axiosInstance =  axios.create({
-	headers: { 
-		'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Credentials': 'true',
-		'Content-Type': 'application/x-www-form-urlencoded' 
-	},
-	withCredentials: true, 
-	baseURL: "http://localhost:5000", });
-
-const menuItems = document.querySelectorAll(".menu-item");
-
-let activeMenu = "chats";
-menuItems.forEach((menuItem)=>{
-    (menuItem as HTMLElement).onclick = () =>{
-        if(menuItem.id === "logout"){
-            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-            window.location.reload();
-        }else{
-            findElement(activeMenu).classList.remove("active");
-            findElement(`section-${activeMenu}`).style.display = "none";
-
-            menuItem.classList.add("active");
-            activeMenu = menuItem.id;
-            findElement(`section-${activeMenu}`).style.display = "block";
-        }
-    }
-});
-
-const menu = document.querySelectorAll(".menu")[0] as HTMLElement;
-menu.onmouseover = () =>{
-    menu.classList.add("expand");
-}
-
-menu.onmouseout = () =>{
-    menu.classList.remove("expand");
-}
 
 const friendSearchForm = findElement("friend-search-form");
 const searchUsersInput = findElement("search-users-input") as HTMLInputElement;

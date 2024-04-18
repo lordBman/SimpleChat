@@ -1,5 +1,5 @@
 import { findElement } from "./utils";
-import { initChats, send } from "./chat";
+import { initChats } from "./chat";
 
 const content = findElement("content");
 const loading = findElement("loading");
@@ -41,7 +41,7 @@ menu.onmouseout = () =>{
 const navigate = (menu: string) =>{
     switch(menu){
         case "chats":
-            initChats();
+            break;
     }
 }
 

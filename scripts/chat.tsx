@@ -68,8 +68,6 @@ class ChatManager{
         }
     }
 
-    
-
     public static instance = (states?: ChatState[]): ChatManager =>{
         if(ChatManager.chatManager){
             return ChatManager.chatManager;

@@ -1,5 +1,6 @@
 import { findElement } from "./utils";
-import { initChats } from "./chat";
+import { ChatManager } from "./chat";
+import { FriendSearchManager } from "./main";
 
 const content = findElement("content");
 const loading = findElement("loading");
@@ -45,4 +46,5 @@ const navigate = (menu: string) =>{
     }
 }
 
-initChats();
+ChatManager.instance();
+FriendSearchManager.instance();

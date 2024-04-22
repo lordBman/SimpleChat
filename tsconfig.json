@@ -26,5 +26,5 @@
     "removeComments": true,
     "preserveValueImports": false
   },
-  "include": [ "./scripts" ]
+  "include": [ "./pages" ]
 }

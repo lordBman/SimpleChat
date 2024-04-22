@@ -16,4 +16,31 @@ friendRouter.get("/search", async(req, res)=>{
     return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
+friendRouter.post("/cancel", async(req, res)=>{
+    if(req.body.id){
+        const model = new FriendModel();
+        const response = await model.reject(req.body);
+
+        return res.status(HttpStatusCode.Ok).send(response);
+    }
+    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
+});
+
+friendRouter.post("/", async(req, res)=>{
+    if(req.body.userID){
+        const model = new FriendModel();
+        const response = await model.request(req.body);
+
+        return res.status(HttpStatusCode.Created).send(response);
+    }
+    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
+});
+
+friendRouter.get("/", async(req, res)=>{
+    const model = new FriendModel();
+    const response = await model.all(req.body);
+
+    return res.status(HttpStatusCode.Ok).send(response);
+});
+
 export default friendRouter;

@@ -1,33 +1,34 @@
-import React, { Suspense, useState } from "react";
-
-import "../../assets/css/icons.css";
-import "../../assets/css/main.css";
+import React, { Suspense, useContext, useState } from "react";
 
 import { Chats, Friends, Groups, Info, Notifications, Settings, Profile } from "./sections";
 
 import Menu from "../conponents.tsx/menu";
 import { Chat } from "./main";
+import AppProvider, { AppContext, AppContextType } from "./providers";
+import { QueryClient, QueryClientProvider, useQueryClient } from "react-query";
 
 const Loading = () =>{
     return (
         <div id="loading" style={{ display:"flex", alignItems: "center", justifyContent: "center" }}>
-            <div className="loading"></div>
+            <div className="loading">loadung</div>
         </div>
     );
 }
 
 
-const Dashboard = (props:  { user: any }) =>{
+const Dashboard = () =>{
     const [active, setActive] = useState("chats");
 
     const activeChange = (id: string) => setActive(id);
 
+    const { loading, isError, message } = useContext(AppContext) as AppContextType;
+
     return (
-        <Suspense fallback={<Loading />}>
-            <div id="content" className="content">
+        <>
+            { !loading && !isError && <div id="content" className="content">
                 <Menu active={active} onClicked={activeChange} />
                 <div className="sections">
-                    { active === "profile" && <Profile name={props.user.name} email={ props.user.email } /> }
+                    { active === "profile" && <Profile /> }
                     { active === "chats" && <Chats /> }
                     { active === "notifications" && <Notifications /> }
                     { active === "groups" && <Groups /> }
@@ -36,9 +37,24 @@ const Dashboard = (props:  { user: any }) =>{
                     { active === "info" && <Info /> }
                 </div>
                 <Chat />
-            </div>
-        </Suspense>
+            </div> }
+
+            { loading && <Loading /> }
+            { !loading && isError && <div>Error: {message}</div> }
+        </>
     );
 }
 
-export default Dashboard;
+const App = () =>{
+    const queryClient = new QueryClient();
+
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AppProvider>
+                <Dashboard />
+            </AppProvider>
+        </QueryClientProvider>
+    );
+}
+
+export default App;

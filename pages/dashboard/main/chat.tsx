@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "../../../assets/css/chat.css";
 import RecievedChat from "../../conponents.tsx/recieved-chat";
 import MyChat from "../../conponents.tsx/my-chat";
 

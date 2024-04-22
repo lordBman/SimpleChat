@@ -1,10 +1,7 @@
-import React, { useContext } from "react";
+import React from "react";
 import { formatTime } from "../utils";
-import { AppContext, AppContextType } from "../dashboard/providers";
 
-const MyChat = (props: { message: string}) =>{
-    const { data } = useContext(AppContext) as AppContextType;
-    
+const MyChat = (props: { name: string, message: string }) =>{
     return (
         <div className="my-chat-container">
             <div className="chat-container-content">
@@ -13,7 +10,7 @@ const MyChat = (props: { message: string}) =>{
                 <div className="my-chat-time">{formatTime(new Date())}</div>
             </div>
             <div className="messages-item-profile-container">
-                <div className="messages-item-profile">{ data.name.charAt(0).toUpperCase()}</div>
+                <div className="messages-item-profile">{props.name.charAt(0).toUpperCase()}</div>
             </div>
         </div>
     );

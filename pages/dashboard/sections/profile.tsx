@@ -1,12 +1,9 @@
-import React from "react";
-import "../../../assets/css/profile.css";
+import React, { useContext } from "react";
+import { AppContext, AppContextType } from "../providers";
 
-interface ProfileProps{
-    name: string,
-    email: string,
-}
+const Profile = () =>{
+    const { data } = useContext(AppContext) as AppContextType;
 
-const Profile: React.FC<ProfileProps> = ({ name, email }) =>{
     return (
         <div className="profile-main-container">
             <div className="profile-title-container">
@@ -16,8 +13,8 @@ const Profile: React.FC<ProfileProps> = ({ name, email }) =>{
 
             <div className="profile-container">
                 <div style={{ display: "flex", alignItems:"center", justifyContent: "center", flexDirection: "column", gap: 6 }}>
-                    <div id="profile-picture">{ name.charAt(0).toUpperCase() }</div>
-                    <div id="profile-name">{name}</div>
+                    <div id="profile-picture">{ data.name.charAt(0).toUpperCase() }</div>
+                    <div id="profile-name">{data.name}</div>
                     <div style={{ display: "flex", gap: 10, alignItems: "center"}}>
                         <div style={{ border: "solid 3px #06D6A3; border-radius:50%" }}>
                             <div style={{ width:2, height:2, backgroundColor: "white", borderRadius:"50%" }}></div>
@@ -35,11 +32,11 @@ const Profile: React.FC<ProfileProps> = ({ name, email }) =>{
                     </div>
                     <div className="about-container-item">
                         <div className="title">Name</div>
-                        <div>{ name}</div>
+                        <div>{ data.name }</div>
                     </div>
                     <div className="about-container-item">
                         <div className="title">Email</div>
-                        <div>{email}</div>
+                        <div>{ data.email }</div>
                     </div>
                     <div className="about-container-item">
                         <div className="title">Time</div>

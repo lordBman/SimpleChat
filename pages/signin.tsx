@@ -1,5 +1,4 @@
 import React from "react";
-import "../assets/css/signin.css";
 
 const Signin = () =>{
     return (
@@ -10,10 +9,10 @@ const Signin = () =>{
                     <input id="name"  name="name" type="text" value="" placeholder="Name" />
 
                     <label htmlFor="email">Email:</label>
-                    <input id="email"  name="email" type="email" value="" placeholder="Enter email address" />
+                    <input id="email"  name="email" type="email" placeholder="Enter email address" />
 
                     <label htmlFor="password">Password:</label>
-                    <input id="password" name="password" type="password" value="" placeholder="Password" />
+                    <input id="password" name="password" type="password" placeholder="Password" />
 
                     <button type="submit">sign up</button>
                 </form>
@@ -22,10 +21,10 @@ const Signin = () =>{
             <div>
                 <form method="POST" action="/users/login">
                     <label htmlFor="email">Email:</label>
-                    <input id="email"  name="email" type="email" value="" placeholder="Enter email address" />
+                    <input id="email"  name="email" type="email" placeholder="Enter email address" />
 
                     <label htmlFor="password">Password:</label>
-                    <input id="password" name="password" type="password" value="" placeholder="Password" />
+                    <input id="password" name="password" type="password" placeholder="Password" />
 
                     <button type="submit">signin</button>
                 </form>

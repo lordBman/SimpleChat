@@ -1,4 +1,5 @@
 import axios from "axios";
+import { env } from "process";
 import React from "react";
 import ReactDOMClient from "react-dom/client";
 import ReactDOMServer from "react-dom/server";
@@ -19,7 +20,7 @@ const axiosInstance =  axios.create({
 		'Content-Type': 'application/x-www-form-urlencoded' 
 	},
 	withCredentials: true, 
-	baseURL: "http://localhost:5000", });
+	baseURL: env.URL, });
 
 const formatTime = (date: Date) =>{
     const hours = date.getHours();

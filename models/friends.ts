@@ -4,10 +4,24 @@ import { Friend, User } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 
+interface Result{ user: User, friend?: Friend }
+
 class FriendModel{
     database: Database;
     constructor(){
         this.database = DBManager.instance();
+    }
+    
+    async all(data: { user: User }): Promise<Friend[] | undefined>{
+        try{
+            const friends = await this.database.client.friend.findMany({ 
+                where: { OR: [ { requesterID: data.user.id }, { acceptorID: data.user.id } ] },
+                include: { acceptor: true, requester: true },
+            });
+            return friends;
+        }catch(error){
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
+        }
     }
 
     async request(data: { user: User, userID: string }): Promise<Friend | undefined>{
@@ -36,21 +50,32 @@ class FriendModel{
         }
     }
 
-    async find(data: { user: User, query: string }): Promise<{ user: User, requested: boolean, requesting: boolean, accepted: boolean }[] | undefined>{
+    async reject(data: { id: string }): Promise<Friend | undefined>{
+        try{
+            const friend = await this.database.client.friend.delete({
+                where: { id: data.id }
+            });
+            return friend;
+        }catch(error){
+            this.database.errorHandler.add(HttpStatusCode.Unauthorized, `${error}`, "session expired, try logging in");
+        }
+    }
+
+    async find(data: { user: User, query: string }): Promise<Result[] | undefined>{
         try{
             const users = (await this.database.client.user.findMany({ where: { NOT: { id: data.user.id } } })).filter((user)=>{
                 return user.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             });
 
-            let results = [];
+            let results: Result[] = [];
             for(let i = 0; i < users.length; i++ ){
                 const init = await this.database.client.friend.findFirst({ 
                     where: {
-                        OR:[ { acceptorID: data.user.id, requesterID: users[i].id }, { requesterID: data.user.id, acceptorID: users[i].id } ] } });
+                       OR:[ { acceptorID: data.user.id, requesterID: users[i].id }, { requesterID: data.user.id, acceptorID: users[i].id } ] } });
                 if(init){
-                    results.push({ user: users[i], requested: data.user.id === init.requesterID, requesting: data.user.id === init.acceptorID, accepted: init.accepted });
+                    results.push({ user: users[i], friend: init });
                 }else{
-                    results.push({ user: users[i], requested: false, accepted: false,  requesting: false });
+                    results.push({ user: users[i] });
                 }
             }
             return results;

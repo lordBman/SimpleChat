@@ -34,7 +34,7 @@ const Chat = () =>{
             </div>
             <div className="chat-main">
                 <div id="chats-container" className="chat-container">
-                    <MyChat name="Nobel" message="How are you doing today, I hope you had a good night's rest ?" />
+                    <MyChat message="How are you doing today, I hope you had a good night's rest ?" />
                     <RecievedChat />
                 </div>
             </div>

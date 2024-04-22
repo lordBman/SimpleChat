@@ -8,7 +8,7 @@ export const axiosInstance =  axios.create({
 		'Content-Type': 'application/x-www-form-urlencoded' 
 	},
 	withCredentials: true, 
-	baseURL: "http://192.168.0.4:5000", });
+	baseURL: "http://localhost:5000", });
 
 export const formatTime = (date: Date) =>{
     const hours = date.getHours();

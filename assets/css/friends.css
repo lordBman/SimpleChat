@@ -20,8 +20,8 @@
     align-items: start;
 }
 
-friends-search-result-item-name{
-    font-size: 16px;
+.friends-search-result-item-name{
+    font-size: 15px;
     font-weight: 500;
     color: gray;
 }

@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { AppContext, AppContextType } from "../providers";
 
 const Profile = () =>{
-    const { data } = useContext(AppContext) as AppContextType;
+    const { user } = useContext(AppContext) as AppContextType;
 
     return (
         <div className="profile-main-container">
@@ -13,8 +13,8 @@ const Profile = () =>{
 
             <div className="profile-container">
                 <div style={{ display: "flex", alignItems:"center", justifyContent: "center", flexDirection: "column", gap: 6 }}>
-                    <div id="profile-picture">{ data.name.charAt(0).toUpperCase() }</div>
-                    <div id="profile-name">{data.name}</div>
+                    <div id="profile-picture">{ user?.name.charAt(0).toUpperCase() }</div>
+                    <div id="profile-name">{user?.name}</div>
                     <div style={{ display: "flex", gap: 10, alignItems: "center"}}>
                         <div style={{ border: "solid 3px #06D6A3; border-radius:50%" }}>
                             <div style={{ width:2, height:2, backgroundColor: "white", borderRadius:"50%" }}></div>
@@ -32,11 +32,11 @@ const Profile = () =>{
                     </div>
                     <div className="about-container-item">
                         <div className="title">Name</div>
-                        <div>{ data.name }</div>
+                        <div>{ user?.name }</div>
                     </div>
                     <div className="about-container-item">
                         <div className="title">Email</div>
-                        <div>{ data.email }</div>
+                        <div>{ user?.email }</div>
                     </div>
                     <div className="about-container-item">
                         <div className="title">Time</div>

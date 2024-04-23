@@ -16,7 +16,8 @@ class FriendModel{
         try{
             const friends = await this.database.client.friend.findMany({ 
                 where: { OR: [ { requesterID: data.user.id }, { acceptorID: data.user.id } ] },
-                include: { acceptor: true, requester: true },
+                include: { acceptor:{ select: { id: true, email:  true, name: true, password: false } }, requester: { select: { id:true, email:  true, name: true, password: false } } }
+                
             });
             return friends;
         }catch(error){
@@ -29,7 +30,7 @@ class FriendModel{
             const id = uuid();
             const friend = await this.database.client.friend.create({ 
                 data: { id, requesterID: data.user.id, acceptorID: data.userID },
-                include: { acceptor: true }
+                include: { acceptor: { select: { id: true, email:  true, name: true, password: false } } }
             });
             return friend;
         }catch(error){
@@ -42,7 +43,7 @@ class FriendModel{
             const friend = await this.database.client.friend.update({
                 where: { id: data.id },
                 data: { accepted: true },
-                include: { requester: true }
+                include: { requester: { select: { id: true, email:  true, name: true, password: false } } }
             });
             return friend;
         }catch(error){
@@ -71,7 +72,10 @@ class FriendModel{
             for(let i = 0; i < users.length; i++ ){
                 const init = await this.database.client.friend.findFirst({ 
                     where: {
-                       OR:[ { acceptorID: data.user.id, requesterID: users[i].id }, { requesterID: data.user.id, acceptorID: users[i].id } ] } });
+                       OR:[ { acceptorID: data.user.id, requesterID: users[i].id }, { requesterID: data.user.id, acceptorID: users[i].id } ] 
+                    },
+                    include: { requester: { select: { id: true, email:  true, name: true, password: false } } }
+                });
                 if(init){
                     results.push({ user: users[i], friend: init });
                 }else{

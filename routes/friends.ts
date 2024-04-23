@@ -26,6 +26,16 @@ friendRouter.post("/cancel", async(req, res)=>{
     return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
+friendRouter.post("/accept", async(req, res)=>{
+    if(req.body.id){
+        const model = new FriendModel();
+        const response = await model.accept(req.body);
+
+        return res.status(HttpStatusCode.Ok).send(response);
+    }
+    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
+});
+
 friendRouter.post("/", async(req, res)=>{
     if(req.body.userID){
         const model = new FriendModel();

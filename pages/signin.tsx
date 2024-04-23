@@ -6,7 +6,7 @@ const Signin = () =>{
             <div>
                 <form method="POST" action="/users">
                     <label htmlFor="name">Name:</label>
-                    <input id="name"  name="name" type="text" value="" placeholder="Name" />
+                    <input id="name"  name="name" type="text" placeholder="Name" />
 
                     <label htmlFor="email">Email:</label>
                     <input id="email"  name="email" type="email" placeholder="Enter email address" />

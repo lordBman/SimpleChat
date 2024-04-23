@@ -16,7 +16,7 @@ class UserModel{
             const id = uuid();
             const init = await this.database.client.user.create({ data: { id, ...data } });
 
-            const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+            const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "10 seconds" } );
 
             return token;
         }catch(error){

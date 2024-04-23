@@ -38,7 +38,7 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         mutationFn: () => axiosInstance.get("/users"),
         onMutate:()=>setState(init => { return { ...init, loading: true, isError: false, messages: "Getting users details"}}),
         onSuccess(data) {
-            setState(init => { return { ...init, loading: false, isError: false, message: "", data: data.data }});
+            setState(init => { return { ...init, loading: false, isError: false, message: "", user: data.data }});
             setFriendsState(init => { return {...init, friends: data.data.friends } });
         },
         onError(error) {

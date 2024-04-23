@@ -46,25 +46,28 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
     });
     const cancelRequest = () =>cancelMutation.mutate();
 
-    let loading = requestMutation.isLoading || acceptMutation.isLoading || cancelMutation.isLoading;
     let accepted = state.friend && state.friend.accepted;
+    const message = () => {
+
+    }
+
+    let loading = requestMutation.isLoading || acceptMutation.isLoading || cancelMutation.isLoading;
     let requesting = !accepted && state.friend && state.friend.acceptorID === user?.id;
     let requested = !accepted && state.friend && state.friend.requesterID === user?.id;
 
     return (
-        <div className="friends-search-result-item-container">
+        <div onClick={message} className="friends-search-result-item-container">
             <div className="messages-item-profile-container">
                 <div className="messages-item-profile">{result.user.name.charAt(0).toUpperCase()}</div>
             </div>
             <div className="friends-search-result-item-details">
                 <div className="friends-search-result-item-name">{result.user.name}</div>
                 <div className="friends-search-result-item-email">{result.user.email}</div>
-                { !loading && <div style={{ alignSelf: 'end'}}>
+                { !loading && <div style={{ alignSelf: 'end', gap: 10, display: "flex"  }}>
                     { requesting  && !accepted && <button onClick={acceptRequest} className="friends-search-result-item-button">Accept</button> }
                     { requested && <button onClick={cancelRequest} className="friends-search-result-item-button">Cancel</button> }
                     { !requesting && !requested && <button onClick={sendRequest} className="friends-search-result-item-button">Request</button> }
-                    { requesting && <button className='friends-search-result-item-button' onClick={cancelRequest} >Decline</button> }
-                    { accepted && <button className='friends-search-result-item-button'>Message</button> }
+                    { requesting && <button className='friends-search-result-item-button' style={{ marginLeft: 10 }} onClick={cancelRequest} >Decline</button> }
                 </div> }
                 { loading && <div style={{ alignSelf: 'end'}}>
                         <CircleLoading message="requesting" labelStyle={{ fontSize: 12, color: "grey", fontWeight: 300, letterSpacing: 1.5 }} />
@@ -112,11 +115,10 @@ const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{
             <div className="friends-search-result-item-details">
                 <div className="friends-search-result-item-name">{init.name}</div>
                 <div className="friends-search-result-item-email">{init.email}</div>
-                { !loading && <div style={{ alignSelf: 'end'}}>
+                { !loading && <div style={{ alignSelf: 'end', gap: 10, display: "flex" }}>
                     { requesting  && <button onClick={acceptRequest} className="friends-search-result-item-button">Accept</button> }
                     { requested && <button onClick={cancelRequest} className="friends-search-result-item-button">Cancel</button> }
                     { requesting && <button className='friends-search-result-item-button'>Decline</button> }
-                    { friend.accepted && <button className='friends-search-result-item-button'>Message</button> }
                 </div> }
                 { loading && <div style={{ alignSelf: 'end'}}>
                         <CircleLoading message="requesting" labelStyle={{ fontSize: 12, color: "grey", fontWeight: 300, letterSpacing: 1.5 }} />

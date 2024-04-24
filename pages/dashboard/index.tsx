@@ -1,11 +1,11 @@
-import React, { Suspense, useContext, useState } from "react";
+import React, { useState } from "react";
 
 import { Chats, Friends, Groups, Info, Notifications, Settings, Profile } from "./sections";
 
 import Menu from "../conponents.tsx/menu";
 import { Chat } from "./main";
-import AppProvider, { AppContext, AppContextType } from "./providers";
-import { QueryClient, QueryClientProvider, useQueryClient } from "react-query";
+import { QueryClient, QueryClientProvider } from "react-query";
+import ProviderWraper, { AppProvider } from "./providers";
 
 const Loading = () =>{
     return (
@@ -21,27 +21,20 @@ const Dashboard = () =>{
 
     const activeChange = (id: string) => setActive(id);
 
-    const { loading, isError, message } = useContext(AppContext) as AppContextType;
-
     return (
-        <>
-            { !loading && !isError && <div id="content" className="content">
-                <Menu active={active} onClicked={activeChange} />
-                <div className="sections">
-                    { active === "profile" && <Profile /> }
-                    { active === "chats" && <Chats /> }
-                    { active === "notifications" && <Notifications /> }
-                    { active === "groups" && <Groups /> }
-                    { active === "friends" && <Friends /> }
-                    { active === "settings" && <Settings /> }
-                    { active === "info" && <Info /> }
-                </div>
-                <Chat />
-            </div> }
-
-            { loading && <Loading /> }
-            { !loading && isError && <div>Error: {message}</div> }
-        </>
+        <div id="content" className="content">
+            <Menu active={active} onClicked={activeChange} />
+            <div className="sections">
+                { active === "profile" && <Profile /> }
+                { active === "chats" && <Chats /> }
+                { active === "notifications" && <Notifications /> }
+                { active === "groups" && <Groups /> }
+                { active === "friends" && <Friends /> }
+                { active === "settings" && <Settings /> }
+                { active === "info" && <Info /> }
+            </div>
+            <Chat />
+        </div>
     );
 }
 
@@ -51,7 +44,9 @@ const App = () =>{
     return (
         <QueryClientProvider client={queryClient}>
             <AppProvider>
-                <Dashboard />
+                <ProviderWraper Loading={Loading}>
+                    <Dashboard />
+                </ProviderWraper>
             </AppProvider>
         </QueryClientProvider>
     );

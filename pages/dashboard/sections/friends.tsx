@@ -3,10 +3,11 @@ import { useMutation } from "react-query";
 import { axiosInstance } from "../../utils";
 import { Friend, User } from "@prisma/client";
 import { FriendView, FriendResultView } from "../../conponents.tsx";
-import { AppContext, AppContextType } from "../providers";
+import { AppContext, AppContextType } from "../providers/app-provider";
+import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
 
 const Friends = () =>{
-    const { friendsState } = useContext(AppContext) as AppContextType;
+    const { friends } = useContext(FriendsContext) as FriendsContextType;
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<{ user: User, friend?: Friend }[]>([])
 
@@ -40,7 +41,7 @@ const Friends = () =>{
                 <input id="search-users-input" value={query} onChange={onQueryChange} className="search-input" type="search" placeholder="search users ..." />
             </form>
             { query.length <= 0 && <div id="friends-list">
-                { friendsState.friends.map((friend, index) => <FriendView friend={friend} key={index} />) }
+                { friends.map((friend, index) => <FriendView friend={friend} key={index} />) }
             </div> }
             { searchMutation.isLoading && <div id="friends-search-loading">
                 <span>Loading...</span>

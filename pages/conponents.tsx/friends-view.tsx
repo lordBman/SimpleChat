@@ -2,15 +2,18 @@ import React, { useContext, useState } from "react";
 import { CircleLoading } from ".";
 import { axiosInstance } from "../utils";
 import { Friend, User } from "@prisma/client";
-import { AppContext, AppContextType } from "../dashboard/providers";
 import { useMutation } from "react-query";
+import { AppContext, AppContextType } from "../dashboard/providers/app-provider";
+import { FriendsContext, FriendsContextType } from "../dashboard/providers/friends-provider";
 
 interface FriendResultViewProps{
     result: { user: User, friend?: Friend }
 }
 
 const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
-    const { user, refreshFriends } = useContext(AppContext) as AppContextType;
+    const { data} = useContext(AppContext) as AppContextType;
+    const { refreshFriends } = useContext(FriendsContext) as FriendsContextType;
+
     const [ state, setState ] = useState(result);
 
     const requestMutation = useMutation({
@@ -52,8 +55,8 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
     }
 
     let loading = requestMutation.isLoading || acceptMutation.isLoading || cancelMutation.isLoading;
-    let requesting = !accepted && state.friend && state.friend.acceptorID === user?.id;
-    let requested = !accepted && state.friend && state.friend.requesterID === user?.id;
+    let requesting = !accepted && state.friend && state.friend.acceptorID === data?.id;
+    let requested = !accepted && state.friend && state.friend.requesterID === data?.id;
 
     return (
         <div onClick={message} className="friends-search-result-item-container">
@@ -83,7 +86,8 @@ interface FriendViewProps{
 } 
 
 const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{
-    const { user, refreshFriends } = useContext(AppContext) as AppContextType;
+    const { data} = useContext(AppContext) as AppContextType;
+    const { refreshFriends } = useContext(FriendsContext) as FriendsContextType;
 
     const acceptMutation = useMutation({
         mutationKey: ["accept_request"],
@@ -102,10 +106,10 @@ const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{
     const cancelRequest = () =>cancelMutation.mutate();
 
     let loading = acceptMutation.isLoading || cancelMutation.isLoading;
-    let requesting = !friend.accepted && friend.acceptorID === user?.id;
-    let requested = !friend.accepted && friend.requesterID === user?.id;
+    let requesting = !friend.accepted && friend.acceptorID === data?.id;
+    let requested = !friend.accepted && friend.requesterID === data?.id;
 
-    const init = (friend.requesterID === user?.id ? friend.acceptor : friend.requester)!;
+    const init = (friend.requesterID === data?.id ? friend.acceptor : friend.requester)!;
 
     return (
         <div className="friends-search-result-item-container">

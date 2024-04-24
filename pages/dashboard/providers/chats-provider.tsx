@@ -27,7 +27,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { data } = React.useContext(AppContext) as AppContextType;
     const [current, setCurrent] = useState<Channel | Group | Friend>();
 
-    const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats || [] });
+    const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats! });
 
     const refreshChatsMutation = useMutation({
         mutationKey:  ["chats"],

@@ -6,15 +6,15 @@ import Menu from "../conponents.tsx/menu";
 import { Chat } from "./main";
 import { QueryClient, QueryClientProvider } from "react-query";
 import ProviderWraper, { AppProvider } from "./providers";
+import { PuffLoader } from "react-spinners";
 
 const Loading = () =>{
     return (
-        <div id="loading" style={{ display:"flex", alignItems: "center", justifyContent: "center" }}>
-            <div className="loading">loadung</div>
+        <div style={{ display:"flex", width: "100dvw", height: "100dvh", backgroundColor: "white", alignItems: "center", justifyContent: "center" }}>
+            <PuffLoader color="#36d7b7" />
         </div>
     );
 }
-
 
 const Dashboard = () =>{
     const [active, setActive] = useState("chats");

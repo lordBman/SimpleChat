@@ -13,6 +13,8 @@ export type ChannelResponse = Channel & {
     chats: ChatResponse[];
 };
 export type ChatsResponse = Array<GroupResponse | ChannelResponse>;
+export declare const isGroup: (response: ChatsResponse) => boolean;
+export declare const isChannel: (response: GroupResponse) => boolean;
 export type FriendResponse = Friend & {
     acceptor: User;
     requester: User;

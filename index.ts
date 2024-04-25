@@ -1,9 +1,4 @@
-import express, { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import jetLogger from "jet-logger";
-import bodyParser from "body-parser";
-import cookieParser from "cookie-parser";
-import morgan from "morgan";
 import { Socket, Server } from "socket.io";
 import routes from "./routes";
 

@@ -7,6 +7,7 @@ export type ChatContextType = {
     isError: boolean;
     message?: any;
     refreshChats: CallableFunction;
+    makeCurrent: CallableFunction;
 };
 export declare const ChatContext: React.Context<ChatContextType | null>;
 declare const ChatProvider: React.FC<React.PropsWithChildren>;

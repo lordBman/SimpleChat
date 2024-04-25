@@ -20,6 +20,7 @@ export type ChatContextType = {
     isError: boolean,
     message?: any, 
     refreshChats: CallableFunction;
+    makeCurrent: CallableFunction;
 }
 
 export const ChatContext = React.createContext<ChatContextType | null>(null);
@@ -43,6 +44,8 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             setState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
+
+    const makeCurrent = (response: ChannelResponse | GroupResponse | FriendResponse)=> setCurrent(response);
 
     const socket = React.useMemo(() => {
         const token = getCookie("token");
@@ -73,7 +76,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const refreshChats = () => refreshChatsMutation.mutate();
 
     return (
-        <ChatContext.Provider value={{ ...state, refreshChats, current }}>{ children }</ChatContext.Provider>
+        <ChatContext.Provider value={{ ...state, refreshChats, makeCurrent, current }}>{ children }</ChatContext.Provider>
     );
 }
 

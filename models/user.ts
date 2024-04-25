@@ -62,8 +62,8 @@ class UserModel{
                 where: { OR: [{ requesterID: user.id }, { acceptorID: user.id }, ] }, 
                 include:{
                     requester: { select: { id: true, email:  true, name: true } }, 
-                    acceptor: { select: { id: true, email:  true, name: true } }, 
-                    channel: true 
+                    acceptor: { select: { id: true, email:  true, name: true } },
+                    channel: true
                 }
             }));
 

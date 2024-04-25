@@ -1,17 +1,18 @@
 import * as React from 'react';
-import { Channel, Friend, Group, User } from '@prisma/client';
+import { User } from '@prisma/client';
+import { ChatsResponse, FriendResponse } from '../../responses';
 export type AppState = {
     data?: User & {
-        friends: Friend[];
-        chats: Array<Channel | Group>;
+        friends: FriendResponse[];
+        chats: ChatsResponse;
     };
     isError: boolean;
     message?: any;
 };
 export type AppContextType = {
     data?: User & {
-        friends: Friend[];
-        chats: Array<Channel | Group>;
+        friends: FriendResponse[];
+        chats: ChatsResponse;
     };
     loading: boolean;
     isError: boolean;

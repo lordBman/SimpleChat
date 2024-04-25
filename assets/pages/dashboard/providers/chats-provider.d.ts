@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Channel, Friend, Group } from '@prisma/client';
+import { ChannelResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
 export type ChatContextType = {
-    chats: Array<Channel | Group>;
-    current?: Channel | Group | Friend;
+    chats: ChatsResponse;
+    current?: ChannelResponse | GroupResponse | FriendResponse;
     loading: boolean;
     isError: boolean;
     message?: any;

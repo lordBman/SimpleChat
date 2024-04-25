@@ -4,19 +4,20 @@ import { useMutation, useQuery } from 'react-query';
 import { Friend, User } from '@prisma/client';
 import { axiosInstance } from '../../utils';
 import { AppContext, AppContextType } from './app-provider';
+import { FriendResponse } from '../../responses';
 
 interface FriendsState{
     loading: boolean,
     isError: boolean,
     message?: any, 
-    friends: Friend[],
+    friends: FriendResponse[],
 }
 
 export type FriendsContextType = {
     loading: boolean,
     isError: boolean,
     message?: any, 
-    friends: Friend[],
+    friends: FriendResponse[],
     refreshFriends: CallableFunction
 }
 

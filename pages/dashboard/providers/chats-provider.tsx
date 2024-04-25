@@ -1,21 +1,21 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
-import { Channel, Friend, Group } from '@prisma/client';
 import { AppContext, AppContextType } from './app-provider';
 import { axiosInstance, getCookie } from '../../utils';
 import { io } from "socket.io-client";
+import { ChannelResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
 
 interface ChatState{
-    chats: Array<Channel | Group>;
+    chats: ChatsResponse;
     loading: boolean;
     isError: boolean;
     message?: any
 }
 
 export type ChatContextType = {
-    chats: Array<Channel | Group>;
-    current?: Channel | Group | Friend;
+    chats: ChatsResponse;
+    current?: ChannelResponse | GroupResponse | FriendResponse;
     loading: boolean,
     isError: boolean,
     message?: any, 
@@ -26,7 +26,7 @@ export const ChatContext = React.createContext<ChatContextType | null>(null);
 
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { data } = React.useContext(AppContext) as AppContextType;
-    const [current, setCurrent] = useState<Channel | Group | Friend>();
+    const [current, setCurrent] = useState<ChannelResponse | GroupResponse | FriendResponse>();
 
     const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats! });
 

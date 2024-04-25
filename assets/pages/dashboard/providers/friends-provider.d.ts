@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Friend } from '@prisma/client';
+import { FriendResponse } from '../../responses';
 export type FriendsContextType = {
     loading: boolean;
     isError: boolean;
     message?: any;
-    friends: Friend[];
+    friends: FriendResponse[];
     refreshFriends: CallableFunction;
 };
 export declare const FriendsContext: React.Context<FriendsContextType | null>;

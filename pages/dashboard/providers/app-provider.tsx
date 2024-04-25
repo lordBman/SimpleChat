@@ -3,15 +3,16 @@ import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { Channel, Friend, Group, User } from '@prisma/client';
 import { axiosInstance } from '../../utils';
+import { ChatsResponse, FriendResponse } from '../../responses';
 
 export type AppState = {
-    data?: User & { friends: Friend[], chats: Array<Channel | Group> }
+    data?: User & { friends: FriendResponse[], chats: ChatsResponse }
     isError: boolean;
     message?: any;
 };
 
 export type AppContextType = {
-    data?: User & { friends: Friend[], chats: Array<Channel|Group> }
+    data?: User & { friends: FriendResponse[], chats: ChatsResponse }
     loading: boolean;
     isError: boolean;
     message?: any;

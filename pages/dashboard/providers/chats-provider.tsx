@@ -5,6 +5,7 @@ import { AppContext, AppContextType } from './app-provider';
 import { axiosInstance, getCookie } from '../../utils';
 import { io } from "socket.io-client";
 import { ChannelResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
+import { FriendsContext, FriendsContextType } from './friends-provider';
 
 interface ChatState{
     chats: ChatsResponse;
@@ -27,6 +28,8 @@ export const ChatContext = React.createContext<ChatContextType | null>(null);
 
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { data } = React.useContext(AppContext) as AppContextType;
+    const { friends } = React.useContext(FriendsContext) as FriendsContextType;
+
     const [current, setCurrent] = useState<ChannelResponse | GroupResponse | FriendResponse>();
 
     const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats! });
@@ -45,7 +48,21 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }
     });
 
-    const makeCurrent = (response: ChannelResponse | GroupResponse | FriendResponse)=> setCurrent(response);
+    const makeCurrent = (response: ChannelResponse | GroupResponse | FriendResponse)=> {
+        if("acceptorID" in response){
+            const friend = response as FriendResponse;
+
+            const init = state.chats.find((chat)=>{
+                if("friendID" in chat){
+                    const channelResponse = chat as ChannelResponse;
+                    return channelResponse.friendsID === friend.id;
+                }
+            });
+            setCurrent(init || response);
+        }else{
+            setCurrent(response);
+        }
+    }
 
     const socket = React.useMemo(() => {
         const token = getCookie("token");

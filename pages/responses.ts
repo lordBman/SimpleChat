@@ -1,5 +1,4 @@
 import { User, Friend, Channel, Chat, Group, GroupChat } from "@prisma/client";
-import { response } from "express";
 
 export type GroupChatResponse = GroupChat & { sender: User };
 export type ChatResponse = Chat & { sender: User }

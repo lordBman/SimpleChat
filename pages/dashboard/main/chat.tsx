@@ -36,6 +36,14 @@ const Chat = () =>{
         return { name: "No active Chat", init: "?" };
     }, [current]);
 
+    const initChats = () =>{
+        if(current && isChannel(current)){
+            return (current as ChannelResponse).chats;
+        }  
+        return []; 
+    }
+    const chats = initChats();
+
     const textChange = (event:  React.ChangeEvent<HTMLInputElement>) =>{
         setMessage(event.target.value);
     }
@@ -64,8 +72,12 @@ const Chat = () =>{
             </div>
             <div className="chat-main">
                 <div id="chats-container" className="chat-container">
-                    <MyChat message="How are you doing today, I hope you had a good night's rest ?" />
-                    <RecievedChat />
+                    { chats.map((chat)=>{
+                        if(chat.senderID === data?.id){
+                            return <MyChat chat={chat}/>
+                        }
+                        return  <RecievedChat chat={chat} />
+                    })}
                 </div>
             </div>
             <div className="chat-input-container">

@@ -1,3 +1,7 @@
 import React from "react";
-declare const RecievedChat: () => React.JSX.Element;
+import { ChatResponse } from "../responses";
+interface RecievedChatProps {
+    chat: ChatResponse;
+}
+declare const RecievedChat: React.FC<RecievedChatProps>;
 export default RecievedChat;

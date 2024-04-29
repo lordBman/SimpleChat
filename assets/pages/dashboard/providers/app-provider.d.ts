@@ -3,6 +3,8 @@ import { User } from '@prisma/client';
 import { ChatsResponse, FriendResponse } from '../../responses';
 export type AppState = {
     data?: User & {
+        token: string;
+    } & {
         friends: FriendResponse[];
         chats: ChatsResponse;
     };
@@ -11,6 +13,8 @@ export type AppState = {
 };
 export type AppContextType = {
     data?: User & {
+        token: string;
+    } & {
         friends: FriendResponse[];
         chats: ChatsResponse;
     };

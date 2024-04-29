@@ -24,7 +24,7 @@ class ChatModel {
         });
     }
 
-    async create(data: { user: User, message: string, receiverID?: string, groupID?:number }): Promise<Chat | GroupChat | undefined>{
+    async create(data: { user: User, message: string, channelID?: string, receiverID?: string, groupID?:number }): Promise<Chat | Channel | GroupChat | undefined>{
         try{
             if(data.groupID){
                 const chat = await this.database.client.groupChat.create({ 
@@ -52,7 +52,7 @@ class ChatModel {
 
             if(data.receiverID){
                 let friend = await this.database.client.friend.findFirst({
-                    where: { 
+                    where: {
                         OR: [ { requesterID: data.user.id, acceptorID: data.receiverID }, { requesterID: data.receiverID, acceptorID: data.user.id } ],
                     },
                     include: { channel: true }
@@ -65,11 +65,38 @@ class ChatModel {
                     await this.updateChannel(channel.id);
                 }else{
                     const id = uuid();
-                    channel = await this.database.client.channel.create({  data: { id, friendsID: friend!.id }, });
+                    channel = await this.database.client.channel.create({  data: { id, friendsID: friend!.id } });
                 }
     
-                const chat = await this.database.client.chat.create({
+                await this.database.client.chat.create({
                     data: { message: data.message, senderID: data.user.id, channelID: channel.id },
+                });
+    
+                await this.database.client.notification.create({
+                    data: { recieverID: data.receiverID, alert: `${data.user.name} sent you a message`, message: data.message }
+                });
+
+                const init = await this.database.client.channel.findUnique({ 
+                    where: { id: channel.id }, 
+                    include: { chats: {
+                        include: { 
+                            sender: true,
+                            reply: { include: { sender: true } },
+                            reference: { include: { sender:  true } }
+                        }
+                    } } 
+                });
+    
+                return init!;
+            }
+
+            if(data.channelID){
+                const channel = await this.database.client.channel.findUnique({ where: { id: data.channelID }, include: { friends: true } });
+
+                const receiverID = channel?.friends.acceptorID === data.user.id ? channel.friends.requesterID : channel?.friends.acceptorID;
+
+                const chat = await this.database.client.chat.create({
+                    data: { message: data.message, senderID: data.user.id, channelID: data.channelID },
                     include: { 
                         sender: true,
                         reply: { include: { sender: true } },
@@ -78,7 +105,7 @@ class ChatModel {
                 });
     
                 await this.database.client.notification.create({
-                    data: { recieverID: data.receiverID, alert: `${data.user.name} sent you a message`, message: data.message }
+                    data: { recieverID: receiverID!, alert: `${data.user.name} sent you a message`, message: data.message }
                 });
     
                 return chat;

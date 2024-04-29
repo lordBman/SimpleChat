@@ -1,6 +1,6 @@
 import { DBManager } from "../config";
 import Database from "../config/database";
-import { Friend, User } from "@prisma/client";
+import { Channel, Friend, User } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 
@@ -22,6 +22,16 @@ class FriendModel{
             return friends;
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
+        }
+    }
+
+    async channels(data: { user: User }): Promise<Channel[] | undefined>{
+        try{
+            const friends = await this.database.client.friend.findMany({ where: { OR: [ { requesterID: data.user.id }, { acceptorID: data.user.id } ], accepted: true }, include:{ channel: true } });
+            
+            return friends.filter((friend) => friend.channel !== null).map((friend)=> friend.channel!);
+        }catch(error){
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when updating notification");
         }
     }
 

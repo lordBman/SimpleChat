@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
-import RecievedChat from "../../conponents.tsx/recieved-chat";
-import MyChat from "../../conponents.tsx/my-chat";
+import { ChatView } from "../../conponents.tsx";
 import { ChatContext, ChatContextType } from "../providers/chats-provider";
 import { ChannelResponse, GroupResponse, FriendResponse } from "../../responses";
 import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
@@ -12,7 +11,7 @@ const isChannel = (current: ChannelResponse | GroupResponse | FriendResponse) =>
 
 const Chat = () =>{
     const { data } = React.useContext(AppContext) as AppContextType;
-    const { current } = React.useContext(ChatContext) as ChatContextType;
+    const { current, send } = React.useContext(ChatContext) as ChatContextType;
     const { friends } = React.useContext(FriendsContext) as FriendsContextType;
     const [message, setMessage] = useState("");
 
@@ -31,6 +30,10 @@ const Chat = () =>{
                     return { name: friend?.requester.name, init: friend?.requester.name.charAt(0).toLocaleUpperCase() };
                 }
                 return { name: friend?.acceptor.name, init: friend?.acceptor.name.charAt(0).toLocaleUpperCase() };
+            }else if(isGroup(current)){
+                const group = (current as GroupResponse);
+
+                return { name: group.name, init: "" };
             }
         }
         return { name: "No active Chat", init: "?" };
@@ -48,9 +51,9 @@ const Chat = () =>{
         setMessage(event.target.value);
     }
 
-    const send = () =>{
+    const sendMessage = () =>{
         if(message.length){
-            
+            send(message);
             setMessage("");
         }
     }
@@ -59,7 +62,10 @@ const Chat = () =>{
             <div className="chat-header">
                 <div className="chat-header-profile">
                     <div className="messages-item-profile-container">
-                        <div className="messages-item-profile">{initial.init}</div>
+                        { current && isGroup(current) && <div className="messages-item-profile">
+                            <span className="heroicons--user-group"></span>
+                        </div> }
+                        { (!current || !isGroup(current)) && <div className="messages-item-profile">{initial.init}</div> }
                     </div>
                     <div>{initial.name}</div>
                     { current && <div style={{ border: "solid 3px #06D6A3", borderRadius:"50%" }}>
@@ -72,19 +78,14 @@ const Chat = () =>{
             </div>
             <div className="chat-main">
                 <div id="chats-container" className="chat-container">
-                    { chats.map((chat)=>{
-                        if(chat.senderID === data?.id){
-                            return <MyChat chat={chat}/>
-                        }
-                        return  <RecievedChat chat={chat} />
-                    })}
+                    { chats.map((chat, index)=>{ return ( <ChatView chat={chat} key={index} /> ) })}
                 </div>
             </div>
             <div className="chat-input-container">
                 <input value={message} onChange={textChange} type="text"  placeholder="Enter  message ..." />
                 <span className="ri--attachment-line"></span>
                 <span className="mynaui--image"></span>
-                <button onClick={send}>
+                <button onClick={sendMessage}>
                     <span className="mynaui--send"></span>
                 </button>
             </div>

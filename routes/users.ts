@@ -30,7 +30,7 @@ userRouter.post("/", async(req, res) =>{
         const model = new UserModel();
         const user = await model.create(req.body);
         if(user){
-            res.cookie(`token`, user);
+            res.cookie(`token`, user, { httpOnly: true });
             return res.status(HttpStatusCode.Accepted).send(user);
         }
         return DBManager.instance().errorHandler.display(res);
@@ -43,7 +43,7 @@ userRouter.post("/login", async(req, res) =>{
         const model = new UserModel();
         const user = await model.signin(req.body);
         if(user){
-            res.cookie(`token`, user);
+            res.cookie(`token`, user, {  httpOnly: true });
             return res.status(HttpStatusCode.Accepted).send(user);
         }
         return DBManager.instance().errorHandler.display(res);
@@ -55,7 +55,7 @@ userRouter.get("/", APIAuthenication, async(req, res) =>{
     const model = new UserModel();
     const response = await model.get(req.body.user);
     if(response){
-        return res.status(HttpStatusCode.Ok).send(response);
+        return res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
     }
     return DBManager.instance().errorHandler.display(res);
 });

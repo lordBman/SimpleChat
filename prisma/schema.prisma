@@ -48,6 +48,7 @@ model Friend{
 
     @@unique([requesterID, acceptorID])
 }
+
 model Channel{
     id            String        @id
     last          DateTime      @default(now())

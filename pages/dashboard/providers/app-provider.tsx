@@ -6,13 +6,13 @@ import { axiosInstance } from '../../utils';
 import { ChatsResponse, FriendResponse } from '../../responses';
 
 export type AppState = {
-    data?: User & { friends: FriendResponse[], chats: ChatsResponse }
+    data?: User & { token: string } & { friends: FriendResponse[], chats: ChatsResponse }
     isError: boolean;
     message?: any;
 };
 
 export type AppContextType = {
-    data?: User & { friends: FriendResponse[], chats: ChatsResponse }
+    data?: User & { token: string } & { friends: FriendResponse[], chats: ChatsResponse }
     loading: boolean;
     isError: boolean;
     message?: any;

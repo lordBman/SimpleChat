@@ -5,7 +5,7 @@ import { AppContext, AppContextType } from './app-provider';
 import { axiosInstance, getCookie } from '../../utils';
 import { io } from "socket.io-client";
 import { ChannelResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
-import { FriendsContext, FriendsContextType } from './friends-provider';
+//import { FriendsContext, FriendsContextType } from './friends-provider';
 
 interface ChatState{
     chats: ChatsResponse;
@@ -22,13 +22,15 @@ export type ChatContextType = {
     message?: any, 
     refreshChats: CallableFunction;
     makeCurrent: CallableFunction;
+    send: CallableFunction;
+    typing: CallableFunction;
 }
 
 export const ChatContext = React.createContext<ChatContextType | null>(null);
 
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { data } = React.useContext(AppContext) as AppContextType;
-    const { friends } = React.useContext(FriendsContext) as FriendsContextType;
+    //const { friends } = React.useContext(FriendsContext) as FriendsContextType;
 
     const [current, setCurrent] = useState<ChannelResponse | GroupResponse | FriendResponse>();
 
@@ -64,10 +66,26 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }
     }
 
-    const socket = React.useMemo(() => {
-        const token = getCookie("token");
+    const send = (message: string) =>{
+        if("acceptorID" in current!){
+            const friendResponse = current as FriendResponse;
 
-        return io("http://localhost:5000", { auth: { token, access: "access-key" } });
+            if(friendResponse.acceptorID === data?.id){
+                socket.emit("chat", { message, receiverID: friendResponse.requesterID });
+            }else{
+                socket.emit("chat", { message, receiverID: friendResponse.acceptorID });
+            }
+        }else if("friendID" in current!){
+            socket.emit("chat", { message }, (current as ChannelResponse).id);
+        }
+    }
+
+    const typing = () =>{
+
+    }
+
+    const socket = React.useMemo(() => {
+        return io("http://localhost:5000", { auth: { token: data?.token, access: "access-key" } });
     }, [data?.id]);
 
     socket.on("chat", (data)=>{
@@ -93,7 +111,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const refreshChats = () => refreshChatsMutation.mutate();
 
     return (
-        <ChatContext.Provider value={{ ...state, refreshChats, makeCurrent, current }}>{ children }</ChatContext.Provider>
+        <ChatContext.Provider value={{ ...state, refreshChats, makeCurrent, send, typing, current }}>{ children }</ChatContext.Provider>
     );
 }
 

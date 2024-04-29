@@ -8,6 +8,8 @@ export type ChatContextType = {
     message?: any;
     refreshChats: CallableFunction;
     makeCurrent: CallableFunction;
+    send: CallableFunction;
+    typing: CallableFunction;
 };
 export declare const ChatContext: React.Context<ChatContextType | null>;
 declare const ChatProvider: React.FC<React.PropsWithChildren>;

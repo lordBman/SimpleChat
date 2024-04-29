@@ -20,7 +20,7 @@ chatRouter.post("/", async(req, res) =>{
 });
 
 chatRouter.put("/", async(req, res) =>{
-    if(req.body.message && req.body.chatID && ( req.body.channelID || req.body.groupID ) ){
+    if(req.body.message && req.body.chatID && ( req.body.channelID || req.body.groupID || req.body.channelID ) ){
         const model = new ChatModel();
         const group = await model.update(req.body);
 

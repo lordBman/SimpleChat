@@ -14,7 +14,7 @@ class UserModel{
     async create(data: { name: string, email: string, password: string }): Promise<string | undefined>{
         try{
             const id = uuid();
-            const init = await this.database.client.user.create({ data: { id, ...data } });
+            const init = await this.database.client.user.create({ data: { id, ...data }, select: { id: true, name: true, email: true } });
 
             const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "10 seconds" } );
 
@@ -30,7 +30,7 @@ class UserModel{
             if(init){
                 if(data.password === init.password){
                     console.log(JSON.stringify(data.password));
-                    const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+                    const token = jwt.sign({ user: { ...init, password: undefined }}, process.env.SECRET || "test", { expiresIn: "7 days" } );
                     return token;
                 }
                 this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
@@ -55,7 +55,7 @@ class UserModel{
         try{
             const init = await this.database.client.user.findUnique({
                 where:{ id: user.id },
-                include: { notifications: { orderBy: { created: "desc" } } }
+                select: { id: true, name: true, email: true, password: false,  }
             });
 
             const friends = (await this.database.client.friend.findMany({
@@ -63,12 +63,12 @@ class UserModel{
                 include:{
                     requester: { select: { id: true, email:  true, name: true } }, 
                     acceptor: { select: { id: true, email:  true, name: true } },
-                    channel: true
+                    channel: { include: { chats: true } }
                 }
             }));
 
-            const channels: Channel[] = friends.filter((predicate)=>{ return predicate.accepted && predicate.channel  }).map((value)=>{
-                return value.channel!
+            const channels: Channel[] = friends.filter((predicate)=>{ return predicate.accepted && predicate.channel }).map(( friend )=>{
+                return friend.channel!;
             });
 
             const members = await this.database.client.member.findMany({ where: { userID: user.id }, include:{ group: true } });
@@ -87,7 +87,7 @@ class UserModel{
 
             const chats = [ ...channels, ...groups ].sort((a, b)=> b.last.valueOf() - a.last.valueOf());
 
-            return { ...init!, chats, friends, members };
+            return { ...init!, password: "", chats, friends, members };
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }

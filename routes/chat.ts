@@ -6,12 +6,12 @@ import { DBManager } from "../config";
 const chatRouter = express.Router();
 
 chatRouter.post("/", async(req, res) =>{
-    if(req.body.message && ( req.body.recieverID || req.body.groupID )){
+    if(req.body.message && ( req.body.friendID || req.body.groupID )){
         const model = new ChatModel();
-        const group = await model.create(req.body);
+        const init = await model.create(req.body);
 
-        if(group){
-            return res.status(HttpStatusCode.Created).send(group);
+        if(init){
+            return res.status(HttpStatusCode.Created).send(init);
         }
         return DBManager.instance().errorHandler.display(res);
     }else{
@@ -20,12 +20,12 @@ chatRouter.post("/", async(req, res) =>{
 });
 
 chatRouter.put("/", async(req, res) =>{
-    if(req.body.message && req.body.chatID && ( req.body.channelID || req.body.groupID || req.body.channelID ) ){
+    if(req.body.message && req.body.chatID && ( req.body.friendID || req.body.groupID ) ){
         const model = new ChatModel();
-        const group = await model.update(req.body);
+        const init = await model.update(req.body);
 
-        if(group){
-            return res.status(HttpStatusCode.Accepted).send(group);
+        if(init){
+            return res.status(HttpStatusCode.Accepted).send(init);
         }
         return DBManager.instance().errorHandler.display(res);
     }else{

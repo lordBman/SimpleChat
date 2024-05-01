@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useQuery } from 'react-query';
-import { Channel, Friend, Group, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { axiosInstance } from '../../utils';
-import { ChatsResponse, FriendResponse } from '../../responses';
+import { ChatsResponse, FriendResponse, MemberResponse } from '../../responses';
 
 export type AppState = {
-    data?: User & { token: string } & { friends: FriendResponse[], chats: ChatsResponse }
+    data?: User & { token: string } & { members: MemberResponse[], friends: FriendResponse[], chats: ChatsResponse }
     isError: boolean;
     message?: any;
 };

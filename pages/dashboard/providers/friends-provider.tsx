@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
-import { Friend, User } from '@prisma/client';
+import { useMutation } from 'react-query';
 import { axiosInstance } from '../../utils';
 import { AppContext, AppContextType } from './app-provider';
 import { FriendResponse } from '../../responses';

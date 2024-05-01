@@ -2,7 +2,7 @@ import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
-import { Channel, Friend, Group, Member, User } from "@prisma/client";
+import { Chat, Friend, Group, Member, User } from "@prisma/client";
 import { uuid } from "../utils";
 
 class UserModel{
@@ -51,43 +51,34 @@ class UserModel{
         }
     }
 
-    async get(user: User): Promise<User & { chats: Array<Channel | Group> } & { friends: Friend[] } & { members: Member[] } | undefined>{
+    async get(user: User): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
         try{
-            const init = await this.database.client.user.findUnique({
-                where:{ id: user.id },
-                select: { id: true, name: true, email: true, password: false,  }
-            });
-
-            const friends = (await this.database.client.friend.findMany({
+            const friends = await this.database.client.friend.findMany({
                 where: { OR: [{ requesterID: user.id }, { acceptorID: user.id }, ] }, 
                 include:{
                     requester: { select: { id: true, email:  true, name: true } }, 
                     acceptor: { select: { id: true, email:  true, name: true } },
-                    channel: { include: { chats: true } }
                 }
-            }));
-
-            const channels: Channel[] = friends.filter((predicate)=>{ return predicate.accepted && predicate.channel }).map(( friend )=>{
-                return friend.channel!;
             });
 
-            const members = await this.database.client.member.findMany({ where: { userID: user.id }, include:{ group: true } });
+            const members = await this.database.client.member.findMany({
+                where: { userID: user.id }, 
+                include:{
+                    group: { include: { creator: { select: { id: true, email: true, name: true } } } },
+                } 
+            });
 
-            const groups: Group[] = [];
-            for(let i = 0; i < members.length; i++){
-                const member = members[i];
-                if(member.accepted){
-                    const group = await this.database.client.group.findUnique({
-                        where: { id: member.groupID },
-                        include: { members: { include: { user: true } }, chats: { where:{ createdAt: { gte: member.joined } }, orderBy: { createdAt:  "desc" }, include: { sender: true } } } }
-                    );
-                    groups.push(group!);
-                }
+            const actives = [...friends.filter((friend)=> friend.accepted), ...members.filter((member)=> member.accepted ).map((member)=> member.group )];
+            let chats: { [key: string]: Chat[] } = {};
+            for(let i = 0; i < actives.length; i++){
+                chats[actives[i].id] = await this.database.client.chat.findMany({ 
+                    where: { ownerID: actives[i].id }, 
+                    orderBy: { created: "desc" },
+                    include: { sender: { select: { id: true, email: true, name: true } } }
+                });
             }
 
-            const chats = [ ...channels, ...groups ].sort((a, b)=> b.last.valueOf() - a.last.valueOf());
-
-            return { ...init!, password: "", chats, friends, members };
+            return { ...user, chats, friends, members };
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }

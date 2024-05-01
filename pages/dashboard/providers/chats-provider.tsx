@@ -4,7 +4,7 @@ import { useMutation } from 'react-query';
 import { AppContext, AppContextType } from './app-provider';
 import { axiosInstance, getCookie } from '../../utils';
 import { io } from "socket.io-client";
-import { ChannelResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
+import { ChatResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
 //import { FriendsContext, FriendsContextType } from './friends-provider';
 
 interface ChatState{
@@ -16,7 +16,7 @@ interface ChatState{
 
 export type ChatContextType = {
     chats: ChatsResponse;
-    current?: ChannelResponse | GroupResponse | FriendResponse;
+    current?: ChatResponse[];
     loading: boolean,
     isError: boolean,
     message?: any, 
@@ -88,8 +88,8 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         return io("http://localhost:5000", { auth: { token: data?.token, access: "access-key" } });
     }, [data?.id]);
 
-    socket.on("chat", (data)=>{
-        
+    socket.on("chat", (data, room)=>{
+        console.log(`${JSON.stringify(room)}: ${JSON.stringify(data)}`);
     });
 
     socket.on("typing", (data)=>{

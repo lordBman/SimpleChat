@@ -1,13 +1,9 @@
-import { User, Friend, Channel, Chat, Group, GroupChat } from "@prisma/client";
+import { User, Friend, Chat, Group, Member} from "@prisma/client";
 
-export type GroupChatResponse = GroupChat & { sender: User };
 export type ChatResponse = Chat & { sender: User }
+export type ChatsResponse = { [key: string]: ChatResponse[] };
 
-export type GroupResponse = Group & { chats: GroupChatResponse[], creator: User };
-export type ChannelResponse = Channel & { chats: ChatResponse[] }
+export type GroupResponse = Group & { creator: User };
+export type MemberResponse = Member & { group: GroupResponse };
 
-export type ChatsResponse = Array<GroupResponse | ChannelResponse>;
-export const isGroup = (response: ChatsResponse) => "name" in response;
-export const isChannel = (response: GroupResponse) => "friendID" in response;
-
-export type FriendResponse = Friend & { acceptor: User, requester: User, channel?: Channel  }
+export type FriendResponse = Friend & { acceptor: User, requester: User  };

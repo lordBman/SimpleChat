@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -13,49 +14,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User{
-    id            String        @id @unique
-    name          String        @unique
-    password      String
+    id              String        @id @unique
+    name            String
+    email           String        @unique
+    password        String
 
-    userOne       Channel[]     @relation("userOne")
-    userTwo       Channel[]     @relation("userTwo")
+    requester       Friend[]      @relation("requester")
+    acceptor        Friend[]      @relation("acceptor")
 
-    notifications Notification[]
-    sent          Chat[]
-}
+    notifications   Notification[]
 
-model Channel{
-    id            String        @id
-    last          DateTime      @default(now())
 
-    userOneID     String
-    userOne       User          @relation("userOne", fields: [userOneID], references: [id])
-
-    userTwoID     String
-    userTwo       User          @relation("userTwo", fields: [userTwoID], references: [id])
-
-    chats         Chat[]
-
-    @@unique([userOneID, userTwoID])
+    sentChats       Chat[]
+    createdGroups   Group[]         
+    members         Member[]
 }
 
 model Chat{
-    id            Int           @id @default(autoincrement())
-    message       String
-    created       DateTime      @default(now())
-    delivered     Boolean       @default(false)
+    id              Int           @id @default(autoincrement())
+    message         String
+    created         DateTime      @default(now())
+    delivered       Boolean       @default(false)
 
-    senderID      String
-    sender        User          @relation(fields: [senderID], references: [id])
+    senderID        String
+    sender          User          @relation(fields: [senderID], references: [id])
 
-    channelID     String
-    channel       Channel       @relation(fields: [channelID], references: [id])
+    ownerID         String
 
-    reply             Chat[]            @relation("reference")
-    referenceID       Int?
-    reference         Chat?             @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
+    reply           Chat[]            @relation("reference")
+    referenceID     Int?
+    reference       Chat?             @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
+}
+
+model Friend{
+    id              String        @id
+
+    requesterID     String
+    requester       User          @relation("requester", fields: [requesterID], references: [id])
+
+    acceptorID      String
+    acceptor        User          @relation("acceptor", fields: [acceptorID], references: [id])
+
+    accepted        Boolean       @default(false)
+
+    @@unique([requesterID, acceptorID])
+}
+
+model Group {
+    id              String        @id
+    name            String            @unique
+    last            DateTime          @default(now())
+    attachment      String?
+
+    creatorID       String
+    creator         User              @relation(fields: [creatorID], references: [id], onDelete: NoAction)
+
+    members         Member[]
+    notifications   Notification[]
+}
+
+model Member {
+    user              User              @relation(fields: [userID], references: [id], onDelete: Cascade)
+    userID            String
+
+    group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
+    groupID           String
+
+    joined            DateTime          @default(now())
+    role              String            @default("member")
+
+    accepted          Boolean           @default(false)
+
+    @@id([userID, groupID])
 }
 
 model Notification{
@@ -64,6 +95,9 @@ model Notification{
     alert             String  
     created           DateTime          @default(now())
     received          Boolean           @default(false)
+
+    groupID           String?
+    group             Group?            @relation(fields: [groupID], references: [id], onDelete: SetNull)
 
     reciecver         User              @relation(fields: [recieverID], references: [id], onDelete: Cascade)
     recieverID        String

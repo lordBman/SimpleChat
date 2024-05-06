@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model User{
+    id            String        @id @unique
+    name          String
+    email         String        @unique
+    password      String
+
+    requester     Friend[]      @relation("requester")
+    acceptor      Friend[]      @relation("acceptor")
+
+    notifications Notification[]
+
+
+    sentChats         Chat[]
+    createdGroups     Group[]
+    sentGroupChats    GroupChat[]
+    members           Member[]
+}
+
+model Friend{
+    id            String        @id
+
+    requesterID   String
+    requester     User          @relation("requester", fields: [requesterID], references: [id])
+
+    acceptorID    String
+    acceptor      User          @relation("acceptor", fields: [acceptorID], references: [id])
+
+    accepted      Boolean       @default(false)
+
+    channel       Channel?
+
+    @@unique([requesterID, acceptorID])
+}
+model Channel{
+    id            String        @id
+    last          DateTime      @default(now())
+
+    friendsID     String        @unique
+    friends       Friend        @relation(fields: [friendsID], references: [id])
+
+    chats         Chat[]
+}
+
+model Chat{
+    id            Int           @id @default(autoincrement())
+    message       String
+    created       DateTime      @default(now())
+    delivered     Boolean       @default(false)
+
+    senderID      String
+    sender        User          @relation(fields: [senderID], references: [id])
+
+    channelID     String
+    channel       Channel       @relation(fields: [channelID], references: [id])
+
+    reply             Chat[]            @relation("reference")
+    referenceID       Int?
+    reference         Chat?             @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
+}
+
+model Group {
+    id                Int               @id @default(autoincrement())
+    name              String            @unique
+    last              DateTime          @default(now())
+    attachment        String?
+
+    creatorID         String
+    creator           User              @relation(fields: [creatorID], references: [id], onDelete: NoAction)
+
+    chats             GroupChat[]
+    members           Member[]
+    notifications Notification[]
+}
+
+model GroupChat {
+    id                Int               @id @default(autoincrement())
+    message           String
+
+    createdAt         DateTime          @default(now())
+    updatedAt         DateTime          @updatedAt
+
+    senderID          String
+    sender            User              @relation(fields: [senderID], references: [id], onDelete: Cascade)
+
+    delivered         Delivered[]
+
+    groupID           Int
+    group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
+
+    reply             GroupChat[]       @relation("reference")
+    referenceID       Int?
+    reference         GroupChat?        @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
+}
+
+model Member {
+    user              User              @relation(fields: [userID], references: [id], onDelete: Cascade)
+    userID            String
+
+    group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
+    groupID           Int
+
+    joined            DateTime          @default(now())
+    role              String            @default("member")
+
+    accepted          Boolean           @default(false)
+
+    delivered         Delivered[]
+
+    @@id([userID, groupID])
+}
+
+model Delivered{
+    member            Member            @relation(fields: [userID, groupID], references: [userID, groupID], onDelete: Cascade)
+
+    userID            String
+    groupID           Int
+
+    chat             GroupChat          @relation(fields: [chatID], references: [id], onDelete: Cascade)
+    chatID           Int                @id @unique
+}
+
+model Notification{
+    id                Int               @id @default(autoincrement())
+    message           String?
+    alert             String  
+    created           DateTime          @default(now())
+    received          Boolean           @default(false)
+
+    groupID           Int?
+    group             Group?            @relation(fields: [groupID], references: [id], onDelete: SetNull)
+
+    reciecver         User              @relation(fields: [recieverID], references: [id], onDelete: Cascade)
+    recieverID        String
+}

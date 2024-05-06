@@ -1,22 +1,30 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
-    "module": "esnext",
-    "target": "esnext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "es6",
+    "target": "es6",
+    "esModuleInterop": true,
     "moduleResolution": "bundler",
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
+    //"moduleDetection": "force",
+    //"allowImportingTsExtensions": true,
+    //"noEmit": true,
     "composite": true,
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "jsx": "preserve",
+    "jsx": "react",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "types": [
       "bun-types" // add Bun global
-    ]
-  }
+    ],
+    "outDir": "./assets",
+
+    "sourceMap": true,
+    
+    "removeComments": true,
+    "preserveValueImports": false
+  },
+  "include": [ "./pages" ]
 }

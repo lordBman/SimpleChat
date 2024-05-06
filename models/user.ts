@@ -2,7 +2,7 @@ import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
-import { Channel, User } from "@prisma/client";
+import { Chat, Friend, Group, Member, User } from "@prisma/client";
 import { uuid } from "../utils";
 
 class UserModel{
@@ -11,12 +11,12 @@ class UserModel{
         this.database = DBManager.instance();
     }
 
-    private async create(data: { name: string, password: string }): Promise<string | undefined>{
+    async create(data: { name: string, email: string, password: string }): Promise<string | undefined>{
         try{
             const id = uuid();
-            const init = await this.database.client.user.create({ data: { id, ...data } });
+            const init = await this.database.client.user.create({ data: { id, ...data }, select: { id: true, name: true, email: true } });
 
-            const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+            const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "10 seconds" } );
 
             return token;
         }catch(error){
@@ -24,63 +24,63 @@ class UserModel{
         }
     }
 
-    async signin(data: { name: string, password: string }): Promise<string | undefined>{
+    async signin(data: { email: string, password: string }): Promise<string | undefined>{
         try{
-            const init = await this.database.client.user.findFirst({ where: { name: data.name } });
+            const init = await this.database.client.user.findFirst({ where: { email: data.email } });
             if(init){
                 if(data.password === init.password){
                     console.log(JSON.stringify(data.password));
-                    const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+                    const token = jwt.sign({ user: { ...init, password: undefined }}, process.env.SECRET || "test", { expiresIn: "7 days" } );
                     return token;
                 }
                 this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
             }
-            return this.create(data);
+            this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "account does not exists, try signing up");
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when getting user");
         }
     }
 
-    async delete(data: { token: string }): Promise<string | undefined>{
+    async delete(user: User): Promise<string | undefined>{
         try{
-            const { user } = jwt.verify(data.token, process.env.SECRET || "test" ) as  any;
             await this.database.client.user.delete({ where: { id: user.id } });
 
             return "user was deleted successfully";
         }catch(error){
-            if(error instanceof jwt.TokenExpiredError){
-                this.database.errorHandler.add(HttpStatusCode.Unauthorized, `${error}`, "session expired, try logging in");
-            }else{
-                this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
-            }
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }
     }
 
-    async get(data: { token: string }): Promise<User & { channels: Channel[] } & { firends: User[] }| undefined>{
+    async get(user: User): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
         try{
-            const { user } = jwt.verify(data.token, process.env.SECRET || "test" ) as any;
-
-            const init = await this.database.client.user.findUnique({
-                where:{ id: user.id },
-                include: { notifications: { orderBy: { created: "desc" } } }
+            const friends = await this.database.client.friend.findMany({
+                where: { OR: [{ requesterID: user.id }, { acceptorID: user.id }, ] }, 
+                include:{
+                    requester: { select: { id: true, email:  true, name: true } }, 
+                    acceptor: { select: { id: true, email:  true, name: true } },
+                }
             });
 
-            const channels = await this.database.client.channel.findMany({ 
-                where: { OR: [ { userOneID: user.id, }, { userTwoID: user.id } ] },
-                include: { chats: { orderBy: { created:  "desc" } } },
+            const members = await this.database.client.member.findMany({
+                where: { userID: user.id }, 
+                include:{
+                    group: { include: { creator: { select: { id: true, email: true, name: true } } } },
+                } 
             });
 
-            const firends = await this.database.client.user.findMany({
-                where: { NOT:{ id: user.id } }
-            });
-
-            return { ...init!, channels, firends };
-        }catch(error){
-            if(error instanceof jwt.TokenExpiredError){
-                this.database.errorHandler.add(HttpStatusCode.Unauthorized, `${error}`, "session expired, try logging in");
-            }else{
-                this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
+            const actives = [...friends.filter((friend)=> friend.accepted), ...members.filter((member)=> member.accepted ).map((member)=> member.group )];
+            let chats: { [key: string]: Chat[] } = {};
+            for(let i = 0; i < actives.length; i++){
+                chats[actives[i].id] = await this.database.client.chat.findMany({ 
+                    where: { ownerID: actives[i].id }, 
+                    orderBy: { created: "asc" },
+                    include: { sender: { select: { id: true, email: true, name: true } } }
+                });
             }
+
+            return { ...user, chats, friends, members };
+        }catch(error){
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }
     }
 }

@@ -11,7 +11,7 @@ const RecievedChat: React.FC<ChatProps> = ({ chat }) =>{
     return (
         <div className="recieved-chat-container">
             <div className="messages-item-profile-container">
-                <div className="messages-item-profile">{chat.sender.name.charAt(0).toLocaleLowerCase()}</div>
+                <div className="messages-item-profile">{chat.sender.name.charAt(0).toLocaleUpperCase()}</div>
             </div>
             <div className="chat-container-content">
                 <div className="recieved-chat-name">{chat.sender.name}</div>

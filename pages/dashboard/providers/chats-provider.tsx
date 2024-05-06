@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
 import { AppContext, AppContextType } from './app-provider';
-import { axiosInstance, getCookie } from '../../utils';
+import { axiosInstance } from '../../utils';
 import { io } from "socket.io-client";
 import { ChatResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
-//import { FriendsContext, FriendsContextType } from './friends-provider';
+import { FriendsContext, FriendsContextType } from './friends-provider';
 
 interface ChatState{
     chats: ChatsResponse;
@@ -16,7 +16,8 @@ interface ChatState{
 
 export type ChatContextType = {
     chats: ChatsResponse;
-    current?: ChatResponse[];
+    current?: GroupResponse | FriendResponse;
+    order: string[],
     loading: boolean,
     isError: boolean,
     message?: any, 
@@ -30,9 +31,9 @@ export const ChatContext = React.createContext<ChatContextType | null>(null);
 
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { data } = React.useContext(AppContext) as AppContextType;
-    //const { friends } = React.useContext(FriendsContext) as FriendsContextType;
+    const { friends } = React.useContext(FriendsContext) as FriendsContextType;
 
-    const [current, setCurrent] = useState<ChannelResponse | GroupResponse | FriendResponse>();
+    const [current, setCurrent] = useState<GroupResponse | FriendResponse>();
 
     const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats! });
 
@@ -50,33 +51,28 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }
     });
 
-    const makeCurrent = (response: ChannelResponse | GroupResponse | FriendResponse)=> {
-        if("acceptorID" in response){
-            const friend = response as FriendResponse;
+    const order = React.useMemo(()=>{
+        const map = new Map(Object.entries(state.chats));
+        
+        return Array.from(map.entries()).sort((entryA, entryB)=>{
+            if(entryA[1].length > 0 && entryB[1].length > 0){
+                return entryB[1][ entryB[1].length - 1].created.toString().localeCompare(entryA[1][  entryA[1].length - 1].created.toString());
+            }else if(entryB[1].length > 0){
+                return 1;
+            }
+            return -1;
+        }).map((init)=> init[0]);
+    }, [state.chats]);
 
-            const init = state.chats.find((chat)=>{
-                if("friendID" in chat){
-                    const channelResponse = chat as ChannelResponse;
-                    return channelResponse.friendsID === friend.id;
-                }
-            });
-            setCurrent(init || response);
-        }else{
-            setCurrent(response);
-        }
+    const makeCurrent = (response: GroupResponse | FriendResponse)=> {
+        setCurrent(response);
     }
 
     const send = (message: string) =>{
         if("acceptorID" in current!){
             const friendResponse = current as FriendResponse;
 
-            if(friendResponse.acceptorID === data?.id){
-                socket.emit("chat", { message, receiverID: friendResponse.requesterID });
-            }else{
-                socket.emit("chat", { message, receiverID: friendResponse.acceptorID });
-            }
-        }else if("friendID" in current!){
-            socket.emit("chat", { message }, (current as ChannelResponse).id);
+            socket.emit("chat", { message, friendID: friendResponse.id }, friendResponse.id);
         }
     }
 
@@ -89,7 +85,18 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     }, [data?.id]);
 
     socket.on("chat", (data, room)=>{
-        console.log(`${JSON.stringify(room)}: ${JSON.stringify(data)}`);
+        let reponse: ChatResponse[] = [data];
+
+        if(state.chats[room]){
+            reponse = state.chats[room].concat();
+            reponse.push(data);
+        }
+        let chats = {...state.chats};
+        chats[room] = reponse;
+
+        setState((init)=> { return {...init, chats: chats } });
+
+        console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data)}`);
     });
 
     socket.on("typing", (data)=>{
@@ -101,17 +108,18 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     });
 
     const init = React.useCallback(()=>{
-        if(!current && data?.chats && data.chats.length > 0){
-            setCurrent(data.chats[0]);
+        if(!current && order.length > 0){
+            const init = friends.find((value)=> value.id === order[0])
+            setCurrent(init);
         }
-    }, [current]);
+    }, [order]);
 
-    React.useEffect(()=> init(), [init, current]);
+    React.useEffect(()=> init(), [init, order]);
 
     const refreshChats = () => refreshChatsMutation.mutate();
 
     return (
-        <ChatContext.Provider value={{ ...state, refreshChats, makeCurrent, send, typing, current }}>{ children }</ChatContext.Provider>
+        <ChatContext.Provider value={{ ...state, refreshChats, makeCurrent, send, typing, current, order }}>{ children }</ChatContext.Provider>
     );
 }
 

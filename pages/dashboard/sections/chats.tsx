@@ -1,6 +1,10 @@
 import React from "react";
+import { ChatContext, ChatContextType } from "../providers/chats-provider";
+import Message from "../../conponents.tsx/message";
 
 const Chats = () =>{
+    const { order } = React.useContext(ChatContext) as ChatContextType;
+    
     return (
         <div className="chats-main-container">
             <div>
@@ -14,36 +18,7 @@ const Chats = () =>{
                 <h4 className="messages-title">Messages</h4>
                 <div className="messages-main">
                     <div className="messages-container">
-                        <div className="messages-item">
-                            <div className="messages-item-profile-container">
-                                <div className="messages-item-profile">N</div>
-                                <div className="messages-item-status-container">
-                                    <div className="messages-item-status"></div>
-                                </div>
-                            </div>
-                            <div className="messages-item-content">
-                                <div className="messages-item-name-container">
-                                    <span className="messages-item-name">Blessing James</span>
-                                    <span className="messages-item-time">12:14pm</span>
-                                </div>
-                                <span className="messages-item-message">Hoew are you doing ? </span>
-                            </div>
-                        </div>
-                        <div className="messages-item">
-                            <div className="messages-item-profile-container">
-                                <div className="messages-item-profile">N</div>
-                                <div className="messages-item-status-container">
-                                    <div className="messages-item-status"></div>
-                                </div>
-                            </div>
-                            <div className="messages-item-content">
-                                <div className="messages-item-name-container">
-                                    <span className="messages-item-name">Blessing James</span>
-                                    <span className="messages-item-time">12:14pm</span>
-                                </div>
-                                <span className="messages-item-message">Hoew are you doing ? </span>
-                            </div>
-                        </div>
+                       { order.map((item)=> <Message id={item} />) }
                     </div>
                 </div>
             </div>

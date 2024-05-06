@@ -1,33 +1,27 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChatView } from "../../conponents.tsx";
 import { ChatContext, ChatContextType } from "../providers/chats-provider";
-import { ChannelResponse, GroupResponse, FriendResponse } from "../../responses";
+import { GroupResponse, FriendResponse } from "../../responses";
 import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
 import { AppContext, AppContextType } from "../providers/app-provider";
 
-const isFriend = (current: ChannelResponse | GroupResponse | FriendResponse) => "acceptorID" in current;
-const isGroup = (current: ChannelResponse | GroupResponse | FriendResponse) => "name" in current;
-const isChannel = (current: ChannelResponse | GroupResponse | FriendResponse) => "friendsID" in current;
+const isFriend = (current: GroupResponse | FriendResponse) => "acceptorID" in current;
+const isGroup = (current: GroupResponse | FriendResponse) => "name" in current;
 
 const Chat = () =>{
     const { data } = React.useContext(AppContext) as AppContextType;
-    const { current, send } = React.useContext(ChatContext) as ChatContextType;
-    const { friends } = React.useContext(FriendsContext) as FriendsContextType;
+    const { current, send, chats } = React.useContext(ChatContext) as ChatContextType;
     const [message, setMessage] = useState("");
+    const [containerScrollState, setContainerScrollState] = useState<boolean>();
 
-    const initial = useMemo(()=>{
+    const initChats = current?.id ? chats[current.id] : [];
+
+    const initial = useMemo(()=>{                                                                                                                                                                           
         if(current){
-            if(isChannel(current)){
-                const friendsID = (current as ChannelResponse).friendsID;
-                const friend = friends.find((value)=>friendsID === value.id);
-                if(friend?.acceptorID === data?.id){
-                    return { name: friend?.requester.name, init: friend?.requester.name.charAt(0).toLocaleUpperCase() };
-                }
-                return { name: friend?.acceptor.name, init: friend?.acceptor.name.charAt(0).toLocaleUpperCase() };
-            }else if(isFriend(current)){
+            if(isFriend(current)){
                 const friend = (current as FriendResponse);
                 if(friend?.acceptorID === data?.id){
-                    return { name: friend?.requester.name, init: friend?.requester.name.charAt(0).toLocaleUpperCase() };
+                    return { name: friend?.requester.name, init: friend?.requester.name.charAt(0).toLocaleUpperCase()};
                 }
                 return { name: friend?.acceptor.name, init: friend?.acceptor.name.charAt(0).toLocaleUpperCase() };
             }else if(isGroup(current)){
@@ -39,13 +33,27 @@ const Chat = () =>{
         return { name: "No active Chat", init: "?" };
     }, [current]);
 
-    const initChats = () =>{
-        if(current && isChannel(current)){
-            return (current as ChannelResponse).chats;
-        }  
-        return []; 
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (container){
+            if(!containerScrollState){
+                container.scrollTop = container.scrollHeight;
+                setContainerScrollState(true);
+            }else{
+                const isAtBottom = container.scrollHeight - container.scrollTop === container.clientHeight;
+                if(containerScrollState && !isAtBottom){
+                    container.scrollTo({ top: container.scrollHeight,  behavior: "smooth" });
+                }
+            }
+        }
+    }, [initChats, containerRef.current]);
+
+    const isScrolling = () =>{
+        const container = containerRef.current!;
+        setContainerScrollState(container.scrollHeight - container.scrollTop === container.clientHeight);
     }
-    const chats = initChats();
 
     const textChange = (event:  React.ChangeEvent<HTMLInputElement>) =>{
         setMessage(event.target.value);
@@ -57,6 +65,7 @@ const Chat = () =>{
             setMessage("");
         }
     }
+
     return (
         <div className="chat-root-container">
             <div className="chat-header">
@@ -77,8 +86,8 @@ const Chat = () =>{
                 </div>
             </div>
             <div className="chat-main">
-                <div id="chats-container" className="chat-container">
-                    { chats.map((chat, index)=>{ return ( <ChatView chat={chat} key={index} /> ) })}
+                <div id="chats-container" ref={containerRef} onScroll={isScrolling} className="chat-container">
+                    { initChats?.map((chat, index)=>{ return ( <ChatView chat={chat} key={index} /> ) })}
                 </div>
             </div>
             <div className="chat-input-container">

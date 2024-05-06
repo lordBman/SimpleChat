@@ -73,7 +73,7 @@ class UserModel{
             for(let i = 0; i < actives.length; i++){
                 chats[actives[i].id] = await this.database.client.chat.findMany({ 
                     where: { ownerID: actives[i].id }, 
-                    orderBy: { created: "desc" },
+                    orderBy: { created: "asc" },
                     include: { sender: { select: { id: true, email: true, name: true } } }
                 });
             }

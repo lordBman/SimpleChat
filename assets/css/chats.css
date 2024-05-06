@@ -62,7 +62,7 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
     max-height: 100%;
 }
 

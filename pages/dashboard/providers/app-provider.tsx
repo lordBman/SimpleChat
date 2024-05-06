@@ -12,7 +12,7 @@ export type AppState = {
 };
 
 export type AppContextType = {
-    data?: User & { token: string } & { friends: FriendResponse[], chats: ChatsResponse }
+    data?: User & { token: string } & { members: MemberResponse[], friends: FriendResponse[], chats: ChatsResponse }
     loading: boolean;
     isError: boolean;
     message?: any;

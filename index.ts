@@ -4,7 +4,6 @@ import routes from "./routes";
 import jwt from "jsonwebtoken";
 import FriendModel from "./models/friends";
 import { ChatModel } from "./models";
-import { Chat, GroupChat } from "@prisma/client";
 
 const port = Number.parseInt(process.env.PORT || "5000");
 
@@ -40,40 +39,22 @@ io.on("connection", (socket: Socket)=>{
 
     const friendModel = new FriendModel();
     
-    friendModel.channels({ user: socket.handshake.auth.user }).then((channels)=>{
+    friendModel.all({ user: socket.handshake.auth.user }).then((channels)=>{
         if(channels){
             const init = channels.map((channel)=> channel.id);
             socket.join(init);
         }
     });
 
-    socket.on("chat", (data: { message: string, recieverID?: string, groupID?: number }, room) => {
+    socket.on("chat", (data: { message: string, friendID?: string, groupID?: string }) => {
         const chatModel = new ChatModel();
 
-        console.log(`current room: ${room}`);
+        //console.log(`current room: ${room}`);
 
         chatModel.create({ ...data, user: socket.handshake.auth.user}).then((chat)=>{
             console.log(JSON.stringify(chat));
 
-            if(room){
-                io.to(room).emit("chat", chat);
-            }else{
-                if(chat && "groupID" in chat){
-                    io.to((chat as GroupChat).groupID.toString()).emit("chat", chat);
-                }else if(chat && "channelID" in chat){
-                    const friendSocket = connections.get(data.recieverID!);
-                    if(friendSocket && !friendSocket.rooms.has((chat as Chat).channelID)){
-                        friendSocket.join((chat as Chat).channelID);
-                    }
-    
-                    if(!socket.rooms.has((chat as Chat).channelID)){
-                        socket.join((chat as Chat).channelID);
-                    }
-                    io.to((chat as Chat).channelID).emit("chat", chat);
-                }else{
-    
-                }
-            }
+            io.to((data.friendID || data.groupID)!).emit("chat", chat, (data.friendID || data.groupID));
         });
     });
 

@@ -1,4 +1,6 @@
 import React from "react";
+import { useMutation } from "react-query";
+import { axiosInstance } from "../utils";
 
 interface MenuItemProps{active?: string, isMiddle?: boolean, icon: string, label:string, id: string, onClicked?: CallableFunction }
 
@@ -15,8 +17,16 @@ const MenuItem: React.FC<MenuItemProps> = ({ isMiddle, icon, label, id, onClicke
 }
 
 const Menu: React.FC<{active: string, onClicked?: CallableFunction }> = ({ active, onClicked }) =>{
-
     const chosen = (id: string)=> onClicked && onClicked(id);
+    const logoutMutation = useMutation({
+        mutationKey:["data"],
+        mutationFn: ()=> axiosInstance.get("users/logout"),
+        onSuccess: ()=>{
+            window.location.reload();
+        }
+    });
+
+    const logout = () => logoutMutation.mutate();
 
     return (
         <div className="menu">
@@ -35,7 +45,7 @@ const Menu: React.FC<{active: string, onClicked?: CallableFunction }> = ({ activ
             </div>
             <div className="options">
                 <MenuItem id="settings" icon="et--gears" label="Settings" onClicked={chosen} active={active}/>
-                <MenuItem id="logout" icon="solar--exit-outline" label="Logout" onClicked={chosen} active={active}/>
+                <MenuItem id="logout" icon="solar--exit-outline" label="Logout" onClicked={logout} active={active}/>
                 <MenuItem id="info" icon="clarity--help-info-line" label="Info" onClicked={chosen} active={active}/>
             </div>
         </div>

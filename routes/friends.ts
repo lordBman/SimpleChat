@@ -1,8 +1,9 @@
 import express from "express";
 import { HttpStatusCode } from "axios";
 import FriendModel from "../models/friends";
+import { Server, Namespace } from 'socket.io';
 
-const friendRouter = express();
+export const friendRouter = express();
 
 friendRouter.get("/search", async(req, res)=>{
     if(req.query.query){
@@ -15,6 +16,19 @@ friendRouter.get("/search", async(req, res)=>{
     }
     return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
+
+export default (io: Server) => {
+    const chatNamespace: Namespace = io.of('/friends');
+  
+    chatNamespace.on('connection', (socket) => {
+      console.log('A client connected to the chat namespace');
+  
+      socket.on('chat message', (msg: string) => {
+        console.log('Message:', msg);
+        chatNamespace.emit('chat message', msg); // Broadcast message to all clients
+      });
+    });
+};
 
 friendRouter.post("/cancel", async(req, res)=>{
     if(req.body.id){
@@ -52,5 +66,3 @@ friendRouter.get("/", async(req, res)=>{
 
     return res.status(HttpStatusCode.Ok).send(response);
 });
-
-export default friendRouter;

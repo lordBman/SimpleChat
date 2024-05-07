@@ -2,8 +2,12 @@ import jetLogger from "jet-logger";
 import { Socket, Server } from "socket.io";
 import routes from "./routes";
 import jwt from "jsonwebtoken";
+import friendsSocket from "./sockets/friends";
+import chatsSocket from "./sockets/chats";
+
 import FriendModel from "./models/friends";
 import { ChatModel } from "./models";
+import { ExtendedError } from "socket.io/dist/namespace";
 
 const port = Number.parseInt(process.env.PORT || "5000");
 
@@ -11,7 +15,7 @@ const server = routes.listen(port, () =>{ jetLogger.info(`Express server started
 
 const io = new Server(server);
 
-io.use((socket, next)=>{
+const socketMiddleware = (socket: Socket, next: (err?: ExtendedError | undefined)=>void)=>{
     try{
         if(socket.handshake.auth.token){
             const token = socket.handshake.auth.token;
@@ -27,44 +31,7 @@ io.use((socket, next)=>{
     }catch(error){
         next(Error(error));
     }
-});
+}
 
-
-const connections = new Map<string, Socket>();
-
-io.on("connection", (socket: Socket)=>{
-    console.log(`user connected: ${socket.id}: ${JSON.stringify(socket.handshake.auth.user)}`);
-
-    connections.set(socket.handshake.auth.user.id, socket);
-
-    const friendModel = new FriendModel();
-    
-    friendModel.all({ user: socket.handshake.auth.user }).then((channels)=>{
-        if(channels){
-            const init = channels.map((channel)=> channel.id);
-            socket.join(init);
-        }
-    });
-
-    socket.on("chat", (data: { message: string, friendID?: string, groupID?: string }) => {
-        const chatModel = new ChatModel();
-
-        //console.log(`current room: ${room}`);
-
-        chatModel.create({ ...data, user: socket.handshake.auth.user}).then((chat)=>{
-            console.log(JSON.stringify(chat));
-
-            io.to((data.friendID || data.groupID)!).emit("chat", chat, (data.friendID || data.groupID));
-        });
-    });
-
-    socket.on("typing", (data: string, room)=>{
-        console.log(data);
-        socket.broadcast.to(room).emit("typing", data);
-    });
-
-    socket.on("close", () => {
-        connections.delete(socket.handshake.auth.user.id);
-        console.log(`user left`);
-    });
-});
+friendsSocket(io, socketMiddleware);
+chatsSocket(io, socketMiddleware);

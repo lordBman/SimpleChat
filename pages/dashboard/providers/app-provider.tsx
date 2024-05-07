@@ -7,7 +7,6 @@ import { ChatsResponse, FriendResponse, MemberResponse } from '../../responses';
 
 export type AppState = {
     data?: User & { token: string } & { members: MemberResponse[], friends: FriendResponse[], chats: ChatsResponse }
-    isError: boolean;
     message?: any;
 };
 
@@ -18,10 +17,10 @@ export type AppContextType = {
     message?: any;
 };
 
-export const AppContext = React.createContext<AppContextType | null>(null);
+export const AppContext = React.createContext<AppContextType | undefined>(undefined);
 
 const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const [state, setState] = useState<AppState>({ isError: false });
+    const [state, setState] = useState<AppState>();
 
     const initQuery = useQuery({
         queryKey:  ["data"],
@@ -35,7 +34,7 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     });
     
     return (
-        <AppContext.Provider value={{ ...state, loading: initQuery.isLoading }}>{ children }</AppContext.Provider>
+        <AppContext.Provider value={{ ...state, isError: initQuery.isError, loading: initQuery.isLoading }}>{ children }</AppContext.Provider>
     );
 }
 

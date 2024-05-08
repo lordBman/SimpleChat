@@ -4,6 +4,7 @@ import { useMutation } from 'react-query';
 import { axiosInstance } from '../../utils';
 import { AppContext, AppContextType } from './app-provider';
 import { FriendResponse } from '../../responses';
+import { io } from 'socket.io-client';
 
 interface FriendsState{
     loading: boolean,
@@ -25,6 +26,10 @@ export const FriendsContext = React.createContext<FriendsContextType | null>(nul
 const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { data } = React.useContext(AppContext) as AppContextType;
     const [friendsState, setFriendsState] = useState<FriendsState>({ loading: false, isError: false, friends: data?.friends!  });
+
+    const socket = React.useMemo(() => {
+        return io("/friends", { auth: { token: data?.token, access: "access-key" } });
+    }, [data?.id]);
 
     const refreshFriendsMutation = useMutation({
         mutationKey:  ["friend"],

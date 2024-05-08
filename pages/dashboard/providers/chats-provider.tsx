@@ -37,6 +37,10 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats! });
 
+    const socket = React.useMemo(() => {
+        return io("/chats", { auth: { token: data?.token, access: "access-key" } });
+    }, [data?.id]);
+
     const refreshChatsMutation = useMutation({
         mutationKey:  ["chats"],
         mutationFn: () => axiosInstance.get("/chats"),
@@ -80,12 +84,10 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     }
 
-    const socket = React.useMemo(() => {
-        return io("http://localhost:5000", { auth: { token: data?.token, access: "access-key" } });
-    }, [data?.id]);
-
     socket.on("chat", (data, room)=>{
         let reponse: ChatResponse[] = [data];
+
+        console.log(JSON.stringify(data));
 
         if(state.chats[room]){
             reponse = state.chats[room].concat();

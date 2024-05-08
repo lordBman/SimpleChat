@@ -18,18 +18,19 @@ export default (io: Server, middleware: (socket: Socket, err: any)=>void) => {
             if(channels){
                 const init = channels.map((channel)=> channel.id);
                 socket.join(init);
+                console.log(JSON.stringify(init));
             }
         });
     
-        socket.on("chat", (data: { message: string, friendID?: string, groupID?: string }) => {
+        socket.on("chat", (data: { message: string, friendID?: string, groupID?: string }, room) => {
             const chatModel = new ChatModel();
     
-            //console.log(`current room: ${room}`);
+            console.log(`current room: ${room}`);
     
             chatModel.create({ ...data, user: socket.handshake.auth.user}).then((chat)=>{
                 console.log(JSON.stringify(chat));
     
-                io.to((data.friendID || data.groupID)!).emit("chat", chat, (data.friendID || data.groupID));
+                chatsNamespace.to((data.friendID || data.groupID)!).emit("chat", chat, (data.friendID || data.groupID));
             });
         });
     

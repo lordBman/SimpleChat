@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 
-import { Chats, Friends, Groups, Info, Notifications, Settings, Profile } from "./sections";
+import Sections from "./sections";
 
-import Menu from "../conponents.tsx/menu";
-import { Chat } from "./main";
+import Menu from "../conponents/menu";
+import Main from "./main";
 import { QueryClient, QueryClientProvider } from "react-query";
 import ProviderWraper, { AppProvider } from "./providers";
 import { PuffLoader } from "react-spinners";
+import "../css/main.scss";
+import { BottomNavigation } from "../conponents";
 
 const Loading = () =>{
     return (
@@ -16,24 +18,13 @@ const Loading = () =>{
     );
 }
 
-const Dashboard = () =>{
-    const [active, setActive] = useState("chats");
-
-    const activeChange = (id: string) => setActive(id);
-
+const DeskTop = () =>{
     return (
         <div id="content" className="content">
-            <Menu active={active} onClicked={activeChange} />
-            <div className="sections">
-                { active === "profile" && <Profile /> }
-                { active === "chats" && <Chats /> }
-                { active === "notifications" && <Notifications /> }
-                { active === "groups" && <Groups /> }
-                { active === "friends" && <Friends /> }
-                { active === "settings" && <Settings /> }
-                { active === "info" && <Info /> }
-            </div>
-            <Chat />
+            <Menu />
+            <Sections />
+            <Main />
+            <BottomNavigation />
         </div>
     );
 }
@@ -45,7 +36,7 @@ const App = () =>{
         <QueryClientProvider client={queryClient}>
             <AppProvider>
                 <ProviderWraper Loading={Loading}>
-                    <Dashboard />
+                    <DeskTop />
                 </ProviderWraper>
             </AppProvider>
         </QueryClientProvider>

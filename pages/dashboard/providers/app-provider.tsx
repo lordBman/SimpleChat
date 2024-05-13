@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { User } from '@prisma/client';
+import { Socket, io } from "socket.io-client";
 import { axiosInstance } from '../../utils';
 import { ChatsResponse, FriendResponse, MemberResponse } from '../../responses';
 
@@ -15,6 +16,7 @@ export type AppContextType = {
     loading: boolean;
     isError: boolean;
     message?: any;
+    socket?: Socket;
 };
 
 export const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -32,9 +34,19 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             setState(init => { return { ...init, loading: false, isError: true, message: error}});
         },
     });
+
+    const socket = React.useMemo(() => {
+        if(state?.data){
+            const init = io("/", { auth: { token: state?.data.token, access: "access-key" } });
+            init.on("connected", ()=>{
+                console.log(init.connected);
+            });
+            return init;
+        }
+    }, [state?.data]);
     
     return (
-        <AppContext.Provider value={{ ...state, isError: initQuery.isError, loading: initQuery.isLoading }}>{ children }</AppContext.Provider>
+        <AppContext.Provider value={{ ...state, isError: initQuery.isError, loading: initQuery.isLoading, socket }}>{ children }</AppContext.Provider>
     );
 }
 

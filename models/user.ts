@@ -4,6 +4,7 @@ import Database from "../config/database";
 import jwt from "jsonwebtoken";
 import { Chat, Friend, Group, Member, User } from "@prisma/client";
 import { uuid } from "../utils";
+import FriendModel from "./friends";
 
 class UserModel{
     database: Database;
@@ -53,13 +54,7 @@ class UserModel{
 
     async get(user: User): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
         try{
-            const friends = await this.database.client.friend.findMany({
-                where: { OR: [{ requesterID: user.id }, { acceptorID: user.id }, ] }, 
-                include:{
-                    requester: { select: { id: true, email:  true, name: true } }, 
-                    acceptor: { select: { id: true, email:  true, name: true } },
-                }
-            });
+            const friends = await new FriendModel().all({ user });
 
             const members = await this.database.client.member.findMany({
                 where: { userID: user.id }, 
@@ -68,7 +63,7 @@ class UserModel{
                 } 
             });
 
-            const actives = [...friends.filter((friend)=> friend.accepted), ...members.filter((member)=> member.accepted ).map((member)=> member.group )];
+            const actives = [...friends?.filter((friend)=> friend.accepted)!, ...members.filter((member)=> member.accepted ).map((member)=> member.group )];
             let chats: { [key: string]: Chat[] } = {};
             for(let i = 0; i < actives.length; i++){
                 chats[actives[i].id] = await this.database.client.chat.findMany({ 
@@ -78,7 +73,7 @@ class UserModel{
                 });
             }
 
-            return { ...user, chats, friends, members };
+            return { ...user, chats, friends: friends!, members };
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }

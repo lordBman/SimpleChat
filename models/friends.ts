@@ -3,6 +3,7 @@ import Database from "../config/database";
 import { Friend, User } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
+import { joinChatRoom } from "../sockets/chats";
 
 interface Result{ user: User, friend?: Friend }
 
@@ -19,6 +20,9 @@ class FriendModel{
                 include: { acceptor:{ select: { id: true, email:  true, name: true, password: false } }, requester: { select: { id:true, email:  true, name: true, password: false } } }
                 
             });
+
+            friends.forEach((friend)=> joinChatRoom(friend));
+
             return friends;
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
@@ -32,6 +36,8 @@ class FriendModel{
                 data: { id, requesterID: data.user.id, acceptorID: data.userID },
                 include: { acceptor: { select: { id: true, email:  true, name: true, password: false } } }
             });
+            joinChatRoom(friend);
+
             return friend;
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
@@ -45,6 +51,8 @@ class FriendModel{
                 data: { accepted: true },
                 include: { requester: { select: { id: true, email:  true, name: true, password: false } } }
             });
+            joinChatRoom(friend);
+
             return friend;
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.Unauthorized, `${error}`, "session expired, try logging in");
@@ -56,6 +64,8 @@ class FriendModel{
             const friend = await this.database.client.friend.delete({
                 where: { id: data.id }
             });
+            joinChatRoom(friend);
+
             return friend;
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.Unauthorized, `${error}`, "session expired, try logging in");

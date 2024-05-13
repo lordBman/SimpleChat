@@ -7,8 +7,8 @@ let ctx = await esbuild.context({
         "./pages/scripts/signin.tsx"
     ],
     bundle: true,
-    minify: true,
     outdir: "./assets",
+    sourcemap: true,
     plugins: [ sassPlugin({ type: "style", cache: false }) ]
 });
 

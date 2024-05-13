@@ -10,13 +10,8 @@ export const dashboardRenderer = (res: Response) =>{
     const html = `
         <html lang="en">
             <head>
-                <link rel="stylesheet" href="/assets/css/main.css" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <link rel="stylesheet" href="/assets/css/icons.css" />
-                <link rel="stylesheet" href="/assets/css/friends.css" />
-                <link rel="stylesheet" href="/assets/css/profile.css" />
-                <link rel="stylesheet" href="/assets/css/chat.css" />
-                <link rel="stylesheet" href="/assets/css/chats.css" />
-                <link rel="stylesheet" href="/assets/css/loading.css" />
             </head>
             <body>
                 <main id="root">${root}</main>
@@ -33,9 +28,8 @@ export const signinRenderer = (res: Response) =>{
     const html = `
         <html lang="en">
             <head>
-                <link rel="stylesheet" href="/assets/css/signin.css" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <link rel="stylesheet" href="/assets/css/icons.css" />
-                <link rel="stylesheet" href="/assets/css/loading.css" />
             </head>
             <body>
                 <main id="root">${root}</main>

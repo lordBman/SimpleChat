@@ -1,56 +1,31 @@
-import { Server, Namespace, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import FriendModel from '../models/friends';
-import { SocketUtils } from './utils';
+import { joinChatRoom } from './chats';
+import { ConnectedSockets } from './utils';
 
-const connections = new Map<string, Socket>();
+export default (namespace: Namespace, socket: Socket) => {
+    socket.on('cancel', async(input: { friendID: string }, room: string) => {
+        const model = new FriendModel();
+        const response = await model.reject({ id: input.friendID });
 
-export default (io: Server, middleware: (socket: Socket, err: any)=>void) => {
-    const friendsNamespace: Namespace = io.of('/friends');
-    friendsNamespace.use(middleware);
-  
-    friendsNamespace.on('connection', (socket) => {
-        connections.set(socket.handshake.auth.user.id, socket);
-        console.log('A client connected to the friends namespace');
-        
-        socket.on('cancel', async(id: string) => {
-            const model = new FriendModel();
-            const response = await model.reject({ id });
+        ConnectedSockets.getInstance().send("cancel", [ response?.acceptorID!, response?.requesterID! ], response);
+    });
 
-            friendsNamespace.to(response?.id!).emit('cancel', response);
-        });
+    socket.on("accept", async(input: { friendID: string }, room: string)=>{
+        const model = new FriendModel();
+        const response = await model.accept({ id: input.friendID });
 
-        socket.on("accept", async(id: string)=>{
-            const model = new FriendModel();
-            const response = await model.accept({ id });
+        console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
 
-            if(SocketUtils.getInstance().isAlive(response?.requesterID!)){
-                SocketUtils.getInstance().get(response?.requesterID!)?.join(response?.id!);
-            }
+        joinChatRoom(response!);
+    
+        namespace.to(response?.id!).emit('accept', response);
+    });
+    
+    socket.on("request", async(input: { userID: string })=>{
+        const model = new FriendModel();
+        const response = await model.request({ user: socket.handshake.auth.user, userID: input.userID });
 
-            if(SocketUtils.getInstance().isAlive(response?.acceptorID!)){
-                SocketUtils.getInstance().get(response?.acceptorID!)?.join(response?.id!);
-            }
-        
-            friendsNamespace.emit('accept', response);
-        });
-        
-        socket.on("request", async(userID: string)=>{
-            const model = new FriendModel();
-            const response = await model.request({ user: socket.handshake.auth.user, userID });
-
-            if(connections.has(response?.requesterID!)){
-                connections.get(response?.requesterID!)?.join(response?.id!);
-            }
-
-            if(connections.has(response?.acceptorID!)){
-                connections.get(response?.acceptorID!)?.join(response?.id!);
-            }
-
-            friendsNamespace.to(response?.id!).emit("request", response)
-        });
-
-        socket.on("close", () => {
-            connections.delete(socket.handshake.auth.user.id);
-        });
+        ConnectedSockets.getInstance().send("cancel", [ response?.acceptorID!, response?.requesterID! ], response);
     });
 };

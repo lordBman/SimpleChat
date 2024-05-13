@@ -1,12 +1,27 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChatView } from "../../conponents.tsx";
+import { BackButton, ChatView } from "../../conponents/index.js";
 import { ChatContext, ChatContextType } from "../providers/chats-provider";
 import { GroupResponse, FriendResponse } from "../../responses";
-import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
 import { AppContext, AppContextType } from "../providers/app-provider";
+import "../../css/chat.scss";
 
 const isFriend = (current: GroupResponse | FriendResponse) => "acceptorID" in current;
 const isGroup = (current: GroupResponse | FriendResponse) => "name" in current;
+
+const length = (date: Date) =>{
+    const now = new Date();
+
+    if(date.getFullYear() === now.getFullYear()){
+        if(date.getMonth() === now.getMonth()){
+            if(date.getDate() === now.getDate()){
+                return "Today";
+            }else if(now.getDate() - date.getDate() === 1){
+                return "Yesterday";
+            }
+        }
+    }
+    return date.toDateString();
+}
 
 const Chat = () =>{
     const { data } = React.useContext(AppContext) as AppContextType;
@@ -14,7 +29,29 @@ const Chat = () =>{
     const [message, setMessage] = useState("");
     const [containerScrollState, setContainerScrollState] = useState<boolean>();
 
-    const initChats = current?.id ? chats[current.id] : [];
+    const initChats = useMemo(()=>{
+        const initChats = current?.id ? chats[current.id] : [];
+
+        const init = [];
+        let [date, index] = [ "", 0 ];
+        while(index < initChats.length){
+            const chat = initChats[index];
+
+            const initDate = length(new Date(chat.created.toString()));
+            if(date === initDate){
+                init.push(<ChatView chat={chat} key={index} />);
+                index += 1;
+            }else{
+                date = initDate;
+                init.push(
+                    <div style={{ marginTop: 10, color: "gray", alignSelf: "center" }} key={`${index}-init`}>
+                        <h2 style={{ fontSize: 16 }}>{initDate}</h2>
+                    </div>
+                );
+            }
+        }
+        return init;
+    }, [current, chats]);
 
     const initial = useMemo(()=>{                                                                                                                                                                           
         if(current){
@@ -70,13 +107,14 @@ const Chat = () =>{
         <div className="chat-root-container">
             <div className="chat-header">
                 <div className="chat-header-profile">
+                    <BackButton />
                     <div className="messages-item-profile-container">
                         { current && isGroup(current) && <div className="messages-item-profile">
                             <span className="heroicons--user-group"></span>
                         </div> }
                         { (!current || !isGroup(current)) && <div className="messages-item-profile">{initial.init}</div> }
                     </div>
-                    <div>{initial.name}</div>
+                    <div className="chat-header-profile-name">{initial.name}</div>
                     { current && <div style={{ border: "solid 3px #06D6A3", borderRadius:"50%" }}>
                         <div style={{ width:"2px", height:"2px",backgroundColor: "white", borderRadius:"50%"}}></div>
                     </div> }
@@ -86,9 +124,7 @@ const Chat = () =>{
                 </div>
             </div>
             <div className="chat-main">
-                <div id="chats-container" ref={containerRef} onScroll={isScrolling} className="chat-container">
-                    { initChats?.map((chat, index)=>{ return ( <ChatView chat={chat} key={index} /> ) })}
-                </div>
+                <div id="chats-container" ref={containerRef} onScroll={isScrolling} className="chat-container">{initChats}</div>
             </div>
             <div className="chat-input-container">
                 <input value={message} onChange={textChange} type="text"  placeholder="Enter  message ..." />

@@ -16,7 +16,7 @@ const RecievedChat: React.FC<ChatProps> = ({ chat }) =>{
             <div className="chat-container-content">
                 <div className="recieved-chat-name">{chat.sender.name}</div>
                 <div className="recieved-chat">{chat.message}</div>
-                <div className="recieved-chat-time">{formatTime(new Date(chat.created.toString()))}</div>
+                <div className="recieved-chat-time">{new Date(chat.created.toString()).toLocaleTimeString()}</div>
             </div>
         </div>
     );
@@ -30,7 +30,7 @@ const MyChat: React.FC<ChatProps> = ({ chat }) =>{
             <div className="chat-container-content">
                 <div className="my-chat-name">Me</div>
                 <div className="my-chat">{chat.message}</div>
-                <div className="my-chat-time">{formatTime(new Date(chat.created.toString()))}</div>
+                <div className="my-chat-time">{new Date(chat.created.toString()).toLocaleTimeString()}</div>
             </div>
             <div className="messages-item-profile-container">
                 <div className="messages-item-profile">{ data?.name.charAt(0).toUpperCase()}</div>

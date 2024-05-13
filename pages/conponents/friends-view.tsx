@@ -1,11 +1,12 @@
 import React, { useContext, useState } from "react";
 import { CircleLoading } from ".";
-import { axiosInstance } from "../utils";
 import { Friend, User } from "@prisma/client";
-import { useMutation } from "react-query";
 import { AppContext, AppContextType } from "../dashboard/providers/app-provider";
 import { FriendsContext, FriendsContextType } from "../dashboard/providers/friends-provider";
 import { ChatContext, ChatContextType } from "../dashboard/providers/chats-provider";
+import { useMutation } from "react-query";
+import { axiosInstance } from "../utils";
+import { FriendResponse } from "../responses";
 
 interface FriendResultViewProps{
     result: { user: User, friend?: Friend }
@@ -83,31 +84,18 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 }
 
 interface FriendViewProps{
-    friend: Friend & { acceptor?: User, requester?: User },
+    friend: FriendResponse,
 } 
 
 const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{
     const { data} = useContext(AppContext) as AppContextType;
-    const { refreshFriends } = useContext(FriendsContext) as FriendsContextType;
+    const { cancel, accept } = useContext(FriendsContext) as FriendsContextType;
     const { makeCurrent } = useContext(ChatContext) as ChatContextType;
 
-    const acceptMutation = useMutation({
-        mutationKey: ["accept_request"],
-        mutationFn: () => axiosInstance.post(`/friends/accept`, { id: friend.id }),
-        onSuccess: () =>refreshFriends(),
-        onError: (error) => alert(error),
-    });
-    const acceptRequest = () => acceptMutation.mutate();
-    
-    const cancelMutation = useMutation({
-        mutationKey: ["cancel_request"],
-        mutationFn: () => axiosInstance.post(`/friends/cancel`, { id: friend.id }),
-        onSuccess: () =>  refreshFriends(),
-        onError: (error) => alert(error),
-    });
-    const cancelRequest = () =>cancelMutation.mutate();
+    const acceptRequest = () => accept(friend.id);
+    const cancelRequest = () => cancel(friend.id);
 
-    let loading = acceptMutation.isLoading || cancelMutation.isLoading;
+    let loading = false;
     let requesting = !friend.accepted && friend.acceptorID === data?.id;
     let requested = !friend.accepted && friend.requesterID === data?.id;
 

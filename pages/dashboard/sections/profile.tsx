@@ -1,12 +1,13 @@
 import React, { useContext } from "react";
 import { AppContext, AppContextType } from "../providers/app-provider";
+import "../../css/profile.scss";
 
 const Profile = () =>{
     const { data } = useContext(AppContext) as AppContextType;
 
     return (
         <div className="profile-main-container">
-            <div className="profile-title-container">
+            <div className="profile-title-container section-title">
                 <h2 className="profile-title">Profile</h2>
                 <span className="circum--menu-kebab profile-title-menu"></span>
             </div>

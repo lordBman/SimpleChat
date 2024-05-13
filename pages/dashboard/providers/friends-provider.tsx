@@ -4,7 +4,6 @@ import { useMutation } from 'react-query';
 import { axiosInstance } from '../../utils';
 import { AppContext, AppContextType } from './app-provider';
 import { FriendResponse } from '../../responses';
-import { io } from 'socket.io-client';
 
 interface FriendsState{
     loading: boolean,
@@ -18,18 +17,56 @@ export type FriendsContextType = {
     isError: boolean,
     message?: any, 
     friends: FriendResponse[],
-    refreshFriends: CallableFunction
+    refreshFriends: CallableFunction,
+    request: (userID: string) =>void,
+    accept: (friendID: string) =>void,
+    cancel: (friendID: string) =>void
 }
 
 export const FriendsContext = React.createContext<FriendsContextType | null>(null);
 
 const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { data } = React.useContext(AppContext) as AppContextType;
+    const { data, socket } = React.useContext(AppContext) as AppContextType;
     const [friendsState, setFriendsState] = useState<FriendsState>({ loading: false, isError: false, friends: data?.friends!  });
 
-    const socket = React.useMemo(() => {
-        return io("/friends", { auth: { token: data?.token, access: "access-key" } });
-    }, [data?.id]);
+    if(socket){
+        socket.on("request", (response: FriendResponse) =>{
+            const init = [response, ...friendsState.friends]
+            setFriendsState(state => ({...state, friends: init }));
+        });
+    
+        socket.on("accept", (response: FriendResponse) =>{
+            console.log(JSON.stringify(`just recieved: ${response}`));
+            
+            const index = friendsState.friends.findIndex((value)=> response.id === value.id);
+            const init = [...friendsState.friends].with(index, response);
+    
+            setFriendsState(state => ({...state, friends: init }));
+        });
+    
+        socket.on("cancel", (response: FriendResponse) =>{
+            const index = friendsState.friends.findIndex((value)=> response.id === value.id);
+            const init = [...friendsState.friends];
+            init.splice(index, 1);
+    
+            setFriendsState(state => ({...state, friends: init }));
+        });
+    }
+
+    const request = (userID: string) =>{
+        if(socket)
+            socket.emit("request", { userID });
+    }
+
+    const accept = (friendID: string) =>{
+        if(socket)
+            socket.emit("accept", { friendID }, friendID);
+    }
+
+    const cancel = (friendID: string) =>{
+        if(socket)
+            socket.emit("cancel", { friendID }, friendID);
+    }
 
     const refreshFriendsMutation = useMutation({
         mutationKey:  ["friend"],
@@ -46,7 +83,7 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const refreshFriends = () => refreshFriendsMutation.mutate();
 
     return (
-        <FriendsContext.Provider value={{ ...friendsState, refreshFriends}}>{ children }</FriendsContext.Provider>
+        <FriendsContext.Provider value={{ ...friendsState, refreshFriends, accept, cancel, request }}>{ children }</FriendsContext.Provider>
     );
 }
 

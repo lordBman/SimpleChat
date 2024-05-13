@@ -1,6 +1,8 @@
 import React from "react";
 import { useMutation } from "react-query";
 import { axiosInstance } from "../utils";
+import "../css/menu.scss";
+import { MainContext, MainContextType } from "../dashboard/providers/main-provider";
 
 interface MenuItemProps{active?: string, isMiddle?: boolean, icon: string, label:string, id: string, onClicked?: CallableFunction }
 
@@ -16,11 +18,14 @@ const MenuItem: React.FC<MenuItemProps> = ({ isMiddle, icon, label, id, onClicke
     )
 }
 
-const Menu: React.FC<{active: string, onClicked?: CallableFunction }> = ({ active, onClicked }) =>{
-    const chosen = (id: string)=> onClicked && onClicked(id);
+const Menu = () =>{
+    const { section, setSection } = React.useContext(MainContext) as MainContextType;
+
+    const chosen = (id: string)=> setSection(id);
+    
     const logoutMutation = useMutation({
         mutationKey:["data"],
-        mutationFn: ()=> axiosInstance.get("users/logout"),
+        mutationFn: ()=> axiosInstance.get("users/log out"),
         onSuccess: ()=>{
             window.location.reload();
         }
@@ -37,16 +42,16 @@ const Menu: React.FC<{active: string, onClicked?: CallableFunction }> = ({ activ
                 </div>
             </div>
             <div className="options">
-                <MenuItem id="profile" isMiddle icon="guidance--user-1" label="Profile" onClicked={chosen} active={active}/>
-                <MenuItem id="chats" isMiddle icon="fluent--chat-20-regular" label="Chats" onClicked={chosen} active={active}/>
-                <MenuItem id="notifications" isMiddle icon="solar--bell-linear" label="Notifications" onClicked={chosen} active={active}/>
-                <MenuItem id="groups" isMiddle icon="heroicons--user-group" label="Groups" onClicked={chosen} active={active}/>
-                <MenuItem id="friends" isMiddle icon="system-uicons--contacts" label="Friends" onClicked={chosen} active={active}/>
+                <MenuItem id="profile" isMiddle icon="guidance--user-1" label="Profile" onClicked={chosen} active={section}/>
+                <MenuItem id="chats" isMiddle icon="fluent--chat-20-regular" label="Chats" onClicked={chosen} active={section}/>
+                <MenuItem id="notifications" isMiddle icon="solar--bell-linear" label="Notifications" onClicked={chosen} active={section}/>
+                <MenuItem id="groups" isMiddle icon="heroicons--user-group" label="Groups" onClicked={chosen} active={section}/>
+                <MenuItem id="friends" isMiddle icon="system-uicons--contacts" label="Friends" onClicked={chosen} active={section}/>
             </div>
             <div className="options">
-                <MenuItem id="settings" icon="et--gears" label="Settings" onClicked={chosen} active={active}/>
-                <MenuItem id="logout" icon="solar--exit-outline" label="Logout" onClicked={logout} active={active}/>
-                <MenuItem id="info" icon="clarity--help-info-line" label="Info" onClicked={chosen} active={active}/>
+                <MenuItem id="settings" icon="et--gears" label="Settings" onClicked={chosen} active={section}/>
+                <MenuItem id="logout" icon="solar--exit-outline" label="Logout" onClicked={logout} active={section}/>
+                <MenuItem id="info" icon="clarity--help-info-line" label="Info" onClicked={chosen} active={section}/>
             </div>
         </div>
     );

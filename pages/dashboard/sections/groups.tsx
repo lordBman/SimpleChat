@@ -29,9 +29,10 @@ const Groups = () =>{
 
     const createMutation = useMutation({
         mutationKey:  ["groups"],
-        mutationFn: (variables: string)=> axiosInstance.get(`/groups/search?query=${variables}`),
+        mutationFn: (name: string)=> axiosInstance.post(`/groups/create`, { name }),
         onSuccess: (data) =>{
             setResults(data.data);
+            close();
         },
         onError: (error) =>alert(error)
     });
@@ -50,6 +51,9 @@ const Groups = () =>{
     const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) =>{
         setCreateState(init => ({...init, name: event.currentTarget.value }));
     }
+
+    const open = () => setCreateState(init => ({...init, isOpen: true }));
+    const close = () => setCreateState(init => ({...init, isOpen: false, name: ""}));
 
     const memberViews = useMemo(()=>{
         const sortedMembers = members.sort((a, b)=>{
@@ -86,13 +90,18 @@ const Groups = () =>{
                     <span className="formkit--search"></span>
                     <input id="search-groups" onChange={onQueryChange} className="search-input" type="search" placeholder="search groups ..." />
                 </form>
-                <button style={{ border: "none", backgroundColor: "grey", color: "white", borderRadius: 5, height: "100%", aspectRatio: 1, fontSize: 20, fontWeight: 600 }}>+</button>
+                <button onClick={open} style={{ border: "none", backgroundColor: "grey", color: "white", borderRadius: 5, height: "100%", aspectRatio: 1, fontSize: 26 }}>
+                    <span className="fluent--channel-add-24-regular"></span>
+                </button>
             </div>
             { createState.isOpen && (
-                <form className="search-form" style={{ display: "flex", flexDirection: "row", width: "100%", gap: 8 }} onSubmit={onCreate}>
-                    <input id="search-groups" onChange={onQueryChange} className="group-create-input" placeholder="choose name" />
-                    <button type="submit" style={{ border: "none", backgroundColor: "grey", color: "white", borderRadius: 5, height: "100%", fontSize: 16, fontWeight: 400 }}>Creatte</button>
-                </form>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", padding: 10, backgroundColor: "white", borderRadius: 8, width: "100%", gap: 8 }}>
+                    <span className="mdi--cancel-circle" style={{ fontSize: 30, color: "grey" }} onClick={close}></span>
+                    <form style={{ display: "flex", flexDirection: "row", width: "100%", gap: 8 }} onSubmit={onCreate}>
+                        <input id="search-groups"  style={{ flex: 1, padding: 4,  }} onChange={onNameChange} className="group-create-input" placeholder="choose name" />
+                        <button type="submit" style={{ border: "none", backgroundColor: "grey", color: "white", borderRadius: 5, height: "100%", fontSize: 14, fontWeight: 400 }}>Create</button>
+                    </form>
+                </div>
             ) }
             { query.length <= 0 && <div id="members-list">{ memberViews }</div> }
             { searchMutation.isLoading && <div id="friends-search-loading">

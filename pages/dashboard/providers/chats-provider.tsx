@@ -24,6 +24,7 @@ export type ChatContextType = {
     refreshChats: CallableFunction;
     makeCurrent: CallableFunction;
     send: CallableFunction;
+    status: { message?: string, room?: string },
     typing: CallableFunction;
 }
 
@@ -35,7 +36,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { main, set } = React.useContext(MainContext) as MainContextType;    
 
     const [current, setCurrent] = useState<GroupResponse | FriendResponse>();
-
+    const [status, setStatus] = useState<{ room?:string, message?: string }>({});
     const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats! });
 
     if(socket){
@@ -56,8 +57,14 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data)}`);
         });
     
-        socket.on("typing", (data)=>{
-            
+        socket.on("typing", (message, room)=>{
+            if(room === status.room){
+                if(status.message !== message){
+                    setStatus({ message, room });
+                }                
+            }else if(room === current?.id){
+                setStatus({ message, room });
+            }
         });
     }
 
@@ -106,7 +113,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     }
 
     const typing = () =>{
-
+        socket?.emit("typing", , current?.id);
     }
 
     const init = React.useCallback(()=>{
@@ -121,7 +128,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const refreshChats = () => refreshChatsMutation.mutate();
 
     return (
-        <ChatContext.Provider value={{ ...state, refreshChats, makeCurrent, send, typing, current, order }}>{ children }</ChatContext.Provider>
+        <ChatContext.Provider value={{ ...state, status, refreshChats, makeCurrent, send, typing, current, order }}>{ children }</ChatContext.Provider>
     );
 }
 

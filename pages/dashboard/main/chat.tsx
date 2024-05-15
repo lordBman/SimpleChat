@@ -126,13 +126,19 @@ const Chat = () =>{
             <div className="chat-main">
                 <div id="chats-container" ref={containerRef} onScroll={isScrolling} className="chat-container">{initChats}</div>
             </div>
-            <div className="chat-input-container">
-                <input value={message} onChange={textChange} type="text"  placeholder="Enter  message ..." />
-                <span className="ri--attachment-line"></span>
-                <span className="mynaui--image"></span>
-                <button onClick={sendMessage}>
-                    <span className="mynaui--send"></span>
-                </button>
+            <div className="chat-input-root">
+                <div className="chat-status-container">
+                    <div className="chatr-status-typing"></div>
+                    <div className="chatr-status-reference"></div>
+                </div>
+                <div className="chat-input-container">
+                    <input value={message} onChange={textChange} type="text"  placeholder="Enter  message ..." />
+                    <span className="ri--attachment-line"></span>
+                    <span className="mynaui--image"></span>
+                    <button onClick={sendMessage}>
+                        <span className="mynaui--send"></span>
+                    </button>
+                </div>
             </div>
         </div>
     );

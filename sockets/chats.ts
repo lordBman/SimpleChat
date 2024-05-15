@@ -45,6 +45,6 @@ export default (namespace: Namespace, socket: Socket) => {
 
     socket.on("typing", (data: string, room)=>{
         console.log(data);
-        socket.broadcast.to(room).emit("typing", data);
+        socket.broadcast.to(room).emit("typing", {room, message:`${socket.handshake.auth.user.name} is typing...` });
     });
 }

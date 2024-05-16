@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
 import { AppContext, AppContextType } from './app-provider';
-import { axiosInstance } from '../../utils';
+import { TypingManager, axiosInstance } from '../../utils';
 import { ChatResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
 import { FriendsContext, FriendsContextType } from './friends-provider';
 import { MainContext, MainContextType, MainPage } from './main-provider';
@@ -26,6 +26,7 @@ export type ChatContextType = {
     send: CallableFunction;
     status: { message?: string, room?: string },
     typing: CallableFunction;
+    stoppedTyping: CallableFunction;
 }
 
 export const ChatContext = React.createContext<ChatContextType | null>(null);
@@ -33,7 +34,7 @@ export const ChatContext = React.createContext<ChatContextType | null>(null);
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { data, socket } = React.useContext(AppContext) as AppContextType;
     const { friends } = React.useContext(FriendsContext) as FriendsContextType;
-    const { main, set } = React.useContext(MainContext) as MainContextType;    
+    const { main, set } = React.useContext(MainContext) as MainContextType;
 
     const [current, setCurrent] = useState<GroupResponse | FriendResponse>();
     const [status, setStatus] = useState<{ room?:string, message?: string }>({});
@@ -95,6 +96,12 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }).map((init)=> init[0]);
     }, [state.chats]);
 
+    const typingManager = React.useMemo(()=>{
+        return new TypingManager(1000, ()=>{
+            socket?.emit("typing", true , current?.id);
+        });
+    }, [current])
+
     const makeCurrent = (response: GroupResponse | FriendResponse)=> {
         setCurrent(response);
         if(main !== MainPage.Chat){
@@ -112,8 +119,11 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }
     }
 
-    const typing = () =>{
-        socket?.emit("typing", , current?.id);
+    const typing = () => typingManager.run();
+
+    const stoppedTyping = () =>{
+        typingManager.stop();
+        socket?.emit("typing", false, current?.id);
     }
 
     const init = React.useCallback(()=>{
@@ -128,7 +138,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const refreshChats = () => refreshChatsMutation.mutate();
 
     return (
-        <ChatContext.Provider value={{ ...state, status, refreshChats, makeCurrent, send, typing, current, order }}>{ children }</ChatContext.Provider>
+        <ChatContext.Provider value={{ ...state, status, refreshChats, makeCurrent, send, typing, stoppedTyping, current, order }}>{ children }</ChatContext.Provider>
     );
 }
 

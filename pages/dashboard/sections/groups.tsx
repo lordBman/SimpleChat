@@ -49,7 +49,7 @@ const Groups = () =>{
     }
 
     const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) =>{
-        setCreateState(init => ({...init, name: event.currentTarget.value }));
+        setCreateState(init => ({...init, name: event.target.value }));
     }
 
     const open = () => setCreateState(init => ({...init, isOpen: true }));

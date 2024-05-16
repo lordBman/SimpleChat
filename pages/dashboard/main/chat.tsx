@@ -25,7 +25,7 @@ const length = (date: Date) =>{
 
 const Chat = () =>{
     const { data } = React.useContext(AppContext) as AppContextType;
-    const { current, send, chats } = React.useContext(ChatContext) as ChatContextType;
+    const { current, send, chats, typing, stoppedTyping } = React.useContext(ChatContext) as ChatContextType;
     const [message, setMessage] = useState("");
     const [containerScrollState, setContainerScrollState] = useState<boolean>();
 
@@ -93,6 +93,11 @@ const Chat = () =>{
     }
 
     const textChange = (event:  React.ChangeEvent<HTMLInputElement>) =>{
+        if(event.target.value){
+            typing();
+        }else{
+            stoppedTyping();
+        }
         setMessage(event.target.value);
     }
 

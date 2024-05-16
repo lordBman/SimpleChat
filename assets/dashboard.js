@@ -31576,6 +31576,34 @@
     }
     return `${time} ${formatDay(date)} ${date.getMonth()} ${date.getFullYear()}`;
   };
+  var TypingManager = class {
+    constructor(intervals, callback) {
+      this.run = () => {
+        if (!this.isRunning) {
+          this.isRunning = true;
+          this.callback();
+          this.timer = setTimeout(() => {
+            this.isRunning = false;
+          }, this.intervals);
+        }
+      };
+      this.restart = () => {
+        clearTimeout(this.timer);
+        this.isRunning = true;
+        this.callback();
+        this.timer = setTimeout(() => {
+          this.isRunning = false;
+        }, this.intervals);
+      };
+      this.stop = () => {
+        this.isRunning = false;
+        clearTimeout(this.timer);
+      };
+      this.callback = callback;
+      this.isRunning = false;
+      this.intervals = intervals;
+    }
+  };
 
   // pages/dashboard/providers/app-provider.tsx
   var AppContext = React5.createContext(void 0);
@@ -31687,6 +31715,7 @@
     const { friends } = React8.useContext(FriendsContext);
     const { main, set } = React8.useContext(MainContext);
     const [current, setCurrent] = (0, import_react8.useState)();
+    const [status, setStatus] = (0, import_react8.useState)({});
     const [state, setState] = (0, import_react8.useState)({ loading: false, isError: false, chats: data?.chats });
     if (socket) {
       socket.on("chat", (data2, room) => {
@@ -31703,7 +31732,14 @@
         });
         console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data2)}`);
       });
-      socket.on("typing", (data2) => {
+      socket.on("typing", (message, room) => {
+        if (room === status.room) {
+          if (status.message !== message) {
+            setStatus({ message, room });
+          }
+        } else if (room === current?.id) {
+          setStatus({ message, room });
+        }
       });
     }
     const refreshChatsMutation = useMutation({
@@ -31734,6 +31770,11 @@
         return -1;
       }).map((init2) => init2[0]);
     }, [state.chats]);
+    const typingManager = React8.useMemo(() => {
+      return new TypingManager(1e3, () => {
+        socket?.emit("typing", true, current?.id);
+      });
+    }, [current]);
     const makeCurrent = (response) => {
       setCurrent(response);
       if (main !== 1 /* Chat */) {
@@ -31748,7 +31789,10 @@
         }
       }
     };
-    const typing = () => {
+    const typing = () => typingManager.run();
+    const stoppedTyping = () => {
+      typingManager.stop();
+      socket?.emit("typing", false, current?.id);
     };
     const init = React8.useCallback(() => {
       if (!current && order.length > 0) {
@@ -31758,7 +31802,7 @@
     }, [order]);
     React8.useEffect(() => init(), [init, order]);
     const refreshChats = () => refreshChatsMutation.mutate();
-    return /* @__PURE__ */ React8.createElement(ChatContext.Provider, { value: { ...state, refreshChats, makeCurrent, send, typing, current, order } }, children);
+    return /* @__PURE__ */ React8.createElement(ChatContext.Provider, { value: { ...state, status, refreshChats, makeCurrent, send, typing, stoppedTyping, current, order } }, children);
   };
   var chats_provider_default = ChatProvider;
 
@@ -32531,7 +32575,7 @@
       setQuery(event.currentTarget.value);
     };
     const onNameChange = (event) => {
-      setCreateState((init) => ({ ...init, name: event.currentTarget.value }));
+      setCreateState((init) => ({ ...init, name: event.target.value }));
     };
     const open = () => setCreateState((init) => ({ ...init, isOpen: true }));
     const close = () => setCreateState((init) => ({ ...init, isOpen: false, name: "" }));
@@ -32950,7 +32994,7 @@
   };
   var Chat = () => {
     const { data } = import_react27.default.useContext(AppContext);
-    const { current, send, chats } = import_react27.default.useContext(ChatContext);
+    const { current, send, chats, typing, stoppedTyping } = import_react27.default.useContext(ChatContext);
     const [message, setMessage] = (0, import_react27.useState)("");
     const [containerScrollState, setContainerScrollState] = (0, import_react27.useState)();
     const initChats = (0, import_react27.useMemo)(() => {
@@ -33007,6 +33051,11 @@
       setContainerScrollState(container.scrollHeight - container.scrollTop === container.clientHeight);
     };
     const textChange = (event) => {
+      if (event.target.value) {
+        typing();
+      } else {
+        stoppedTyping();
+      }
       setMessage(event.target.value);
     };
     const sendMessage = () => {
@@ -33015,7 +33064,7 @@
         setMessage("");
       }
     };
-    return /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-root-container" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-header-profile" }, /* @__PURE__ */ import_react27.default.createElement(back_button_default, null), /* @__PURE__ */ import_react27.default.createElement("div", { className: "messages-item-profile-container" }, current && isGroup(current) && /* @__PURE__ */ import_react27.default.createElement("div", { className: "messages-item-profile" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "heroicons--user-group" })), (!current || !isGroup(current)) && /* @__PURE__ */ import_react27.default.createElement("div", { className: "messages-item-profile" }, initial.init)), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-header-profile-name" }, initial.name), current && /* @__PURE__ */ import_react27.default.createElement("div", { style: { border: "solid 3px #06D6A3", borderRadius: "50%" } }, /* @__PURE__ */ import_react27.default.createElement("div", { style: { width: "2px", height: "2px", backgroundColor: "white", borderRadius: "50%" } }))), /* @__PURE__ */ import_react27.default.createElement("div", null, /* @__PURE__ */ import_react27.default.createElement("span", { className: "circum--menu-kebab" }))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-main" }, /* @__PURE__ */ import_react27.default.createElement("div", { id: "chats-container", ref: containerRef, onScroll: isScrolling, className: "chat-container" }, initChats)), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-input-container" }, /* @__PURE__ */ import_react27.default.createElement("input", { value: message, onChange: textChange, type: "text", placeholder: "Enter  message ..." }), /* @__PURE__ */ import_react27.default.createElement("span", { className: "ri--attachment-line" }), /* @__PURE__ */ import_react27.default.createElement("span", { className: "mynaui--image" }), /* @__PURE__ */ import_react27.default.createElement("button", { onClick: sendMessage }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "mynaui--send" }))));
+    return /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-root-container" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-header" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-header-profile" }, /* @__PURE__ */ import_react27.default.createElement(back_button_default, null), /* @__PURE__ */ import_react27.default.createElement("div", { className: "messages-item-profile-container" }, current && isGroup(current) && /* @__PURE__ */ import_react27.default.createElement("div", { className: "messages-item-profile" }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "heroicons--user-group" })), (!current || !isGroup(current)) && /* @__PURE__ */ import_react27.default.createElement("div", { className: "messages-item-profile" }, initial.init)), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-header-profile-name" }, initial.name), current && /* @__PURE__ */ import_react27.default.createElement("div", { style: { border: "solid 3px #06D6A3", borderRadius: "50%" } }, /* @__PURE__ */ import_react27.default.createElement("div", { style: { width: "2px", height: "2px", backgroundColor: "white", borderRadius: "50%" } }))), /* @__PURE__ */ import_react27.default.createElement("div", null, /* @__PURE__ */ import_react27.default.createElement("span", { className: "circum--menu-kebab" }))), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-main" }, /* @__PURE__ */ import_react27.default.createElement("div", { id: "chats-container", ref: containerRef, onScroll: isScrolling, className: "chat-container" }, initChats)), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-input-root" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-status-container" }, /* @__PURE__ */ import_react27.default.createElement("div", { className: "chatr-status-typing" }), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chatr-status-reference" })), /* @__PURE__ */ import_react27.default.createElement("div", { className: "chat-input-container" }, /* @__PURE__ */ import_react27.default.createElement("input", { value: message, onChange: textChange, type: "text", placeholder: "Enter  message ..." }), /* @__PURE__ */ import_react27.default.createElement("span", { className: "ri--attachment-line" }), /* @__PURE__ */ import_react27.default.createElement("span", { className: "mynaui--image" }), /* @__PURE__ */ import_react27.default.createElement("button", { onClick: sendMessage }, /* @__PURE__ */ import_react27.default.createElement("span", { className: "mynaui--send" })))));
   };
   var chat_default2 = Chat;
 

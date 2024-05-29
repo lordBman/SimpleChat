@@ -8,7 +8,7 @@ export const axiosInstance =  axios.create({
 		'Content-Type': 'application/x-www-form-urlencoded' 
 	},
 	withCredentials: true, 
-	baseURL: "http://192.168.138.143:5000", });
+	baseURL: "/", });
 
 export const formatMonth = (date: Date)=>{
     switch(date.getMonth()){
@@ -54,8 +54,6 @@ export const formatDay = (date: Date) =>{
 
 export const formatTime = (date: Date) =>{
     const now = new Date();
-
-    
 
     const hours = date.getHours();
     const minutes = date.getMinutes();

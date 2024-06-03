@@ -3,6 +3,8 @@ import { DBManager, SeedResult } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
 import { uuid } from "../utils";
+import { Developer, Project } from "@prisma/client";
+import ProjectModel from "./projects";
 
 class DeveloperModel{
     database: Database;
@@ -28,7 +30,7 @@ class DeveloperModel{
 
     async signin(data: { email: string, password: string }): Promise<string | undefined>{
         try{
-            const init = await this.database.client.user.findFirst({ where: { email: data.email } });
+            const init = await this.database.client.developer.findFirst({ where: { email: data.email } });
             if(init){
                 if(data.password === init.password){
                     console.log(JSON.stringify(data.password));
@@ -43,9 +45,10 @@ class DeveloperModel{
         }
     }
 
-    async delete(user: User): Promise<string | undefined>{
+    async delete(developer: Developer): Promise<string | undefined>{
         try{
-            await this.database.client.user.delete({ where: { id: user.id } });
+            await this.database.client.user.delete({ where: { id: developer.id } });
+            await this.database.client.developer.delete({ where: { id: developer.id } });
 
             return "user was deleted successfully";
         }catch(error){
@@ -53,9 +56,9 @@ class DeveloperModel{
         }
     }
 
-    async get(user: User): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
+    async get(developer: Developer): Promise<Developer & { projects: Project [] } | undefined>{
         try{
-            const friends = await new FriendModel().all({ user });
+            const projects = await new ProjectModel().all({ developer });
 
             const members = await this.database.client.member.findMany({
                 where: { userID: user.id }, 

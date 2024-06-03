@@ -2,7 +2,10 @@
   "name": "simplechat",
   "module": "index.ts",
   "scripts": {
-    "dev": "bun ./esbuild.js & bun --watch run ./index.ts",
+    "dev": "compile & start",
+    "compile": "bun ./esbuild.js",
+    "start": "bun --watch run ./index.ts",
+    "migrate": "bun x prisma migrate dev --name init"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.7",
@@ -36,6 +39,6 @@
     "socket.io": "^4.7.4",
     "socket.io-client": "^4.7.5",
     "sqlite3": "^5.1.7",
-    "ts-loader": "^9.5.1",
+    "ts-loader": "^9.5.1"
   }
 }

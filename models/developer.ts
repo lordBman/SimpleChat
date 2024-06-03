@@ -1,22 +1,21 @@
 import { HttpStatusCode } from "axios";
-import { DBManager } from "../config";
+import { DBManager, SeedResult } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
-import { Chat, Friend, Group, Member, Project, User } from "@prisma/client";
 import { uuid } from "../utils";
-import FriendModel from "./friends";
 
-class UserModel{
+class DeveloperModel{
     database: Database;
     constructor(){
         this.database = DBManager.instance();
     }
 
-    async create(data: { project: Project, organization?: string, name: string, email: string, password: string }): Promise<string | undefined>{
+    async create(data: { name: string, email: string, password: string }): Promise<string | undefined>{
         try{
-            const id = uuid();
-            const init = await this.database.client.user.create({
-                data: { id, projectID: data.project.id, name: data.name, email: data.email, password: data.password },
+            const developer = await this.database.client.developer.create({ data: { id: uuid(), ...data }, select: { id: true, name: true, email: true } });
+
+            const init = await this.database.client.user.create({ 
+                data: { id: developer.id, organization: process.env.COMPANY_NAME!, projectID:  SeedResult.instance().projectID, ...data },
                 select: { id: true, name: true, email: true } });
 
             const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
@@ -27,9 +26,9 @@ class UserModel{
         }
     }
 
-    async signin(data: {  project: Project, organization?: string, email: string, password: string }): Promise<string | undefined>{
+    async signin(data: { email: string, password: string }): Promise<string | undefined>{
         try{
-            const init = await this.database.client.user.findFirst({ where: { projectID: data.project.id, organization: data.organization, email: data.email } });
+            const init = await this.database.client.user.findFirst({ where: { email: data.email } });
             if(init){
                 if(data.password === init.password){
                     console.log(JSON.stringify(data.password));
@@ -82,4 +81,4 @@ class UserModel{
     }
 }
 
-export default UserModel;
+export default DeveloperModel;

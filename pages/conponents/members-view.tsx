@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
-import { ChatContext, ChatContextType } from "../dashboard/providers/chats-provider";
-import { MembersContext, MembersContextType } from "../dashboard/providers/members-provider";
+import { ChatContext, ChatContextType } from "../chat/providers/chats-provider";
+import { MembersContext, MembersContextType } from "../chat/providers/members-provider";
 import { GroupResponse, MemberResponse } from "../responses";
 
 export interface MemberViewProps{

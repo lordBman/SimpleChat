@@ -1,5 +1,5 @@
 import React from "react";
-import "../css/mobile-header.scss";
+import "../css/chats/mobile-header.scss";
 
 const MobileHeader = () =>{
     return (

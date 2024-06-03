@@ -8,7 +8,7 @@ export const axiosInstance =  axios.create({
 		'Content-Type': 'application/x-www-form-urlencoded' 
 	},
 	withCredentials: true, 
-	baseURL: "/", });
+	baseURL: "/api", });
 
 export const formatMonth = (date: Date)=>{
     switch(date.getMonth()){

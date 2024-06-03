@@ -1,6 +1,6 @@
 import React from "react"
-import "../css/bottom-navigation.scss";      
-import { MainContext, MainContextType } from "../dashboard/providers/main-provider";
+import "../css/chats/bottom-navigation.scss";      
+import { MainContext, MainContextType } from "../chat/providers/main-provider";
 
 interface BottomNavigationItemProps{active?: string, icon: string, label:string, id: string, onClicked?: CallableFunction }
 

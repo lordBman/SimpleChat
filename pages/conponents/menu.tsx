@@ -1,8 +1,8 @@
 import React from "react";
 import { useMutation } from "react-query";
 import { axiosInstance } from "../utils";
-import "../css/menu.scss";
-import { MainContext, MainContextType } from "../dashboard/providers/main-provider";
+import "../css/chats/menu.scss";
+import { MainContext, MainContextType } from "../chat/providers/main-provider";
 
 interface MenuItemProps{active?: string, isMiddle?: boolean, icon: string, label:string, id: string, onClicked?: CallableFunction }
 

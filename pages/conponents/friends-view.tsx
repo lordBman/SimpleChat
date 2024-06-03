@@ -1,9 +1,9 @@
 import React, { useContext, useState } from "react";
 import { CircleLoading } from ".";
 import { Friend, User } from "@prisma/client";
-import { AppContext, AppContextType } from "../dashboard/providers/app-provider";
-import { FriendsContext, FriendsContextType } from "../dashboard/providers/friends-provider";
-import { ChatContext, ChatContextType } from "../dashboard/providers/chats-provider";
+import { AppContext, AppContextType } from "../chat/providers/app-provider";
+import { FriendsContext, FriendsContextType } from "../chat/providers/friends-provider";
+import { ChatContext, ChatContextType } from "../chat/providers/chats-provider";
 import { useMutation } from "react-query";
 import { axiosInstance } from "../utils";
 import { FriendResponse } from "../responses";

@@ -4,13 +4,21 @@ import jetLogger from "jet-logger";
 import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import { UserModel } from "../models";
+import AccessKeyModel from "../models/access-keys";
 
-export const APIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
-    if(req.cookies.token){
+export const UserAPIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
+    if(req.cookies.token && req.cookies.key){
         try{
             req.body.user = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).user;
-
-            return next();
+    
+            const accessKey = await new AccessKeyModel().get(req.cookies.key);
+            if(accessKey?.enabled){            
+                req.body.project = accessKey.project;
+    
+                return next();
+            }else{
+                return res.status(HttpStatusCode.Unauthorized).send({message: "API Access key found but has been deactivated" });
+            }
         }catch(error){
             jetLogger.err(error);
             if(error instanceof jwt.TokenExpiredError){
@@ -51,7 +59,7 @@ userRouter.post("/login", async(req, res) =>{
     return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
-userRouter.get("/", APIAuthenication, async(req, res) =>{
+userRouter.get("/", UserAPIAuthenication, async(req, res) =>{
     const model = new UserModel();
     const response = await model.get(req.body.user);
     if(response){
@@ -63,6 +71,7 @@ userRouter.get("/", APIAuthenication, async(req, res) =>{
 userRouter.get("/logout", async(req, res) =>{
     if(req.cookies.token){
         res.cookie(`token`, '');
+        res.cookie(`key`, '');
         return res.status(HttpStatusCode.Accepted).send({ message: "you have logged out successfully" });
     }else{
         return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});

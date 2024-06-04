@@ -18,7 +18,7 @@ class ProjectModel{
 
             return projects;
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while loading project list");
         }
     }
 }

@@ -2,15 +2,12 @@ import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
-import { Chat, Friend, Group, Member, Project, User } from "@prisma/client";
+import { Chat, Friend, Member, Project, User } from "@prisma/client";
 import { uuid } from "../utils";
 import FriendModel from "./friends";
 
 class UserModel{
-    database: Database;
-    constructor(){
-        this.database = DBManager.instance();
-    }
+    database: Database = DBManager.instance();
 
     async create(data: { project: Project, organization?: string, name: string, email: string, password: string }): Promise<string | undefined>{
         try{
@@ -54,12 +51,24 @@ class UserModel{
         }
     }
 
-    async get(user: User): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
+    async count(data: { project: Project, organization?: string }): Promise<number | undefined>{
         try{
-            const friends = await new FriendModel().all({ user });
+            const init = await this.database.client.user.count({
+                where: { projectID: data.project.id, organization: data.organization }
+            });
+
+            return init!;
+        }catch(error){
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
+        }
+    }
+
+    async get(data: { project: Project, organization?: string, user: User}): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
+        try{
+            const friends = await new FriendModel().all({project: data.project, user: data.user, organization: data.organization });
 
             const members = await this.database.client.member.findMany({
-                where: { userID: user.id }, 
+                where: { userID: data.user.id }, 
                 include:{
                     group: { include: { creator: { select: { id: true, email: true, name: true } } } },
                 } 
@@ -75,7 +84,7 @@ class UserModel{
                 });
             }
 
-            return { ...user, chats, friends: friends!, members };
+            return { ...data.user, chats, friends: friends!, members };
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }

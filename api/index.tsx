@@ -7,6 +7,7 @@ const api = express.Router();
 
 api.use("/chats", APIAuthenication, chatRouter);
 api.use("/friends", APIAuthenication, friendRouter);
+
 api.use("/users", userRouter);
 
 export default api;

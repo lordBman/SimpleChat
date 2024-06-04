@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { uuid } from "../utils";
 import { Developer, Project } from "@prisma/client";
 import ProjectModel from "./projects";
+import { UserModel } from ".";
 
 class DeveloperModel{
     database: Database;
@@ -60,24 +61,15 @@ class DeveloperModel{
         try{
             const projects = await new ProjectModel().all({ developer });
 
-            const members = await this.database.client.member.findMany({
-                where: { userID: user.id }, 
-                include:{
-                    group: { include: { creator: { select: { id: true, email: true, name: true } } } },
-                } 
-            });
+            const init: Array<Project & { userCount: number }> = [];
+            for(let index = 0; index < projects?.length!; index++){
+                const project = projects![index];
 
-            const actives = [...friends?.filter((friend)=> friend.accepted)!, ...members.filter((member)=> member.accepted ).map((member)=> member.group )];
-            let chats: { [key: string]: Chat[] } = {};
-            for(let i = 0; i < actives.length; i++){
-                chats[actives[i].id] = await this.database.client.chat.findMany({ 
-                    where: { ownerID: actives[i].id }, 
-                    orderBy: { created: "asc" },
-                    include: { sender: { select: { id: true, email: true, name: true } } }
-                });
+                const userCount = await new UserModel().count({ project });
+                init.push({ ...project, userCount: userCount! });
             }
 
-            return { ...user, chats, friends: friends!, members };
+            return { ...developer, projects: init };
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }

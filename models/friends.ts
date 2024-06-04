@@ -72,9 +72,9 @@ class FriendModel{
         }
     }
 
-    async find(data: { user: User, query: string }): Promise<Result[] | undefined>{
+    async find(data: { project: Project, organization?: string, user: User, query: string }): Promise<Result[] | undefined>{
         try{
-            const users = (await this.database.client.user.findMany({ where: { NOT: { id: data.user.id } } })).filter((user)=>{
+            const users = (await this.database.client.user.findMany({ where: { projectID: data.project.id, organization: data.organization, NOT: { id: data.user.id } } })).filter((user)=>{
                 return user.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             });
 
@@ -82,7 +82,8 @@ class FriendModel{
             for(let i = 0; i < users.length; i++ ){
                 const init = await this.database.client.friend.findFirst({ 
                     where: {
-                       OR:[ { acceptorID: data.user.id, requesterID: users[i].id }, { requesterID: data.user.id, acceptorID: users[i].id } ] 
+                        projectID: data.project.id, organization: data.organization,
+                        OR:[ { acceptorID: data.user.id, requesterID: users[i].id }, { requesterID: data.user.id, acceptorID: users[i].id } ] 
                     },
                     include: { requester: { select: { id: true, email:  true, name: true, password: false } } }
                 });

@@ -94,7 +94,7 @@ export const errorRenderer = (res: Response) =>{
     const html = `
         <html lang="en">
             <head>
-                <title>Simple Chat | Documentation</title>
+                <title>Simple Chat | Error</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <link rel="stylesheet" href="/assets/css/icons.css" />
                 <link rel="stylesheet" href="/assets/dist/error.css" />

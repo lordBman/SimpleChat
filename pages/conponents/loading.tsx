@@ -19,4 +19,13 @@ const CircleLoading: React.FC<CircleLoadingProps> = (props: CircleLoadingProps) 
     );
 }
 
+export const Loading = () =>{
+    return (
+        <div style={{ display:"flex", width: "100dvw", height: "100dvh", backgroundColor: "white", alignItems: "center", justifyContent: "center" }}>
+            <PuffLoader color="#36d7b7" />
+        </div>
+    );
+}
+
+
 export default CircleLoading;

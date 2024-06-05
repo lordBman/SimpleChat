@@ -63,7 +63,7 @@ export async function seed() {
 
     SeedResult.set({ projectID: project.id });
     
-    jetLogger.info(`${process.env.PROJECT_NAME} all set`);
+    jetLogger.info(`${process.env.PROJECT_NAME} all set Project ID: ${project.id} - Access Key: ${accessKey.key}`);
 }
 
 export { DBManager };

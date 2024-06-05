@@ -1,8 +1,32 @@
+import { useMutation } from "react-query";
+import { axiosInstance } from "./utils";
+
 const Signin = () =>{
+
+    const registerMutation = useMutation({
+        mutationKey: ["user"],
+        mutationFn: ()=> axiosInstance.post("/auth"),
+    });
+
+    const loginMutation = useMutation({
+        mutationKey: ["user"],
+        mutationFn: ()=> axiosInstance.post("/auth/login"),
+    });
+
+    const register = (event: React.FormEvent<HTMLFormElement>)=>{
+        event.preventDefault();
+
+        registerMutation.mutate();
+    }
+
+    const login = (event: React.FormEvent<HTMLFormElement>)=>{
+        event.preventDefault();
+    }
+
     return (
         <div>
             <div>
-                <form method="POST" action="/users">
+                <form method="POST" onSubmit={register} action="/auth">
                     <label htmlFor="name">Name:</label>
                     <input id="name"  name="name" type="text" placeholder="Name" />
 
@@ -17,7 +41,7 @@ const Signin = () =>{
             </div>
 
             <div>
-                <form method="POST" action="/users/login">
+                <form method="POST" onSubmit={login} action="/auth/login">
                     <label htmlFor="email">Email:</label>
                     <input id="email"  name="email" type="email" placeholder="Enter email address" />
 

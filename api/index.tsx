@@ -8,13 +8,14 @@ import jetLogger from "jet-logger";
 import AccessKeyModel from "../models/access-keys";
 import authRouter from "./auth";
 import developerRouter from "./developer";
+import accessKeyRouter from "./access-keys";
 
 export const UserAPIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
-    if(req.cookies.token && (req.cookies.key || req.query.key)){
+    if(req.cookies.token && (req.body.key || req.query.key)){
         try{
             req.body.user = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).user;
     
-            const accessKey = await new AccessKeyModel().get(req.cookies.key || req.query.key);
+            const accessKey = await new AccessKeyModel().get(req.body.key || req.query.key);
             if(accessKey?.enabled){            
                 req.body.project = accessKey.project;
     
@@ -59,6 +60,7 @@ api.use("/friends", UserAPIAuthenication, friendRouter);
 api.use("/users", UserAPIAuthenication, userRouter);
 
 api.use("/developer", DeveloperAPIAuthenication, developerRouter);
+api.use("/access-key", DeveloperAPIAuthenication, accessKeyRouter);
 
 api.use("/auth", authRouter);
 

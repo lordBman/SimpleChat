@@ -8,7 +8,8 @@ let ctx = await esbuild.context({
         "./pages/client-entries/signin.tsx",
         "./pages/client-entries/chat.tsx",
         "./pages/client-entries/docs.tsx",
-        "./pages/client-entries/homepage.tsx"
+        "./pages/client-entries/homepage.tsx",
+        "./pages/client-entries/error.tsx"
     ],
     bundle: true,
     outdir: "./assets/dist",

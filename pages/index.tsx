@@ -88,6 +88,26 @@ export const dashboardRenderer = (res: Response) =>{
     res.status(200).contentType("text/html").send(Buffer.from(html));
 }
 
+export const errorRenderer = (res: Response) =>{
+    const root = ReactDOMServer.renderToString(<Docs />);
+
+    const html = `
+        <html lang="en">
+            <head>
+                <title>Simple Chat | Documentation</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <link rel="stylesheet" href="/assets/css/icons.css" />
+                <link rel="stylesheet" href="/assets/dist/error.css" />
+            </head>
+            <body>
+                <main id="root">${root}</main>
+                <script src="/assets/dist/error.js"></script>
+            </body>
+        </html>
+    `;
+    res.status(200).contentType("text/html").send(Buffer.from(html));
+}
+
 export const docsRenderer = (res: Response) =>{
     const root = ReactDOMServer.renderToString(<Docs />);
 
@@ -111,8 +131,11 @@ export const docsRenderer = (res: Response) =>{
 const secureRoute = async (req: Request, res: Response, next: NextFunction) => {
     if(req.cookies.token){
         try{
-            req.body.user = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).user;
-            return next();
+            req.body.developer = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).developer;
+            if(req.body.developer){
+                return next();
+            }
+            return errorRenderer(res);
         }catch(error){
             jetLogger.err(error);
         }

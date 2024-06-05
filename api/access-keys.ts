@@ -3,11 +3,11 @@ import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import DeveloperModel from "../models/developer";
 
-const developerRouter = express.Router();
+const accessKeyRouter = express.Router();
 
-developerRouter.get("/", async(req, res) =>{
+accessKeyRouter.get("/", async(req, res) =>{
     const model = new DeveloperModel();
-    const response = await model.get(req.body.developer);
+    const response = await model.get(req.body.user);
     if(response){
         return res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
     }

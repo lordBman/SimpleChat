@@ -65,7 +65,7 @@ class UserModel{
 
     async get(data: { project: Project, organization?: string, user: User}): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
         try{
-            const friends = await new FriendModel().all({project: data.project, user: data.user, organization: data.organization });
+            const friends = await new FriendModel().all({ ...data });
 
             const members = await this.database.client.member.findMany({
                 where: { userID: data.user.id }, 

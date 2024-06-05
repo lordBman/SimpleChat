@@ -17,11 +17,11 @@ class DeveloperModel{
         try{
             const developer = await this.database.client.developer.create({ data: { id: uuid(), ...data }, select: { id: true, name: true, email: true } });
 
-            const init = await this.database.client.user.create({ 
+            const user = await this.database.client.user.create({ 
                 data: { id: developer.id, organization: process.env.COMPANY_NAME!, projectID:  SeedResult.instance().projectID, ...data },
                 select: { id: true, name: true, email: true } });
 
-            const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+            const token = jwt.sign({ developer, user }, process.env.SECRET || "test", { expiresIn: "7 days" } );
 
             return token;
         }catch(error){
@@ -35,7 +35,7 @@ class DeveloperModel{
             if(init){
                 if(data.password === init.password){
                     console.log(JSON.stringify(data.password));
-                    const token = jwt.sign({ user: { ...init, password: undefined }}, process.env.SECRET || "test", { expiresIn: "7 days" } );
+                    const token = jwt.sign({ developer: { ...init, password: undefined }, user: { ...init, password: undefined } }, process.env.SECRET || "test", { expiresIn: "7 days" } );
                     return token;
                 }
                 this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");

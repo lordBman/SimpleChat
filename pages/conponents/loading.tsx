@@ -1,4 +1,5 @@
 import React, { CSSProperties } from "react";
+import { PuffLoader } from "react-spinners";
 
 export interface CircleLoadingProps{
     size?: number | string,

@@ -1,20 +1,10 @@
 import Sections from "./sections";
 
-import Menu from "../conponents/menu";
 import Main from "./main";
 import { QueryClient, QueryClientProvider } from "react-query";
 import ProviderWraper, { AppProvider } from "./providers";
-import { PuffLoader } from "react-spinners";
 import "../css/chats/main.scss";
-import { BottomNavigation } from "../conponents";
-
-const Loading = () =>{
-    return (
-        <div style={{ display:"flex", width: "100dvw", height: "100dvh", backgroundColor: "white", alignItems: "center", justifyContent: "center" }}>
-            <PuffLoader color="#36d7b7" />
-        </div>
-    );
-}
+import { BottomNavigation, Menu, Loading } from "../conponents";
 
 const Chat = () =>{
     const queryClient = new QueryClient();

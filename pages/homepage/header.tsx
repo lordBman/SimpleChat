@@ -76,7 +76,7 @@ const Header = (props:{active?: string}) =>{
                 <a href="/docs">Docs</a>
                 <a className={active === "contacts" ? "active" : ""} onClick={scrollToContacts}>Contacts</a>
             </div>
-            <a href="#sigin" className="options-signin">Sign In</a>
+            <a href="/signin" className="options-signin">Sign In</a>
         </header>
     );
 }

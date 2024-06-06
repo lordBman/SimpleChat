@@ -38,7 +38,7 @@ authRouter.post("/user", async(req, res) =>{
         const accessKey = await new AccessKeyModel().get(req.body.key);
         if(accessKey){
             if(accessKey.enabled){
-                req.body.key.project = accessKey.project;
+                req.body.project = accessKey.project;
     
                 const model = new UserModel();
                 const user = await model.create(req.body);

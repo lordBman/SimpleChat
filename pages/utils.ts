@@ -1,5 +1,9 @@
 import axios from "axios";
 
+export interface LooseObject {
+    [key: string]: any
+}
+
 export const axiosInstance =  axios.create({
 	headers: { 
 		'Access-Control-Allow-Origin': '*',
@@ -129,4 +133,19 @@ export class TypingManager{
         this.isRunning = false;
         clearTimeout(this.timer);
     }
+}
+
+export const extract = (form: HTMLFormElement): LooseObject =>{
+    const formData = new FormData(form);
+
+    // Create an empty object to store the key-value pairs
+    let obj: LooseObject = {};
+
+    // Loop through the entries of the FormData object
+    formData.forEach((value, key) => {
+        // Assign each value to the corresponding key in the object
+        obj[key] = value.toString();
+    });
+
+    return obj;
 }

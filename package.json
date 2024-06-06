@@ -2,7 +2,7 @@
   "name": "simplechat",
   "module": "index.ts",
   "scripts": {
-    "dev": "compile && start",
+    "dev": "bun compile & bun start",
     "compile": "bun ./esbuild.js",
     "start": "bun --watch run ./index.ts",
     "migrate": "bun x prisma migrate dev --name init"

@@ -15,7 +15,7 @@ const Friends = () =>{
 
     const searchMutation = useMutation({
         mutationKey:  ["friends"],
-        mutationFn: (variables: string)=> axiosInstance.get(`/friends/search?query=${variables}`),
+        mutationFn: (variables: string)=> axiosInstance.get(`/friends/search?query=${variables}&key=b791fa6f9ff96a4ced89de287456ad5baf3a`),
         onSuccess: (data) =>{
             setResults(data.data);
         },

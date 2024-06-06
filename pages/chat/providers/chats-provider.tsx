@@ -71,7 +71,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const refreshChatsMutation = useMutation({
         mutationKey:  ["chats"],
-        mutationFn: () => axiosInstance.get("/chats"),
+        mutationFn: () => axiosInstance.get("/chats?key=b791fa6f9ff96a4ced89de287456ad5baf3a"),
         onMutate:()=> setState(init => { return { ...init, loading: true, isError: false, messages: "refreshing chats list"}}),
         onSuccess(response) {
             setState(init => {

@@ -21,7 +21,7 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 
     const requestMutation = useMutation({
         mutationKey : ["friend_request"],
-        mutationFn: () => axiosInstance.post(`/friends`, { userID: state.user.id }),
+        mutationFn: () => axiosInstance.post(`/friends?key=b791fa6f9ff96a4ced89de287456ad5baf3a`, { userID: state.user.id }),
         onSuccess: (data) => {
             refreshFriends();
             setState(init => { return {...init, friend: data.data } });
@@ -32,7 +32,7 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 
     const acceptMutation = useMutation({
         mutationKey: ["accept_request"],
-        mutationFn: () => axiosInstance.post(`/friends/accept`, { id: state.friend?.id }),
+        mutationFn: () => axiosInstance.post(`/friends/accept?key=b791fa6f9ff96a4ced89de287456ad5baf3a`, { id: state.friend?.id }),
         onSuccess: (data) =>{
             refreshFriends();
             setState(init => { return {...init, friend: data.data } });
@@ -43,7 +43,7 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
     
     const cancelMutation = useMutation({
         mutationKey: ["cancel_request"],
-        mutationFn: () => axiosInstance.post(`/friends/cancel`, { id: state.friend?.id }),
+        mutationFn: () => axiosInstance.post(`/friends/cancel?key=b791fa6f9ff96a4ced89de287456ad5baf3a`, { id: state.friend?.id }),
         onSuccess: (data) => {
             refreshFriends();
             setState(init => { return {...init, friend: undefined } });

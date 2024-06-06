@@ -101,9 +101,9 @@ model Friend{
     organization    String?
 
     projectID       Int
-    project         Project            @relation(fields: [projectID], references: [id])
+    project         Project        @relation(fields: [projectID], references: [id])
 
-    @@unique([requesterID, acceptorID])
+    @@unique([requesterID, acceptorID, projectID])
 }
 
 model Group {

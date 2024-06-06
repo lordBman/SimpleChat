@@ -15,14 +15,14 @@ const Signin = () =>{
 
     const registerMutation = useMutation({
         mutationKey: ["user"],
-        mutationFn: (data: {name: string, email: string, password: string })=> axiosInstance.post("/auth/user", { ...data, key: "b791fa6f9ff96a4ced89de287456ad5baf3a"}),
+        mutationFn: (data: {name: string, email: string, password: string })=> axiosInstance.post("/auth", data),
         onSuccess: done,
         onError: (error)=> setError(error)
     });
 
     const loginMutation = useMutation({
         mutationKey: ["user"],
-        mutationFn: (data: { email: string, password: string })=> axiosInstance.post("/auth/user/login", { ...data, key: "b791fa6f9ff96a4ced89de287456ad5baf3a"}),
+        mutationFn: (data: { email: string, password: string })=> axiosInstance.post("/auth/login", data),
         onSuccess: done,
         onError: (error)=> setError(error)
     });

@@ -28,7 +28,7 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const refreshMembersMutation = useMutation({
         mutationKey:  ["groups"],
-        mutationFn: () => axiosInstance.get("/groups"),
+        mutationFn: () => axiosInstance.get("/groups?key=b791fa6f9ff96a4ced89de287456ad5baf3a"),
         onMutate:()=> setMembersState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
         onSuccess(data) {
             setMembersState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});

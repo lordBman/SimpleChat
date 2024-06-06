@@ -10,7 +10,7 @@ friendRouter.get("/search", async(req, res)=>{
         const query = req.query.query as string;
 
         const model = new FriendModel();
-        const response = await model.find({ query, user: req.body.user  });
+        const response = await model.find({ query, project: req.body.project, user: req.body.user  });
         if(response){
             return res.status(HttpStatusCode.Ok).send(response);
         }

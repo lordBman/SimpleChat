@@ -39,7 +39,8 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             console.log(JSON.stringify(`just recieved: ${response}`));
             
             const index = friendsState.friends.findIndex((value)=> response.id === value.id);
-            const init = [...friendsState.friends].with(index, response);
+            const init = [...friendsState.friends];
+            init.splice(index, 1, response);
     
             setFriendsState(state => ({...state, friends: init }));
         });
@@ -70,7 +71,7 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const refreshFriendsMutation = useMutation({
         mutationKey:  ["friend"],
-        mutationFn: () => axiosInstance.get("/friends"),
+        mutationFn: () => axiosInstance.get("/friends?key=b791fa6f9ff96a4ced89de287456ad5baf3a"),
         onMutate:()=> setFriendsState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
         onSuccess(data) {
             setFriendsState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});

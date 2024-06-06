@@ -26,7 +26,7 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const initQuery = useQuery({
         queryKey:  ["data"],
-        queryFn: () => axiosInstance.get("/users"),
+        queryFn: () => axiosInstance.get(`/users?key=b791fa6f9ff96a4ced89de287456ad5baf3a`),
         onSuccess(data) {
             setState(init => { return { ...init, loading: false, isError: false, data: data.data }});  
         },
@@ -37,7 +37,7 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const socket = React.useMemo(() => {
         if(state?.data){
-            const init = io("/", { auth: { token: state?.data.token, access: "access-key" } });
+            const init = io("/", { auth: { token: state?.data.token, access: "access-key",  key: "b791fa6f9ff96a4ced89de287456ad5baf3a" } });
             init.on("connected", ()=>{
                 console.log(init.connected);
             });

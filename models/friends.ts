@@ -40,6 +40,7 @@ class FriendModel{
 
             return friend;
         }catch(error){
+            console.log(JSON.stringify(error));
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
         }
     }

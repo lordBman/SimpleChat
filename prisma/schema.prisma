@@ -50,7 +50,7 @@ model AccessKey{
 }
 
 model Organization {
-   id               Int           @id
+   id               Int           @id @default(autoincrement())
    name             String
 
    projectID        Int
@@ -59,6 +59,8 @@ model Organization {
    users            User[]
    friends          Friend[]
    groups           Group[]
+
+   @@unique([name, projectID])
 }
 
 model User{
@@ -68,7 +70,7 @@ model User{
     password        String
 
     organizationID  Int?
-    organization    Organization  @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+    organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
     
     projectID         Int
     project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
@@ -111,7 +113,7 @@ model Friend{
     accepted        Boolean       @default(false)
 
     organizationID  Int?
-    organization    Organization  @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+    organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: Cascade)
 
     projectID       Int
     project         Project        @relation(fields: [projectID], references: [id])
@@ -129,7 +131,7 @@ model Group {
     creator         User                @relation(fields: [creatorID], references: [id], onDelete: NoAction)
 
     organizationID  Int?
-    organization    Organization        @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+    organization    Organization?        @relation(fields: [organizationID], references: [id], onDelete: Cascade)
 
     projectID       Int
     project         Project             @relation(fields: [projectID], references: [id])

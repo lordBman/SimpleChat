@@ -9,6 +9,7 @@ import AccessKeyModel from "../models/access-keys";
 import authRouter from "./auth";
 import developerRouter from "./developer";
 import accessKeyRouter from "./access-keys";
+import { OrganizationModel } from "../models";
 
 export const UserAPIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
     if(req.cookies.token && (req.body.key || req.query.key)){
@@ -18,11 +19,18 @@ export const UserAPIAuthenication = async (req: Request, res: Response, next: Ne
             const accessKey = await new AccessKeyModel().get(req.body.key || req.query.key);
             if(accessKey?.enabled){            
                 req.body.project = accessKey.project;
-    
-                return next();
-            }else{
-                return res.status(HttpStatusCode.Unauthorized).send({message: "API Access key found but has been deactivated" });
+                if(req.body.organization || req.query.organization){
+                    const organizationName = req.body.organization || req.query.organization;
+                    const organization = await new OrganizationModel().get({ project: accessKey.project, name: organizationName });
+                    if(organization){
+                        req.body.organization = organization;
+                        return next();
+                    }
+                    return res.status(HttpStatusCode.NotFound).send({message: "Organization specified not found" });
+                }
+                return next()
             }
+            return res.status(HttpStatusCode.Unauthorized).send({message: "API Access key found but has been deactivated" });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof jwt.TokenExpiredError){

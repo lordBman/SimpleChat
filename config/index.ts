@@ -49,10 +49,15 @@ export async function seed() {
         project = await database.client.project.create({ data: { name: process.env.PROJECT_NAME!, accessToken: uuid(), developerID: developer.id } });
     }
 
-    let admin = await database.client.user.findFirst({ where: { organization: process.env.COMPANY_NAME!, email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! } });
+    let organization = await database.client.organization.upsert({ 
+        where: { name_projectID: { name: process.env.COMPANY_NAME!, projectID: project.id } },
+        update: {},
+        create:  { name: process.env.COMPANY_NAME!, projectID: project.id }
+    });
+    let admin = await database.client.user.findFirst({ where: { organizationID: organization.id, email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! } });
     if(!admin){
         admin = await database.client.user.create({ data: {
-            id: developer.id, projectID: project.id, name: process.env.COMPANY_NAME!, organization: process.env.COMPANY_NAME!,
+            id: developer.id, projectID: project.id, name: process.env.COMPANY_NAME!, organizationID: organization.id,
             email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! } });
     }
 

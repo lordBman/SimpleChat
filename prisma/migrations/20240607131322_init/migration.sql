@@ -25,13 +25,22 @@ CREATE TABLE "AccessKey" (
 );
 
 -- CreateTable
+CREATE TABLE "Organization" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "projectID" INTEGER NOT NULL,
+    CONSTRAINT "Organization_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "organization" TEXT,
+    "organizationID" INTEGER,
     "projectID" INTEGER NOT NULL,
+    CONSTRAINT "User_organizationID_fkey" FOREIGN KEY ("organizationID") REFERENCES "Organization" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "User_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -54,10 +63,11 @@ CREATE TABLE "Friend" (
     "requesterID" TEXT NOT NULL,
     "acceptorID" TEXT NOT NULL,
     "accepted" BOOLEAN NOT NULL DEFAULT false,
-    "organization" TEXT,
+    "organizationID" INTEGER,
     "projectID" INTEGER NOT NULL,
     CONSTRAINT "Friend_requesterID_fkey" FOREIGN KEY ("requesterID") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Friend_acceptorID_fkey" FOREIGN KEY ("acceptorID") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Friend_organizationID_fkey" FOREIGN KEY ("organizationID") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Friend_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -68,9 +78,10 @@ CREATE TABLE "Group" (
     "last" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "attachment" TEXT,
     "creatorID" TEXT NOT NULL,
-    "organization" TEXT,
+    "organizationID" INTEGER,
     "projectID" INTEGER NOT NULL,
     CONSTRAINT "Group_creatorID_fkey" FOREIGN KEY ("creatorID") REFERENCES "User" ("id") ON DELETE NO ACTION ON UPDATE CASCADE,
+    CONSTRAINT "Group_organizationID_fkey" FOREIGN KEY ("organizationID") REFERENCES "Organization" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Group_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -108,6 +119,9 @@ CREATE UNIQUE INDEX "Project_name_developerID_key" ON "Project"("name", "develop
 
 -- CreateIndex
 CREATE UNIQUE INDEX "AccessKey_key_key" ON "AccessKey"("key");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Organization_name_projectID_key" ON "Organization"("name", "projectID");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_id_key" ON "User"("id");

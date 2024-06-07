@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
-import { axiosInstance } from '../../utils';
+import { ProjectKey, axiosInstance } from '../../utils';
 import { AppContext, AppContextType } from './app-provider';
 import { FriendResponse, MemberResponse } from '../../responses';
 
@@ -28,7 +28,7 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const refreshMembersMutation = useMutation({
         mutationKey:  ["groups"],
-        mutationFn: () => axiosInstance.get("/groups?key=b791fa6f9ff96a4ced89de287456ad5baf3a"),
+        mutationFn: () => axiosInstance.get(`/groups?key=${ProjectKey}`),
         onMutate:()=> setMembersState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
         onSuccess(data) {
             setMembersState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});

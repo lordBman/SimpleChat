@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from "react";
 import { MembersContext, MembersContextType } from "../providers/members-provider";
 import { MemberResultView, MemberView } from "../../conponents/members-view";
 import { useMutation } from "react-query";
-import { axiosInstance } from "../../utils";
+import { ProjectKey, axiosInstance } from "../../utils";
 import { GroupResponse, MemberResponse } from "../../responses";
 
 const Groups = () =>{
@@ -13,7 +13,7 @@ const Groups = () =>{
     
     const searchMutation = useMutation({
         mutationKey:  ["groups"],
-        mutationFn: (variables: string)=> axiosInstance.get(`/groups/search?query=${variables}`),
+        mutationFn: (variables: string)=> axiosInstance.get(`/groups/search?query=${variables}&key=${ProjectKey}`),
         onSuccess: (data) =>{
             setResults(data.data);
         },
@@ -29,7 +29,7 @@ const Groups = () =>{
 
     const createMutation = useMutation({
         mutationKey:  ["groups"],
-        mutationFn: (name: string)=> axiosInstance.post(`/groups/create`, { name }),
+        mutationFn: (name: string)=> axiosInstance.post(`/groups/create`, { name, key: ProjectKey }),
         onSuccess: (data) =>{
             setResults(data.data);
             close();

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { User } from '@prisma/client';
 import { Socket, io } from "socket.io-client";
-import { axiosInstance } from '../../utils';
+import { ProjectKey, axiosInstance } from '../../utils';
 import { ChatsResponse, FriendResponse, MemberResponse } from '../../responses';
 
 export type AppState = {
@@ -26,7 +26,7 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const initQuery = useQuery({
         queryKey:  ["data"],
-        queryFn: () => axiosInstance.get(`/users?key=b791fa6f9ff96a4ced89de287456ad5baf3a`),
+        queryFn: () => axiosInstance.get(`/users?key=${ProjectKey}`),
         onSuccess(data) {
             setState(init => { return { ...init, loading: false, isError: false, data: data.data }});  
         },
@@ -37,7 +37,7 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const socket = React.useMemo(() => {
         if(state?.data){
-            const init = io("/", { auth: { token: state?.data.token, access: "access-key",  key: "b791fa6f9ff96a4ced89de287456ad5baf3a" } });
+            const init = io("/", { auth: { token: state?.data.token, access: "access-key",  key: ProjectKey } });
             init.on("connected", ()=>{
                 console.log(init.connected);
             });

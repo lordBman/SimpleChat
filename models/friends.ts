@@ -32,6 +32,7 @@ class FriendModel{
     async request(data: { project: Project, organization?: string, user: User, userID: string }): Promise<Friend | undefined>{
         try{
             const id = uuid();
+            console.log(JSON.stringify({ id, projectID: data.project.id, organization: data.organization, requesterID: data.user.id, acceptorID: data.userID }));
             const friend = await this.database.client.friend.create({ 
                 data: { id, projectID: data.project.id, organization: data.organization, requesterID: data.user.id, acceptorID: data.userID },
                 include: { acceptor: { select: { id: true, email:  true, name: true, password: false } } }
@@ -40,7 +41,7 @@ class FriendModel{
 
             return friend;
         }catch(error){
-            console.log(JSON.stringify(error));
+            console.log(error);
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
         }
     }

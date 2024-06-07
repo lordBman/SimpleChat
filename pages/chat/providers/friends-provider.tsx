@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
-import { axiosInstance } from '../../utils';
+import { ProjectKey, axiosInstance } from '../../utils';
 import { AppContext, AppContextType } from './app-provider';
 import { FriendResponse } from '../../responses';
 
@@ -71,7 +71,7 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const refreshFriendsMutation = useMutation({
         mutationKey:  ["friend"],
-        mutationFn: () => axiosInstance.get("/friends?key=b791fa6f9ff96a4ced89de287456ad5baf3a"),
+        mutationFn: () => axiosInstance.get(`/friends?key=${ProjectKey}`),
         onMutate:()=> setFriendsState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
         onSuccess(data) {
             setFriendsState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});

@@ -2,7 +2,8 @@
 CREATE TABLE "Developer" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL
 );
 
 -- CreateTable
@@ -115,7 +116,7 @@ CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Friend_requesterID_acceptorID_key" ON "Friend"("requesterID", "acceptorID");
+CREATE UNIQUE INDEX "Friend_requesterID_acceptorID_projectID_key" ON "Friend"("requesterID", "acceptorID", "projectID");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Group_id_key" ON "Group"("id");

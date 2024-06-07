@@ -1,6 +1,6 @@
 import React, { useContext, useMemo, useState } from "react";
 import { useMutation } from "react-query";
-import { axiosInstance } from "../../utils";
+import { ProjectKey, axiosInstance } from "../../utils";
 import { Friend, User } from "@prisma/client";
 import { FriendView, FriendResultView } from "../../conponents";
 import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
@@ -15,7 +15,7 @@ const Friends = () =>{
 
     const searchMutation = useMutation({
         mutationKey:  ["friends"],
-        mutationFn: (variables: string)=> axiosInstance.get(`/friends/search?query=${variables}&key=b791fa6f9ff96a4ced89de287456ad5baf3a`),
+        mutationFn: (variables: string)=> axiosInstance.get(`/friends/search?query=${variables}&key=${ProjectKey}`),
         onSuccess: (data) =>{
             setResults(data.data);
         },

@@ -50,9 +50,9 @@ export async function seed() {
     }
 
     let admin = await database.client.user.findFirst({ where: { organization: process.env.COMPANY_NAME!, email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! } });
-    if(admin){
+    if(!admin){
         admin = await database.client.user.create({ data: {
-            id: developer.id, projectID: project.id, name: process.env.NAME!, organization: process.env.COMPANY_NAME!,
+            id: developer.id, projectID: project.id, name: process.env.COMPANY_NAME!, organization: process.env.COMPANY_NAME!,
             email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! } });
     }
 
@@ -60,6 +60,18 @@ export async function seed() {
     if(!accessKey){
         accessKey = await database.client.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
     }
+
+    database.client.developer.findMany().then(results=>{
+        results.forEach((result)=>{
+            console.log(JSON.stringify(result));
+        });
+    });
+
+    database.client.user.findMany().then(results=>{
+        results.forEach((result)=>{
+            console.log(JSON.stringify(result));
+        });
+    });
 
     SeedResult.set({ projectID: project.id });
     

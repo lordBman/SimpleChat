@@ -22,7 +22,6 @@ model Developer{
     projects          Project[]
 }
 
-
 model Project{
     id                Int              @id @default(autoincrement())
     name              String
@@ -36,6 +35,7 @@ model Project{
     users             User[]
     groups            Group[]
     friends           Friend[]
+    organizations     Organization[]
 
     @@unique([name, developerID])
 }
@@ -49,13 +49,26 @@ model AccessKey{
     project           Project           @relation(fields: [projectID], references: [id], onDelete: Cascade)
 }
 
+model Organization {
+   id               Int           @id
+   name             String
+
+   projectID        Int
+   project          Project       @relation(fields: [projectID], references: [id]
+
+   users            User[]
+   friends          Friend[]
+   groups           Group[]
+}
+
 model User{
     id              String        @id @unique
     name            String
     email           String        @unique
     password        String
 
-    organization      String?
+    organizationID  Int?
+    organization    Organization  @relation(fields: [organizationID], references: [id]
     
     projectID         Int
     project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
@@ -98,7 +111,8 @@ model Friend{
 
     accepted        Boolean       @default(false)
 
-    organization    String?
+    organizationID  Int?
+    organization    Organization  @relation(fields: [organizationID], references: [id]
 
     projectID       Int
     project         Project        @relation(fields: [projectID], references: [id])
@@ -115,7 +129,8 @@ model Group {
     creatorID       String
     creator         User                @relation(fields: [creatorID], references: [id], onDelete: NoAction)
 
-    organization    String?
+    organizationID  Int?
+    organization    Organization        @relation(fields: [organizationID], references: [id]
 
     projectID       Int
     project         Project             @relation(fields: [projectID], references: [id])

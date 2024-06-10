@@ -79,6 +79,15 @@ header{
     border-color: var(--dark);
 }
 
+.options-icon > a{
+    width: 60px;
+    gap: 10px;
+    border-top: none;
+    border-bottom: none;
+    font-size: 30px;
+    cursor: pointer;
+}
+
 section{
     @include padding-horizontal($side-padding);
     width: 100dvw;

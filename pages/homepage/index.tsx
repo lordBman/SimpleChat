@@ -4,10 +4,13 @@ import Features from "./features";
 import Footer from "./footer";
 
 import "../css/home/main.scss";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 const Homepage  = () =>{
+    const queryClient = new QueryClient();
+
     return (
-        <>
+        <QueryClientProvider client={queryClient}>
             <Header />
             <div id="content-container">
                 <section id="about">
@@ -20,7 +23,7 @@ const Homepage  = () =>{
                     <Footer />
                 </section>
             </div>
-        </>
+        </QueryClientProvider>
     );
 }
 

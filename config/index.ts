@@ -25,6 +25,7 @@ class DBManager{
 
 export class SeedResult{
     projectID: number;
+    organizationID: number
 
     static result: SeedResult;
 
@@ -78,7 +79,7 @@ export async function seed() {
         });
     });
 
-    SeedResult.set({ projectID: project.id });
+    SeedResult.set({ projectID: project.id, organizationID: organization.id });
     
     jetLogger.info(`${process.env.PROJECT_NAME} all set Project ID: ${project.id} - Access Key: ${accessKey.key}`);
 }

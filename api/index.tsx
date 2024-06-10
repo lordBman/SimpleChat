@@ -16,7 +16,7 @@ export const UserAPIAuthenication = async (req: Request, res: Response, next: Ne
         try{
             req.body.user = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).user;
     
-            const accessKey = await new AccessKeyModel().get(req.body.key || req.query.key);
+            const accessKey = await new AccessKeyModel().get(req.body.key || req.query.key); console.log(`${req.body.key || req.query.key} - ${JSON.stringify(accessKey)}`);
             if(accessKey?.enabled){            
                 req.body.project = accessKey.project;
                 if(req.body.organization || req.query.organization){

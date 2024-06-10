@@ -5,7 +5,7 @@ import jetLogger from "jet-logger";
 import Signin from "./signin";
 import Chat from "./chat";
 import Homepage from "./homepage";
-import DashBoard from "./dashboard";
+import DashBoard from "./developer";
 import Docs from "./docs";
 
 export const chatRenderer = (res: Response) =>{
@@ -68,7 +68,7 @@ export const homepageRenderer = (res: Response) =>{
     res.status(200).contentType("text/html").send(Buffer.from(html));
 }
 
-export const dashboardRenderer = (res: Response) =>{
+export const developerRenderer = (res: Response) =>{
     const root = ReactDOMServer.renderToString(<DashBoard />);
 
     const html = `
@@ -77,11 +77,11 @@ export const dashboardRenderer = (res: Response) =>{
                 <title>Simple Chat | Dashboard</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <link rel="stylesheet" href="/assets/css/icons.css" />
-                <link rel="stylesheet" href="/assets/dist/dashboard.css" />
+                <link rel="stylesheet" href="/assets/dist/developer.css" />
             </head>
             <body>
                 <main id="root">${root}</main>
-                <script src="/assets/dist/dashboard.js"></script>
+                <script src="/assets/dist/developer.js"></script>
             </body>
         </html>
     `;
@@ -158,7 +158,7 @@ pages.get("/signin", async(req, res) =>{
 });
 
 pages.get("/dashboard", secureRoute, async(req, res) =>{
-    return dashboardRenderer(res);
+    return developerRenderer(res);
 });
 
 pages.get("/chats", secureRoute, async(req, res) =>{

@@ -2,7 +2,7 @@ import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
-import { Chat, Friend, Member, Project, User } from "@prisma/client";
+import { Chat, Friend, Member, Organization, Project, User } from "@prisma/client";
 import { uuid } from "../utils";
 import FriendModel from "./friends";
 
@@ -24,7 +24,7 @@ class UserModel{
         }
     }
 
-    async signin(data: {  project: Project, organization?: string, email: string, password: string }): Promise<string | undefined>{
+    async signin(data: {  project: Project, organization?: Organization, email: string, password: string }): Promise<string | undefined>{
         try{
             const init = await this.database.client.user.findFirst({ where: { projectID: data.project.id, organization: data.organization, email: data.email } });
             if(init){
@@ -51,7 +51,7 @@ class UserModel{
         }
     }
 
-    async count(data: { project: Project, organization?: string }): Promise<number | undefined>{
+    async count(data: { project: Project, organization?: Organization }): Promise<number | undefined>{
         try{
             const init = await this.database.client.user.count({
                 where: { projectID: data.project.id, organization: data.organization }
@@ -63,7 +63,7 @@ class UserModel{
         }
     }
 
-    async get(data: { project: Project, organization?: string, user: User}): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
+    async get(data: { project: Project, organization?: Organization, user: User}): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
         try{
             const friends = await new FriendModel().all({ ...data });
 

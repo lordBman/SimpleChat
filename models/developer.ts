@@ -18,7 +18,7 @@ class DeveloperModel{
             const developer = await this.database.client.developer.create({ data: { id: uuid(), ...data }, select: { id: true, name: true, email: true } });
 
             const user = await this.database.client.user.create({ 
-                data: { id: developer.id, organization: process.env.COMPANY_NAME!, projectID:  SeedResult.instance().projectID, ...data },
+                data: { id: developer.id, organizationID: SeedResult.instance().organizationID, projectID:  SeedResult.instance().projectID, ...data },
                 select: { id: true, name: true, email: true } });
 
             const token = jwt.sign({ developer, user }, process.env.SECRET || "test", { expiresIn: "7 days" } );

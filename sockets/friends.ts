@@ -24,7 +24,7 @@ export default (namespace: Namespace, socket: Socket) => {
     
     socket.on("request", async(input: { userID: string })=>{
         const model = new FriendModel();
-        const response = await model.request({ project: socket.handshake.auth.project, user: socket.handshake.auth.user, userID: input.userID });
+        const response = await model.request({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, user: socket.handshake.auth.user, userID: input.userID });
 
         ConnectedSockets.getInstance().send("cancel", [ response?.acceptorID!, response?.requesterID! ], response);
     });

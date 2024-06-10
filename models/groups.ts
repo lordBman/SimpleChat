@@ -1,6 +1,6 @@
 import { DBManager } from "../config";
 import Database from "../config/database";
-import { Group, Member, Project, User } from "@prisma/client";
+import { Group, Member, Organization, Project, User } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
@@ -13,7 +13,7 @@ class GroupModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { project: Project, organization?: string, user: User, name: string }): Promise<Member | undefined>{
+    async create(data: { project: Project, organization?: Organization, user: User, name: string }): Promise<Member | undefined>{
         try{
             const exists = await this.database.client.group.findMany({
                 where: { projectID: data.project.id, organization: data.organization, name: data.name },
@@ -23,7 +23,7 @@ class GroupModel{
                 this.database.errorHandler.add(HttpStatusCode.AlreadyReported, ``, "group already exists");
             }else{
                 const init = await this.database.client.group.create({
-                    data: { id: uuid(), projectID: data.project.id, organization: data.organization, name: data.name, creatorID: data.user.id },
+                    data: { id: uuid(), projectID: data.project.id, organizationID: data.organization?.id, name: data.name, creatorID: data.user.id },
                 });
     
                 const member = await this.database.client.member.create({

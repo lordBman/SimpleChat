@@ -4,7 +4,7 @@ import path from "path";
 
 let ctx = await esbuild.context({
     entryPoints: [
-        "./pages/client-entries/dashboard.tsx",
+        "./pages/client-entries/developer.tsx",
         "./pages/client-entries/signin.tsx",
         "./pages/client-entries/chat.tsx",
         "./pages/client-entries/docs.tsx",

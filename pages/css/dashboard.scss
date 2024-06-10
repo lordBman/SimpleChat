@@ -1,15 +1,10 @@
-:root{
-    --min-width:70px;
-    --max-width: 280px;
-}
-
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-#content{
+.dashboard{
     display: flex;
     width: 100dvw;
     height: 100dvh;
@@ -32,7 +27,7 @@
         font-size: 60%;
     }
     
-    #content{
+    .dashboard{
         flex-direction: column;
         padding-left: 0px;
     }
@@ -52,4 +47,10 @@
     .section-title{
         display: none;
     }
+}
+
+.content{
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
 }

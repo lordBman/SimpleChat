@@ -1,3 +1,8 @@
+:root{
+    --min-width:70px;
+    --max-width: 280px;
+}
+
 @keyframes sidebar-animation-expand{
     0% { width: var(--min-width); }
     100% { width: var(--max-width); }
@@ -15,7 +20,7 @@
 }
 
 .menu{
-    position: absolute;
+    position: fixed;
     display: flex;
     left: 0px;
     top: 0px;

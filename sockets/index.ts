@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import chatsSocketPort from "./chats";
 import friendsSocketPort from "./friends";
 import AccessKeyModel from "../models/access-keys";
+import { OrganizationModel } from "../models";
 
 const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | undefined)=>void)=>{
     try{
@@ -25,6 +26,15 @@ const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | und
             jetLogger.info(JSON.stringify(token));
         
             socket.handshake.auth.project = accessKey.project;
+            if(socket.handshake.auth.organization){
+                const organizationName = socket.handshake.auth.organization;
+                const organization = await new OrganizationModel().get({ project: accessKey.project, name: organizationName });
+                if(organization){
+                    socket.handshake.auth.organization = organization;
+                    return next();
+                }
+                return next(Error("Organization specified not found"));
+            }
 
             next();
         }else{

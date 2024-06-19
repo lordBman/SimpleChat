@@ -2,8 +2,8 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
 import { AppContext, AppContextType } from './app-provider';
-import { ProjectKey, TypingManager, axiosInstance } from '../../utils';
-import { ChatResponse, ChatsResponse, FriendResponse, GroupResponse } from '../../responses';
+import { ProjectKey, TypingManager, axiosInstance } from '../utils';
+import { ChatResponse, ChatsResponse, FriendResponse, GroupResponse } from '../responses';
 import { FriendsContext, FriendsContextType } from './friends-provider';
 import { MainContext, MainContextType, MainPage } from './main-provider';
 

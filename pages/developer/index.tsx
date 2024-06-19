@@ -1,13 +1,16 @@
-import { DashBoard } from "../conponents";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { DashBoard, Loading } from "../conponents";
 import Options from "../conponents/dashboard/menu/options";
+import ProviderWraper, { AppProvider } from "../providers";
 
-const Developer = ()=>{
+const App = ()=>{
     return (
         <DashBoard>
             <DashBoard.Menu initial="home">
                 <Options>
                     <Options.Item id="home" isMiddle icon="solar--home-linear" label="Home" />
-                    <Options.Item id="profile" isMiddle icon="guidance--user-1" label="Profile" />
+                    <Options.Item id="projects" isMiddle icon="hugeicons--code" label="Projects" />
+                    <Options.Item id="messanger" isMiddle icon="fluent--chat-20-regular" label="Messanger" />
                 </Options>
                 <Options>
                     <Options.Item id="settings" icon="et--gears" label="Settings" />
@@ -16,9 +19,23 @@ const Developer = ()=>{
                 </Options>    
             </DashBoard.Menu>
             <DashBoard.Content>
-                Dashboard
+                Dashboard 
             </DashBoard.Content>
         </DashBoard>
+    );
+}
+
+const Developer = () =>{
+    const queryClient = new QueryClient();
+
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AppProvider>
+                <ProviderWraper Loading={Loading}>
+                    <App />
+                </ProviderWraper>
+            </AppProvider>
+        </QueryClientProvider>
     );
 }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import "../css/chats/back-button.scss";
-import { MainContext, MainContextType } from "../chat/providers/main-provider";
+import { MainContext, MainContextType } from "../providers/main-provider";
 
 const BackButton = () =>{
     const { clear } = React.useContext(MainContext) as MainContextType;

@@ -2,11 +2,11 @@ import { Chats, Friends, Groups, Info, Notifications, Profile, Settings } from "
 
 import Main from "./main";
 import { QueryClient, QueryClientProvider } from "react-query";
-import ProviderWraper, { AppProvider } from "./providers";
+import ProviderWraper, { AppProvider } from "../providers";
 import { BottomNavigation, DashBoard, Loading, MobileHeader } from "../conponents";
 import Options from "../conponents/dashboard/menu/options";
 import React from "react";
-import { MainContext, MainContextType } from "./providers/main-provider";
+import { MainContext, MainContextType } from "../providers/main-provider";
 
 
 const App = () =>{

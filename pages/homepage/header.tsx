@@ -79,10 +79,10 @@ const Header = (props:{active?: string}) =>{
             { initQuery.data?.data && (
                 <div className="options options-icon">
                     <a className="options-signin" href="/dashboard">
-                        <span className="solar--home-linear"></span>
+                        <span className="hugeicons--dashboard-square-02"></span>
                     </a>
                     <a className="options-signin" href="/chats">
-                        <span className="streamline--desktop-chat"></span>
+                        <span className="fluent--chat-20-regular"></span>
                     </a>
                     <a className="options-signin">
                         <span className="solar--bell-linear"></span>

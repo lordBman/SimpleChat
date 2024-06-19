@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { User } from '@prisma/client';
 import { Socket, io } from "socket.io-client";
-import { ProjectKey, axiosInstance } from '../../utils';
-import { ChatsResponse, FriendResponse, MemberResponse } from '../../responses';
+import { ProjectKey, axiosInstance } from '../utils';
+import { ChatsResponse, FriendResponse, MemberResponse } from '../responses';
 
 export type AppState = {
     data?: User & { token: string } & { members: MemberResponse[], friends: FriendResponse[], chats: ChatsResponse }

@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState } from "react";
-import { MembersContext, MembersContextType } from "../providers/members-provider";
+import { MembersContext, MembersContextType } from "../../providers/members-provider";
 import { MemberResultView, MemberView } from "../../conponents/members-view";
 import { useMutation } from "react-query";
 import { ProjectKey, axiosInstance } from "../../utils";

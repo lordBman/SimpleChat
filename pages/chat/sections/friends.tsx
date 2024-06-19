@@ -3,9 +3,9 @@ import { useMutation } from "react-query";
 import { ProjectKey, axiosInstance } from "../../utils";
 import { Friend, User } from "@prisma/client";
 import { FriendView, FriendResultView } from "../../conponents";
-import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
+import { FriendsContext, FriendsContextType } from "../../providers/friends-provider";
 import "../../css/chats/friends.scss";
-import { AppContext, AppContextType } from "../providers/app-provider";
+import { AppContext, AppContextType } from "../../providers/app-provider";
 
 const Friends = () =>{
     const { data } = useContext(AppContext) as AppContextType;

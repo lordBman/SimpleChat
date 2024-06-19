@@ -1,10 +1,10 @@
 import React, { useContext, useMemo } from "react";
 import { GroupResponse, FriendResponse, ChatResponse, MemberResponse } from "../responses";
-import { AppContext, AppContextType } from "../chat/providers/app-provider";
-import { FriendsContext, FriendsContextType } from "../chat/providers/friends-provider";
+import { AppContext, AppContextType } from "../providers/app-provider";
+import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
 import { formatTime } from "../utils";
-import { MembersContext, MembersContextType } from "../chat/providers/members-provider";
-import { ChatContext, ChatContextType } from "../chat/providers/chats-provider";
+import { MembersContext, MembersContextType } from "../providers/members-provider";
+import { ChatContext, ChatContextType } from "../providers/chats-provider";
 
 interface FrinedMessageProps{
     message: FriendResponse

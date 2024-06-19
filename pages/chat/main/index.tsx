@@ -1,4 +1,4 @@
-import { MainContext, MainContextType, MainPage } from "../providers/main-provider";
+import { MainContext, MainContextType, MainPage } from "../../providers/main-provider";
 import React from "react";
 import Chat from "./chat";
 

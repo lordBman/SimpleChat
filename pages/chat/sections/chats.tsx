@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatContext, ChatContextType } from "../providers/chats-provider";
+import { ChatContext, ChatContextType } from "../../providers/chats-provider";
 import Message from "../../conponents/message";
 import "../../css/chats/chats.scss";
 

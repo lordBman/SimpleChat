@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BackButton, ChatView } from "../../conponents/index.js";
-import { ChatContext, ChatContextType } from "../providers/chats-provider.js";
+import { ChatContext, ChatContextType } from "../../providers/chats-provider.js";
 import { GroupResponse, FriendResponse } from "../../responses.js";
-import { AppContext, AppContextType } from "../providers/app-provider.js";
+import { AppContext, AppContextType } from "../../providers/app-provider.js";
 import "../../css/chats/chat.scss";
 
 const isFriend = (current: GroupResponse | FriendResponse) => "acceptorID" in current;

@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { ChatResponse } from "../responses";
-import { AppContext, AppContextType } from "../chat/providers/app-provider";
+import { AppContext, AppContextType } from "../providers/app-provider";
 
 interface ChatProps{
     chat: ChatResponse

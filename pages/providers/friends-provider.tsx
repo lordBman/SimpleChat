@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
-import { ProjectKey, axiosInstance } from '../../utils';
+import { ProjectKey, axiosInstance } from '../utils';
 import { AppContext, AppContextType } from './app-provider';
-import { FriendResponse } from '../../responses';
+import { FriendResponse } from '../responses';
 
 interface FriendsState{
     loading: boolean,

@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { AppContext, AppContextType } from "../providers/app-provider";
+import { AppContext, AppContextType } from "../../providers/app-provider";
 import "../../css/chats/profile.scss";
 
 const Profile = () =>{

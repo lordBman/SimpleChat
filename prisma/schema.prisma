@@ -6,12 +6,61 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+model Developer{
+    id                String            @id @unique()
+    name              String
+    email             String
+    password          String
+
+    projects          Project[]
+}
+
+model Project{
+    id                Int              @id @default(autoincrement())
+    name              String
+    
+    accessToken       String
+
+    developerID       String
+    developer         Developer        @relation(fields: [developerID], references: [id], onDelete: Cascade)
+
+    keys              AccessKey[]
+    users             User[]
+    groups            Group[]
+    friends           Friend[]
+    organizations     Organization[]
+
+    @@unique([name, developerID])
+}
+
+model AccessKey{
+    key               String            @id @unique
+    name              String  
+    enabled           Boolean           @default(false)
+
+    projectID         Int
+    project           Project           @relation(fields: [projectID], references: [id], onDelete: Cascade)
+}
+
+model Organization {
+   id               Int           @id @default(autoincrement())
+   name             String
+
+   projectID        Int
+   project          Project       @relation(fields: [projectID], references: [id])
+
+   users            User[]
+   friends          Friend[]
+   groups           Group[]
+
+   @@unique([name, projectID])
 }
 
 model User{
@@ -20,11 +69,16 @@ model User{
     email           String        @unique
     password        String
 
+    organizationID  Int?
+    organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
+    
+    projectID         Int
+    project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
+
     requester       Friend[]      @relation("requester")
     acceptor        Friend[]      @relation("acceptor")
 
     notifications   Notification[]
-
 
     sentChats       Chat[]
     createdGroups   Group[]         
@@ -42,9 +96,9 @@ model Chat{
 
     ownerID         String
 
-    reply           Chat[]            @relation("reference")
+    reply           Chat[]        @relation("reference")
     referenceID     Int?
-    reference       Chat?             @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
+    reference       Chat?         @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
 }
 
 model Friend{
@@ -58,17 +112,29 @@ model Friend{
 
     accepted        Boolean       @default(false)
 
-    @@unique([requesterID, acceptorID])
+    organizationID  Int?
+    organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+
+    projectID       Int
+    project         Project        @relation(fields: [projectID], references: [id])
+
+    @@unique([requesterID, acceptorID, projectID])
 }
 
 model Group {
-    id              String        @id
-    name            String            @unique
-    last            DateTime          @default(now())
+    id              String              @id @unique
+    name            String
+    last            DateTime            @default(now())
     attachment      String?
 
     creatorID       String
-    creator         User              @relation(fields: [creatorID], references: [id], onDelete: NoAction)
+    creator         User                @relation(fields: [creatorID], references: [id], onDelete: NoAction)
+
+    organizationID  Int?
+    organization    Organization?        @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+
+    projectID       Int
+    project         Project             @relation(fields: [projectID], references: [id])
 
     members         Member[]
     notifications   Notification[]

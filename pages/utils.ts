@@ -1,5 +1,11 @@
 import axios from "axios";
 
+export const  ProjectKey = "a37e6a739c5dea43df98d399db75dbb4db1d";
+
+export interface LooseObject {
+    [key: string]: any
+}
+
 export const axiosInstance =  axios.create({
 	headers: { 
 		'Access-Control-Allow-Origin': '*',
@@ -8,7 +14,7 @@ export const axiosInstance =  axios.create({
 		'Content-Type': 'application/x-www-form-urlencoded' 
 	},
 	withCredentials: true, 
-	baseURL: "http://localhost:5000", });
+	baseURL: "/api", });
 
 export const formatMonth = (date: Date)=>{
     switch(date.getMonth()){
@@ -55,8 +61,6 @@ export const formatDay = (date: Date) =>{
 export const formatTime = (date: Date) =>{
     const now = new Date();
 
-    
-
     const hours = date.getHours();
     const minutes = date.getMinutes();
 
@@ -94,4 +98,56 @@ export const getCookie = (cname: string) =>{
         }
     }
     return "";
+}
+
+export class TypingManager{
+    timer?: Timer;
+    callback: CallableFunction;
+    isRunning: boolean
+    intervals: number;
+
+    constructor(intervals: number, callback: CallableFunction){
+        this.callback = callback;
+        this.isRunning = false;
+        this.intervals = intervals;
+    }
+
+    public run = () =>{
+        if(!this.isRunning){
+            this.isRunning = true;
+            this.callback();
+            this.timer = setTimeout(()=>{
+                this.isRunning = false;
+            }, this.intervals);
+        }
+    }
+
+    public restart = () =>{
+        clearTimeout(this.timer);
+        this.isRunning = true;
+        this.callback();
+        this.timer = setTimeout(()=>{
+            this.isRunning = false;
+        }, this.intervals);
+    }
+
+    public stop = () => {
+        this.isRunning = false;
+        clearTimeout(this.timer);
+    }
+}
+
+export const extract = (form: HTMLFormElement): LooseObject =>{
+    const formData = new FormData(form);
+
+    // Create an empty object to store the key-value pairs
+    let obj: LooseObject = {};
+
+    // Loop through the entries of the FormData object
+    formData.forEach((value, key) => {
+        // Assign each value to the corresponding key in the object
+        obj[key] = value.toString();
+    });
+
+    return obj;
 }

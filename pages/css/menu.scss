@@ -1,0 +1,118 @@
+:root{
+    --min-width:70px;
+    --max-width: 280px;
+}
+
+@keyframes sidebar-animation-expand{
+    0% { width: var(--min-width); }
+    100% { width: var(--max-width); }
+}
+
+@keyframes sidebar-animation-minimize{
+    0% { width: var(--max-width); }
+    100% { width: var(--min-width); }
+}
+
+@keyframes fade-in{
+    0% { opacity: 0; }
+    80% { opacity: 0.2; }
+    100% { opacity: 1; }
+}
+
+.menu{
+    position: fixed;
+    display: flex;
+    left: 0px;
+    top: 0px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(15, 34, 58, 0.192);
+    height: 100dvh;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    z-index: 1000;
+    min-width: var(--min-width);
+    animation: sidebar-animation-minimize 600ms ease-in-out;
+}
+
+.options{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 20px;
+}
+
+.icon, .menu-item{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    width: 100%;
+    gap: 8px;
+}
+
+.icon > .menu-title{
+    position: fixed;
+    font-size: 20px;
+    white-space: nowrap;
+    margin-left: 50px;
+    display: none;
+}
+
+.menu-item > .menu-title{
+    font-size: 18px;
+    display: none;
+    position: fixed;
+    margin-left: 50px;
+}
+
+.menu > .options > .icon{
+    font-size: 40px;
+    color: #7269EF;
+}
+
+.menu > .options > .menu-item{
+    font-size: 30px;
+    color: gray;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    border-left: solid 4px transparent;
+    border-right: solid 4px transparent;
+    cursor: pointer;
+    &:hover{
+        color: #7269EF;
+    }
+}
+
+.menu-item-middle{
+    font-size: 36px;
+}
+
+.menu > .options > .menu-item.active{
+    border-left-color: #7269EF;
+    border-right-color: #7269EF;
+    color: #7269EF;
+}
+
+.menu.expand {
+    width: var(--max-width);
+    animation: sidebar-animation-expand 600ms ease-in-out;
+}
+
+.menu.expand > .options > .icon, .menu.expand > .options > .menu-item{
+    justify-content: flex-start;
+    padding-left: 20px;
+}
+
+.menu.expand > .options > .icon > .menu-title, .menu.expand > .options > .menu-item > .menu-title{
+    display: inline;
+    animation: fade-in 600ms ease-in-out;
+}
+
+@media (max-width: 768px) {
+    .menu{
+        display: none;
+    }
+}

@@ -38,4 +38,4 @@ const ProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading }) =>{
 
 export { AppProvider }
 
-export default ProviderWraper;
+export default ProviderWraper;''

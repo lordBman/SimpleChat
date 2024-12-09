@@ -9,11 +9,11 @@ import FriendModel from "./friends";
 class UserModel{
     database: Database = DBManager.instance();
 
-    async create(data: { project: Project, organization?: string, name: string, email: string, password: string }): Promise<string | undefined>{
+    async create(data: { project: Project, organization?: Organization, name: string, email: string, password: string }): Promise<string | undefined>{
         try{
             const id = uuid();
             const init = await this.database.client.user.create({
-                data: { id, projectID: data.project.id, name: data.name, email: data.email, password: data.password },
+                data: { id, projectID: data.project.id, organizationID: data.organization?.id, name: data.name, email: data.email, password: data.password },
                 select: { id: true, name: true, email: true } });
 
             const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
@@ -26,7 +26,7 @@ class UserModel{
 
     async signin(data: {  project: Project, organization?: Organization, email: string, password: string }): Promise<string | undefined>{
         try{
-            const init = await this.database.client.user.findFirst({ where: { projectID: data.project.id, organization: data.organization, email: data.email } });
+            const init = await this.database.client.user.findFirst({ where: { projectID: data.project.id, organizationID: data.organization?.id, email: data.email } });
             if(init){
                 if(data.password === init.password){
                     console.log(JSON.stringify(data.password));
@@ -54,7 +54,7 @@ class UserModel{
     async count(data: { project: Project, organization?: Organization }): Promise<number | undefined>{
         try{
             const init = await this.database.client.user.count({
-                where: { projectID: data.project.id, organization: data.organization }
+                where: { projectID: data.project.id, organizationID: data.organization?.id }
             });
 
             return init!;

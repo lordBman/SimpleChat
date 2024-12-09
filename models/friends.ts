@@ -16,7 +16,7 @@ class FriendModel{
     async all(data: { project: Project, organization?: Organization, user: User }): Promise<Friend[] | undefined>{
         try{
             const friends = await this.database.client.friend.findMany({ 
-                where: { project: data.project, organization: data.organization,  OR: [ { requesterID: data.user.id }, { acceptorID: data.user.id } ] },
+                where: { project: data.project, organizationID: data.organization?.id,  OR: [ { requesterID: data.user.id }, { acceptorID: data.user.id } ] },
                 include: { acceptor:{ select: { id: true, email:  true, name: true, password: false } }, requester: { select: { id:true, email:  true, name: true, password: false } } }
             });
 

@@ -16,7 +16,7 @@ datasource db {
 model Developer{
     id                String            @id @unique()
     name              String
-    email             String
+    email             String             
     password          String
 
     projects          Project[]
@@ -64,15 +64,15 @@ model Organization {
 }
 
 model User{
-    id              String        @id @unique
+    id              String        @id
     name            String
-    email           String        @unique
+    email           String        
     password        String
 
     organizationID  Int?
     organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
     
-    projectID         Int
+    projectID         Int         
     project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
 
     requester       Friend[]      @relation("requester")
@@ -83,6 +83,8 @@ model User{
     sentChats       Chat[]
     createdGroups   Group[]         
     members         Member[]
+
+    @@unique([email, projectID, organizationID])
 }
 
 model Chat{

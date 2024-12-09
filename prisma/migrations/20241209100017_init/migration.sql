@@ -1,9 +1,33 @@
 -- CreateTable
+CREATE TABLE "Credential" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "username" TEXT,
+    "email" TEXT,
+    "password" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "surname" TEXT NOT NULL,
+    "role" TEXT NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Admin" (
+    "id" TEXT NOT NULL PRIMARY KEY
+);
+
+-- CreateTable
 CREATE TABLE "Developer" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL
+    "adminID" TEXT NOT NULL,
+    CONSTRAINT "Developer_adminID_fkey" FOREIGN KEY ("adminID") REFERENCES "Admin" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Client" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "organizationID" INTEGER,
+    "projectID" INTEGER NOT NULL,
+    CONSTRAINT "Client_organizationID_fkey" FOREIGN KEY ("organizationID") REFERENCES "Organization" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "Client_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -11,8 +35,10 @@ CREATE TABLE "Project" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
     "accessToken" TEXT NOT NULL,
-    "developerID" TEXT NOT NULL,
-    CONSTRAINT "Project_developerID_fkey" FOREIGN KEY ("developerID") REFERENCES "Developer" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "developerID" TEXT,
+    "adminID" TEXT,
+    CONSTRAINT "Project_developerID_fkey" FOREIGN KEY ("developerID") REFERENCES "Developer" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Project_adminID_fkey" FOREIGN KEY ("adminID") REFERENCES "Admin" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -34,14 +60,7 @@ CREATE TABLE "Organization" (
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
-    "organizationID" INTEGER,
-    "projectID" INTEGER NOT NULL,
-    CONSTRAINT "User_organizationID_fkey" FOREIGN KEY ("organizationID") REFERENCES "Organization" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "User_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "id" TEXT NOT NULL PRIMARY KEY
 );
 
 -- CreateTable
@@ -112,10 +131,22 @@ CREATE TABLE "Notification" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Credential_id_key" ON "Credential"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_id_key" ON "Admin"("id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Developer_id_key" ON "Developer"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Project_name_developerID_key" ON "Project"("name", "developerID");
+CREATE UNIQUE INDEX "Client_id_key" ON "Client"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Client_id_projectID_organizationID_key" ON "Client"("id", "projectID", "organizationID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Project_name_developerID_adminID_key" ON "Project"("name", "developerID", "adminID");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "AccessKey_key_key" ON "AccessKey"("key");
@@ -127,7 +158,7 @@ CREATE UNIQUE INDEX "Organization_name_projectID_key" ON "Organization"("name", 
 CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX "Chat_id_ownerID_key" ON "Chat"("id", "ownerID");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Friend_requesterID_acceptorID_projectID_key" ON "Friend"("requesterID", "acceptorID", "projectID");

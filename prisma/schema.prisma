@@ -9,35 +9,65 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model Credential{
+    id                  String            @id @unique()
+    username            String?
+    email               String?
+    password            String
+
+    name                String
+    surname             String
+
+    role                String
+}
+
+model Admin{
+    id                  String            @id @unique()
+
+    developers          Developer[]
+    projects            Project[]
 }
 
 model Developer{
-    id                String            @id @unique()
-    name              String
-    email             String             
-    password          String
+    id                  String            @id @unique()
 
-    projects          Project[]
+    adminID             String
+    admin               Admin            @relation(fields: [adminID], references: [id])
+
+    projects            Project[]
+}
+
+model Client{
+    id                  String            @id @unique()
+
+    organizationID  Int?
+    organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
+    
+    projectID         Int         
+    project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
 }
 
 model Project{
     id                Int              @id @default(autoincrement())
-    name              String
+    name              String           @unique
     
     accessToken       String
 
-    developerID       String
-    developer         Developer        @relation(fields: [developerID], references: [id], onDelete: Cascade)
+    developerID       String?
+    developer         Developer?        @relation(fields: [developerID], references: [id], onDelete: Cascade)
+
+    adminID             String?
+    admin               Admin?            @relation(fields: [adminID], references: [id])
 
     keys              AccessKey[]
-    users             User[]
+    clients           Client[]
     groups            Group[]
     friends           Friend[]
     organizations     Organization[]
-
-    @@unique([name, developerID])
 }
 
 model AccessKey{
@@ -56,7 +86,7 @@ model Organization {
    projectID        Int
    project          Project       @relation(fields: [projectID], references: [id])
 
-   users            User[]
+   client           Client[]
    friends          Friend[]
    groups           Group[]
 
@@ -64,16 +94,7 @@ model Organization {
 }
 
 model User{
-    id              String        @id
-    name            String
-    email           String        
-    password        String
-
-    organizationID  Int?
-    organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
-    
-    projectID         Int         
-    project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
+    id              String        @id  @unique
 
     requester       Friend[]      @relation("requester")
     acceptor        Friend[]      @relation("acceptor")
@@ -83,8 +104,6 @@ model User{
     sentChats       Chat[]
     createdGroups   Group[]         
     members         Member[]
-
-    @@unique([email, projectID, organizationID])
 }
 
 model Chat{
@@ -101,6 +120,8 @@ model Chat{
     reply           Chat[]        @relation("reference")
     referenceID     Int?
     reference       Chat?         @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
+
+    @@unique([id, ownerID])
 }
 
 model Friend{

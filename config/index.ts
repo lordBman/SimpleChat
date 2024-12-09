@@ -40,27 +40,36 @@ export class SeedResult{
 export async function seed() {
     const database = DBManager.instance();
     
-    let developer = await database.client.developer.findFirst({ where: { email: process.env.COMPANY_EMAIL!, name: process.env.COMPANY_NAME } });
-    if(!developer){
-        developer = await database.client.developer.create({ data: { id: uuid(), email: process.env.COMPANY_EMAIL!, name: process.env.COMPANY_NAME!, password: process.env.COMPANY_PASSWORD! } });
+    let credential = await database.client.credential.findFirst({ where: { email: process.env.COMPANY_EMAIL!, name: process.env.NAME, surname: process.env.SURNAME } });
+    if(!credential){
+        credential = await database.client.credential.create({ data: { id: uuid(), email: process.env.COMPANY_EMAIL!, name: process.env.NAME!, surname: process.env.SURNAME!, password: process.env.COMPANY_PASSWORD!, role: "admin" } });
     }
 
-    let project = await database.client.project.findFirst({ where: { name: process.env.PROJECT_NAME!, developerID: developer.id } });
-    if(!project){
-        project = await database.client.project.create({ data: { name: process.env.PROJECT_NAME!, accessToken: uuid(), developerID: developer.id } });
-    }
+    let admin = await database.client.admin.upsert({ 
+        where: { id: credential.id },
+        update: {},
+        create: { id: credential.id }
+    });
+
+    let project = await database.client.project.upsert({ 
+        where: { name: process.env.PROJECT_NAME! },
+        update: {},
+        create: { name: process.env.PROJECT_NAME!, adminID: admin.id, accessToken: uuid() }
+    });
 
     let organization = await database.client.organization.upsert({ 
         where: { name_projectID: { name: process.env.COMPANY_NAME!, projectID: project.id } },
         update: {},
         create:  { name: process.env.COMPANY_NAME!, projectID: project.id }
     });
-    let admin = await database.client.user.findFirst({ where: { organizationID: organization.id, email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! } });
-    if(!admin){
-        admin = await database.client.user.create({ data: {
-            id: developer.id, projectID: project.id, name: process.env.COMPANY_NAME!, organizationID: organization.id,
-            email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! } });
-    }
+    
+    await database.client.client.upsert({
+        where: { id: admin.id }, update: {}, create: { id: admin.id, organizationID: organization.id, projectID: project.id } 
+    });
+
+    await database.client.user.upsert({
+        where: { id: admin.id }, update: {}, create: { id: admin.id } 
+    });
 
     let accessKey = await database.client.accessKey.findFirst({ where:{ projectID: project?.id } });
     if(!accessKey){

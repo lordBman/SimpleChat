@@ -8,7 +8,7 @@ import AccessKeyModel from "../models/access-keys";
 const authRouter = express.Router();
 
 authRouter.post("/", async(req, res) =>{
-    if(req.body.name && req.body.email && req.body.password){
+    if(req.body.name && req.body.surname && (req.body.email || req.body.username) && req.body.password){
         const model = new DeveloperModel();
         const developer = await model.create(req.body);
         if(developer){
@@ -21,7 +21,7 @@ authRouter.post("/", async(req, res) =>{
 });
 
 authRouter.post("/login", async(req, res) =>{
-    if(req.body.email && req.body.password){
+    if((req.body.email || req.body.username) && req.body.password){
         const model = new DeveloperModel();
         const developer = await model.signin(req.body);
         if(developer){

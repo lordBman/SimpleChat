@@ -2,36 +2,45 @@ import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
-import { Chat, Friend, Member, Organization, Project, User } from "@prisma/client";
+import { Chat, Friend, Member, Organization, Project, User, Credential, Client } from "@prisma/client";
 import { uuid } from "../utils";
 import FriendModel from "./friends";
 
-class UserModel{
+class ClientModel{
     database: Database = DBManager.instance();
 
-    async create(data: { project: Project, organization?: Organization, name: string, email: string, password: string }): Promise<string | undefined>{
+    async create(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: string }): Promise<Client & Credential | undefined>{
         try{
             const id = uuid();
-            const init = await this.database.client.user.create({
-                data: { id, projectID: data.project.id, organizationID: data.organization?.id, name: data.name, email: data.email, password: data.password },
-                select: { id: true, name: true, email: true } });
+            const credentials = await this.database.client.credential.create({
+                data: { id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "client" },
+                //select: { id: true, name: true, surname:  true, email: true, username: true, role: true }
+            });
 
-            const token = jwt.sign({ user: init }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+            const init = await this.database.client.client.create({
+                data: { id, projectID: data.project.id, organizationID: data.organization?.id },
+            });
 
-            return token;
+            //const token = jwt.sign({ user:  }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+
+            return { ...credentials, ...init };
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }
     }
 
-    async signin(data: {  project: Project, organization?: Organization, email: string, password: string }): Promise<string | undefined>{
+    async signin(data: {  project: Project, organization?: Organization, email?: string, username?: string, password: string }): Promise<string | undefined>{
         try{
-            const init = await this.database.client.user.findFirst({ where: { projectID: data.project.id, organizationID: data.organization?.id, email: data.email } });
-            if(init){
-                if(data.password === init.password){
-                    console.log(JSON.stringify(data.password));
-                    const token = jwt.sign({ user: { ...init, password: undefined }}, process.env.SECRET || "test", { expiresIn: "7 days" } );
-                    return token;
+            const credentials = await this.database.client.credential.findMany({ where: { OR: [ { email: data.email} , { username: data.username } ] } });
+            if(credentials.length > 0){
+                for(var i = 0; i < credentials.length; i++){
+                    const credential = credentials[i];
+                    if(data.password === credential.password){
+                        console.log(JSON.stringify(data.password));
+                        const client = await this.database.client.client.findUnique({ where: { id: credential.id } });
+                        const token = jwt.sign({ user: { ...credential, ...client, password: undefined }}, process.env.SECRET || "test", { expiresIn: "7 days" } );
+                        return token;
+                    }
                 }
                 this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
             }

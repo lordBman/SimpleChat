@@ -1,4 +1,4 @@
-import UserModel from "./user";
+import UserModel from "./clients";
 import ChatModel from "./chat";
 import NotificationModel from "./notification";
 import OrganizationModel from "./organization";

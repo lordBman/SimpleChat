@@ -2,16 +2,16 @@ import { HttpStatusCode } from "axios";
 import { DBManager } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
-import { Chat, Friend, Member, Organization, Project, User, Credential, Client } from "@prisma/client";
+import { Chat, Friend, Member, Organization, Project, User, Credential, Client, Group } from "@prisma/client";
 import { uuid } from "../utils";
 import FriendModel from "./friends";
 
 class ClientModel{
     database: Database = DBManager.instance();
 
-    async create(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: string }): Promise<Client & Credential | undefined>{
+    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: string }): Promise<Client & Credential | undefined>{
         try{
-            const id = uuid();
+            const id = data.id ?? uuid();
             const credentials = await this.database.client.credential.create({
                 data: { id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "client" },
                 //select: { id: true, name: true, surname:  true, email: true, username: true, role: true }
@@ -50,9 +50,10 @@ class ClientModel{
         }
     }
 
-    async delete(user: User): Promise<string | undefined>{
+    async delete(client: Client): Promise<string | undefined>{
         try{
-            await this.database.client.user.delete({ where: { id: user.id } });
+            await this.database.client.client.delete({ where: { id: client.id } });
+            await this.database.client.credential.delete({ where: { id: client.id } });
 
             return "user was deleted successfully";
         }catch(error){
@@ -62,7 +63,7 @@ class ClientModel{
 
     async count(data: { project: Project, organization?: Organization }): Promise<number | undefined>{
         try{
-            const init = await this.database.client.user.count({
+            const init = await this.database.client.client.count({
                 where: { projectID: data.project.id, organizationID: data.organization?.id }
             });
 
@@ -72,25 +73,46 @@ class ClientModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, user: User}): Promise<User & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential}): Promise<Client & Credential & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
         try{
             const friends = await new FriendModel().all({ ...data });
 
-            const members = await this.database.client.member.findMany({
-                where: { userID: data.user.id }, 
-                include:{
-                    group: { include: { creator: { select: { id: true, email: true, name: true } } } },
-                } 
+            let initMembers = await this.database.client.member.findMany({
+                where: { userID: data.user.id }, include: { group: true }
             });
+
+            const members: Array<Credential & Member & { group: Group } > = [];
+            for(let i = 0; i < initMembers.length; i++){
+                const member = initMembers[i];
+                const credential = await this.database.client.credential.findUnique({ 
+                    where: { id: member.userID },
+                    select: { id: true, email: true, username: true, name: true, surname: true }
+                });
+
+                if(credential){
+                    members.push({ ...member, ...credential, password: "" });
+                }
+            }
 
             const actives = [...friends?.filter((friend)=> friend.accepted)!, ...members.filter((member)=> member.accepted ).map((member)=> member.group )];
             let chats: { [key: string]: Chat[] } = {};
             for(let i = 0; i < actives.length; i++){
-                chats[actives[i].id] = await this.database.client.chat.findMany({ 
+                const init = await this.database.client.chat.findMany({ 
                     where: { ownerID: actives[i].id }, 
                     orderBy: { created: "asc" },
-                    include: { sender: { select: { id: true, email: true, name: true } } }
                 });
+
+                const chat: Array<Chat & { sender: Credential }> = [];
+                for(let i = 0; i < init.length; i++){
+                    const sender = await this.database.client.credential.findUnique({
+                        where: { id: init[i].senderID }
+                    });
+
+                    if(sender != null){
+                        chat.push({ ...init[i], sender: sender });
+                    }
+                }
+                chats[actives[i].id] = chat;
             }
 
             return { ...data.user, chats, friends: friends!, members };

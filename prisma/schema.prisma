@@ -57,6 +57,15 @@ model Client{
     
     projectID         Int         
     project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
+
+    requester       Friend[]      @relation("requester")
+    acceptor        Friend[]      @relation("acceptor")
+
+    notifications   Notification[]
+
+    sentChats       Chat[]
+    createdGroups   Group[]         
+    members         Member[]
 }
 
 model Project{
@@ -101,19 +110,6 @@ model Organization {
    @@unique([name, projectID])
 }
 
-model User{
-    id              String        @id  @unique
-
-    requester       Friend[]      @relation("requester")
-    acceptor        Friend[]      @relation("acceptor")
-
-    notifications   Notification[]
-
-    sentChats       Chat[]
-    createdGroups   Group[]         
-    members         Member[]
-}
-
 model Chat{
     id              Int           @id @default(autoincrement())
     message         String
@@ -121,7 +117,7 @@ model Chat{
     delivered       Boolean       @default(false)
 
     senderID        String
-    sender          User          @relation(fields: [senderID], references: [id])
+    sender          Client         @relation(fields: [senderID], references: [credentialID])
 
     ownerID         String
 
@@ -136,10 +132,10 @@ model Friend{
     id              String        @id
 
     requesterID     String
-    requester       User          @relation("requester", fields: [requesterID], references: [id])
+    requester       Client          @relation("requester", fields: [requesterID], references: [credentialID])
 
     acceptorID      String
-    acceptor        User          @relation("acceptor", fields: [acceptorID], references: [id])
+    acceptor        Client          @relation("acceptor", fields: [acceptorID], references: [credentialID])
 
     accepted        Boolean       @default(false)
 
@@ -159,7 +155,7 @@ model Group {
     attachment      String?
 
     creatorID       String
-    creator         User                @relation(fields: [creatorID], references: [id], onDelete: NoAction)
+    creator         Client                @relation(fields: [creatorID], references: [credentialID], onDelete: NoAction)
 
     organizationID  Int?
     organization    Organization?        @relation(fields: [organizationID], references: [id], onDelete: Cascade)
@@ -172,7 +168,7 @@ model Group {
 }
 
 model Member {
-    user              User              @relation(fields: [userID], references: [id], onDelete: Cascade)
+    user              Client              @relation(fields: [userID], references: [credentialID], onDelete: Cascade)
     userID            String
 
     group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
@@ -196,6 +192,6 @@ model Notification{
     groupID           String?
     group             Group?            @relation(fields: [groupID], references: [id], onDelete: SetNull)
 
-    reciecver         User              @relation(fields: [recieverID], references: [id], onDelete: Cascade)
+    reciecver         Client              @relation(fields: [recieverID], references: [credentialID], onDelete: Cascade)
     recieverID        String
 }

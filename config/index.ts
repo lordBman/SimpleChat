@@ -67,22 +67,12 @@ export async function seed() {
         where: { credentialID: admin.credentialID }, update: {}, create: { credentialID: admin.credentialID, organizationID: organization.id, projectID: project.id } 
     });
 
-    await database.client.user.upsert({
-        where: { id: admin.credentialID }, update: {}, create: { id: admin.credentialID } 
-    });
-
     let accessKey = await database.client.accessKey.findFirst({ where:{ projectID: project?.id } });
     if(!accessKey){
         accessKey = await database.client.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
     }
 
     database.client.developer.findMany().then(results=>{
-        results.forEach((result)=>{
-            console.log(JSON.stringify(result));
-        });
-    });
-
-    database.client.user.findMany().then(results=>{
         results.forEach((result)=>{
             console.log(JSON.stringify(result));
         });

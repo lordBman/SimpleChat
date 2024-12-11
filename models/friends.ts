@@ -1,11 +1,14 @@
 import { DBManager } from "../config";
 import Database from "../config/database";
-import { Friend, Organization, Project, User } from "@prisma/client";
+import { Friend, Organization, Project, Credential } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
 
-interface Result{ user: User, friend?: Friend }
+interface Result{ credential: Credential, friend?: Friend }
+
+type RequestFriendResponse = Friend & { acceptor: Credential,  requester: Credential };
+type AllFriendsResponse = Array<RequestFriendResponse>;
 
 class FriendModel{
     database: Database;
@@ -13,22 +16,25 @@ class FriendModel{
         this.database = DBManager.instance();
     }
     
-    async all(data: { project: Project, organization?: Organization, credential: Credential  }): Promise<Friend[] | undefined>{
+    async all(data: { project: Project, organization?: Organization, credential: Credential  }): Promise<AllFriendsResponse | undefined>{
         try{
             const results = await this.database.client.friend.findMany({ 
                 where: { project: data.project, organizationID: data.organization?.id,  OR: [ { requesterID: data.credential.id }, { acceptorID: data.credential.id } ] },
             });
 
-            const friends: Array<Friend & { acceptor: any, requester: any }> = [];
+            const friends: AllFriendsResponse = [];
             for(let i = 0; i < results.length; i++){
                 const acceptor = await this.database.client.credential.findUnique({ 
                     where: { id: results[i].acceptorID }, 
-                    select: { name: true, surname: true, email: true, username: true, id: true } });
+                    select: { id: true, name: true, surname: true, email: true, username: true, id: true } });
                 const requester = await this.database.client.credential.findUnique({ 
                     where: { id: results[i].requesterID },
-                    select: { name: true, surname: true, email: true, username: true, id: true }
+                    select: { id: true, name: true, surname: true, email: true, username: true, id: true }
                 });
-                friends.push({ ...results[i], acceptor, requester });
+
+                if(acceptor && requester){
+                    friends.push({ ...results[i], acceptor: { ...acceptor, password: "", role: "" }, requester: { ...requester, password: "", role: "" } });
+                }
             }
 
             friends.forEach((friend)=> joinChatRoom(friend));
@@ -39,7 +45,7 @@ class FriendModel{
         }
     }
 
-    async request(data: { project: Project, organization?: Organization, credential: Credential, userID: string }): Promise<Friend | undefined>{
+    async request(data: { project: Project, organization?: Organization, credential: Credential, userID: string }): Promise<RequestFriendResponse | undefined>{
         try{
             const id = uuid();
             console.log(JSON.stringify({ id, projectID: data.project.id, organization: data.organization, requesterID: data.credential.id, acceptorID: data.userID }));
@@ -49,12 +55,13 @@ class FriendModel{
 
             const acceptor = await this.database.client.credential.findUnique({ 
                 where: { id: result.acceptorID }, 
-                select: { name: true, surname: true, email: true, username: true, id: true } });
-            const friend: Friend & { acceptor: any, requester: any } = { ...result, acceptor, requester: data.credential };
+                select: { id: true, name: true, surname: true, email: true, username: true, id: true } });
+            if(acceptor){
+                const friend: RequestFriendResponse = { ...result, acceptor: { ...acceptor, password: "", role: "" }, requester: data.credential };
+                joinChatRoom(friend);
 
-            joinChatRoom(friend);
-
-            return friend;
+                return friend;
+            }
         }catch(error){
             console.log(error);
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while sending friend request");
@@ -96,23 +103,21 @@ class FriendModel{
 
     async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<Result[] | undefined>{
         try{
-            const credentials = (await this.database.client.credential.findMany({
-                where: {  NOT: { id: data.credential.id } },
-
-            })).filter((credential)=>{
-                return credential.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
+            const clients = (await this.database.client.client.findMany({
+                where: { projectID: data.project.id, organizationID: data.organization?.id, NOT: { credentialID: data.credential.id } },
+                include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }
+            })).filter((client)=>{
+                return client.credential.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             });
 
-            const users:  = []
-
             let results: Result[] = [];
-            for(let i = 0; i < users.length; i++ ){
+            for(let i = 0; i < clients.length; i++ ){
                 const init = await this.database.client.friend.findFirst({ 
                     where: {
                         projectID: data.project.id, organization: data.organization,
-                        OR:[ { acceptorID: data.user.id, requesterID: users[i].id }, { requesterID: data.user.id, acceptorID: users[i].id } ] 
+                        OR:[ { acceptorID: data.credential.id, requesterID: clients[i].credentialID }, { requesterID: data.credential.id, acceptorID: clients[i].credentialID } ] 
                     },
-                    include: { requester: { select: { id: true, email:  true, name: true, password: false } } }
+                    include: { requester: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }} }
                 });
                 if(init){
                     results.push({ user: users[i], friend: init });

@@ -5,8 +5,7 @@ import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
 
-interface Result{ credential: Credential, friend?: Friend }
-
+type FrientSearchResponse = Credential | Friend;
 type RequestFriendResponse = Friend & { acceptor: Credential,  requester: Credential };
 type AllFriendsResponse = Array<RequestFriendResponse>;
 
@@ -26,10 +25,10 @@ class FriendModel{
             for(let i = 0; i < results.length; i++){
                 const acceptor = await this.database.client.credential.findUnique({ 
                     where: { id: results[i].acceptorID }, 
-                    select: { id: true, name: true, surname: true, email: true, username: true, id: true } });
+                    select: { id: true, name: true, surname: true, email: true, username: true } });
                 const requester = await this.database.client.credential.findUnique({ 
                     where: { id: results[i].requesterID },
-                    select: { id: true, name: true, surname: true, email: true, username: true, id: true }
+                    select: { id: true, name: true, surname: true, email: true, username: true }
                 });
 
                 if(acceptor && requester){
@@ -55,7 +54,7 @@ class FriendModel{
 
             const acceptor = await this.database.client.credential.findUnique({ 
                 where: { id: result.acceptorID }, 
-                select: { id: true, name: true, surname: true, email: true, username: true, id: true } });
+                select: { id: true, name: true, surname: true, email: true, username: true } });
             if(acceptor){
                 const friend: RequestFriendResponse = { ...result, acceptor: { ...acceptor, password: "", role: "" }, requester: data.credential };
                 joinChatRoom(friend);
@@ -101,28 +100,31 @@ class FriendModel{
         }
     }
 
-    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<Result[] | undefined>{
+    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<FrientSearchResponse[] | undefined>{
         try{
-            const clients = (await this.database.client.client.findMany({
+            const credentials = (await this.database.client.client.findMany({
                 where: { projectID: data.project.id, organizationID: data.organization?.id, NOT: { credentialID: data.credential.id } },
                 include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }
             })).filter((client)=>{
                 return client.credential.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
-            });
+            }).map((client) => client.credential);
 
-            let results: Result[] = [];
-            for(let i = 0; i < clients.length; i++ ){
+            let results: FrientSearchResponse[] = [];
+            for(let i = 0; i < credentials.length; i++ ){
                 const init = await this.database.client.friend.findFirst({ 
                     where: {
                         projectID: data.project.id, organization: data.organization,
-                        OR:[ { acceptorID: data.credential.id, requesterID: clients[i].credentialID }, { requesterID: data.credential.id, acceptorID: clients[i].credentialID } ] 
+                        OR:[ { acceptorID: data.credential.id, requesterID: credentials[i].id }, { requesterID: data.credential.id, acceptorID: credentials[i].id } ] 
                     },
-                    include: { requester: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }} }
+                    include: { 
+                        requester: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }}, 
+                        acceptor: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }} 
+                    }
                 });
                 if(init){
-                    results.push({ user: users[i], friend: init });
+                    results.push(init);
                 }else{
-                    results.push({ user: users[i] });
+                    results.push({ ...credentials[i], password: "", role: "" });
                 }
             }
             return results;

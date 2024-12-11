@@ -96,9 +96,14 @@ class FriendModel{
 
     async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<Result[] | undefined>{
         try{
-            const users = (await this.database.client.credential.findMany({ where: { projectID: data.project.id, organization: data.organization, NOT: { id: data.user.id } } })).filter((user)=>{
-                return user.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
+            const credentials = (await this.database.client.credential.findMany({
+                where: {  NOT: { id: data.credential.id } },
+
+            })).filter((credential)=>{
+                return credential.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             });
+
+            const users:  = []
 
             let results: Result[] = [];
             for(let i = 0; i < users.length; i++ ){

@@ -46,15 +46,15 @@ export async function seed() {
     }
 
     let admin = await database.client.admin.upsert({ 
-        where: { id: credential.id },
+        where: { credentialID: credential.id },
         update: {},
-        create: { id: credential.id }
+        create: { credentialID: credential.id }
     });
 
     let project = await database.client.project.upsert({ 
         where: { name: process.env.PROJECT_NAME! },
         update: {},
-        create: { name: process.env.PROJECT_NAME!, adminID: admin.id, accessToken: uuid() }
+        create: { name: process.env.PROJECT_NAME!, adminID: admin.credentialID, accessToken: uuid() }
     });
 
     let organization = await database.client.organization.upsert({ 
@@ -64,11 +64,11 @@ export async function seed() {
     });
     
     await database.client.client.upsert({
-        where: { id: admin.id }, update: {}, create: { id: admin.id, organizationID: organization.id, projectID: project.id } 
+        where: { credentialID: admin.credentialID }, update: {}, create: { credentialID: admin.credentialID, organizationID: organization.id, projectID: project.id } 
     });
 
     await database.client.user.upsert({
-        where: { id: admin.id }, update: {}, create: { id: admin.id } 
+        where: { id: admin.credentialID }, update: {}, create: { id: admin.credentialID } 
     });
 
     let accessKey = await database.client.accessKey.findFirst({ where:{ projectID: project?.id } });

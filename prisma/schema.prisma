@@ -15,6 +15,8 @@ datasource db {
 
 model Credential{
     id                  String            @id @unique()
+    client              Client?
+
     username            String?
     email               String?
     password            String
@@ -23,26 +25,32 @@ model Credential{
     surname             String
 
     role                String
+    
+    admin               Admin?
+    developer           Developer?
 }
 
 model Admin{
-    id                  String            @id @unique()
+    credentialID        String            @id @unique()
+    credential          Credential        @relation(fields: [credentialID], references: [id])
 
     developers          Developer[]
     projects            Project[]
 }
 
 model Developer{
-    id                  String            @id @unique()
+    credentialID        String            @id @unique()
+    credential          Credential        @relation(fields: [credentialID], references: [id])
 
     adminID             String
-    admin               Admin            @relation(fields: [adminID], references: [id])
+    admin               Admin            @relation(fields: [adminID], references: [credentialID])
 
     projects            Project[]
 }
 
 model Client{
-    id                  String            @id @unique()
+    credentialID        String            @id @unique()
+    credential          Credential        @relation(fields: [credentialID], references: [id])
 
     organizationID  Int?
     organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
@@ -58,10 +66,10 @@ model Project{
     accessToken       String
 
     developerID       String?
-    developer         Developer?        @relation(fields: [developerID], references: [id], onDelete: Cascade)
+    developer         Developer?        @relation(fields: [developerID], references: [credentialID], onDelete: Cascade)
 
     adminID             String?
-    admin               Admin?            @relation(fields: [adminID], references: [id])
+    admin               Admin?            @relation(fields: [adminID], references: [credentialID])
 
     keys              AccessKey[]
     clients           Client[]

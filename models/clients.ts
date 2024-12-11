@@ -18,7 +18,7 @@ class ClientModel{
             });
 
             const init = await this.database.client.client.create({
-                data: { id, projectID: data.project.id, organizationID: data.organization?.id },
+                data: { credentialID: id, projectID: data.project.id, organizationID: data.organization?.id },
             });
 
             //const token = jwt.sign({ user:  }, process.env.SECRET || "test", { expiresIn: "7 days" } );
@@ -37,7 +37,7 @@ class ClientModel{
                     const credential = credentials[i];
                     if(data.password === credential.password){
                         console.log(JSON.stringify(data.password));
-                        const client = await this.database.client.client.findUnique({ where: { id: credential.id } });
+                        const client = await this.database.client.client.findUnique({ where: { credentialID: credential.id } });
                         const token = jwt.sign({ user: { ...credential, ...client, password: undefined }}, process.env.SECRET || "test", { expiresIn: "7 days" } );
                         return token;
                     }

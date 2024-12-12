@@ -3,9 +3,10 @@ import { DBManager, SeedResult } from "../config";
 import Database from "../config/database";
 import jwt from "jsonwebtoken";
 import { uuid } from "../utils";
-import { Developer, Project } from "@prisma/client";
+import { Developer, Organization, Project, Client, Credential } from "@prisma/client";
 import ProjectModel from "./projects";
 import { UserModel } from ".";
+import ClientModel from "./clients";
 
 class DeveloperModel{
     database: Database;
@@ -13,44 +14,24 @@ class DeveloperModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { name: string, email: string, password: string }): Promise<string | undefined>{
+    async create(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential } | undefined>{
         try{
-            const developer = await this.database.client.developer.create({ data: { id: uuid(), ...data }, select: { id: true, name: true, email: true } });
+            const client = await new ClientModel().create({ ...data, role: "developer" });
+            if(client){
+                await this.database.client.developer.create({ data: { credentialID: client.credentialID, adminID: data.project.adminID! } });
 
-            const user = await this.database.client.user.create({ 
-                data: { id: developer.id, organizationID: SeedResult.instance().organizationID, projectID:  SeedResult.instance().projectID, ...data },
-                select: { id: true, name: true, email: true } });
-
-            const token = jwt.sign({ developer, user }, process.env.SECRET || "test", { expiresIn: "7 days" } );
-
-            return token;
+                return client;
+            }
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
         }
     }
 
-    async signin(data: { email: string, password: string }): Promise<string | undefined>{
-        try{
-            const init = await this.database.client.developer.findFirst({ where: { email: data.email } });
-            if(init){
-                if(data.password === init.password){
-                    console.log(JSON.stringify(data.password));
-                    const token = jwt.sign({ developer: { ...init, password: undefined }, user: { ...init, password: undefined } }, process.env.SECRET || "test", { expiresIn: "7 days" } );
-                    return token;
-                }
-                this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
-            }
-            this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "account does not exists, try signing up");
-        }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when getting user");
-        }
-    }
-
     async delete(developer: Developer): Promise<string | undefined>{
         try{
-            await this.database.client.user.delete({ where: { id: developer.id } });
-            await this.database.client.developer.delete({ where: { id: developer.id } });
-
+            await this.database.client.developer.delete({ where: developer });
+            await this.database.client.credential.delete({ where: { id: developer.credentialID } });
+            
             return "user was deleted successfully";
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");

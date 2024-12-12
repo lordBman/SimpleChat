@@ -24,7 +24,7 @@ model Credential{
     name                String
     surname             String
 
-    role                String
+    role                String            @default("client")
     
     admin               Admin?
     developer           Developer?
@@ -168,8 +168,8 @@ model Group {
 }
 
 model Member {
-    user              Client              @relation(fields: [userID], references: [credentialID], onDelete: Cascade)
-    userID            String
+    credentialID        String            @unique()
+    client              Client            @relation(fields: [credentialID], references: [credentialID])
 
     group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
     groupID           String
@@ -179,7 +179,7 @@ model Member {
 
     accepted          Boolean           @default(false)
 
-    @@id([userID, groupID])
+    @@id([credentialID, groupID])
 }
 
 model Notification{

@@ -78,7 +78,7 @@ model Project{
     developer         Developer?        @relation(fields: [developerID], references: [credentialID], onDelete: Cascade)
 
     adminID             String?
-    admin               Admin?            @relation(fields: [adminID], references: [credentialID])
+    admin               Admin?          @relation(fields: [adminID], references: [credentialID])
 
     keys              AccessKey[]
     clients           Client[]
@@ -192,6 +192,6 @@ model Notification{
     groupID           String?
     group             Group?            @relation(fields: [groupID], references: [id], onDelete: SetNull)
 
-    reciecver         Client              @relation(fields: [recieverID], references: [credentialID], onDelete: Cascade)
+    reciecver         Client            @relation(fields: [recieverID], references: [credentialID], onDelete: Cascade)
     recieverID        String
 }

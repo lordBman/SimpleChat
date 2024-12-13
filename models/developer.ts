@@ -1,9 +1,10 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, SeedResult } from "../config";
 import Database from "../config/database";
-import { Developer, Organization, Project, Client, Credential } from "@prisma/client";
+import { Developer, Organization, Project, Client, Credential, Admin } from "@prisma/client";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
+import { uuid } from "../utils";
 
 class DeveloperModel{
     database: Database;
@@ -11,11 +12,30 @@ class DeveloperModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential } | undefined>{
+    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential } | undefined>{
         try{
             const client = await new ClientModel().create({ ...data, role: "developer" });
             if(client){
-                await this.database.client.developer.create({ data: { credentialID: client.credentialID, adminID: data.project.adminID! } });
+                await this.database.client.developer.create({ data: { credentialID: client.credentialID, adminID: data.admin.id } });
+                await this.database.client.friend.create({ data: {
+                    id: uuid(),
+                    projectID: data.project.id, organizationID: data.organization?.id,
+                    requesterID: client.credentialID, acceptorID: data.project.adminID!, accepted: true,
+                } });
+
+                await this.database.client.notification.create({
+                    data: { 
+                        recieverID: client.credentialID,
+                        alert: `Hi ${data.name}, greetings from ${process.env.COMPANY_NAME}. my name is ${process.env.NAME}. Welcome to my Chat API platform. feel free to reach out to me if you want anything, I hope you enjoy using our services.`
+                    }
+                });
+
+                await this.database.client.notification.create({
+                    data: { 
+                        recieverID: data.admin.id,
+                        alert: `New developer named ${data.name}, say hi to him/her`
+                    }
+                });
 
                 return client;
             }
@@ -24,14 +44,21 @@ class DeveloperModel{
         }
     }
 
-    async delete(developer: Developer): Promise<string | undefined>{
+    async delete(data: { credential: Credential, admin: Credential }): Promise<string | undefined>{
         try{
-            await this.database.client.developer.delete({ where: developer });
-            await this.database.client.credential.delete({ where: { id: developer.credentialID } });
+            await this.database.client.developer.delete({ where: { credentialID: data.credential.id } });
+            await this.database.client.credential.delete({ where: { id: data.credential.id } });
+
+            await this.database.client.notification.create({
+                data: { 
+                    recieverID: data.admin.id,
+                    alert: `${data.credential.name} deleted his/her developer account`
+                }
+            });
             
             return "user was deleted successfully";
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when deleting user");
         }
     }
 

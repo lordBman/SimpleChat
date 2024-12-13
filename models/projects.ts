@@ -1,4 +1,4 @@
-import { Developer, Project } from "@prisma/client";
+import { Admin, Developer, Project } from "@prisma/client";
 import { DBManager } from "../config";
 import Database from "../config/database";
 import { HttpStatusCode } from "axios";
@@ -9,10 +9,10 @@ class ProjectModel{
         this.database = DBManager.instance();
     }
 
-    async all(data: { developer: Developer }): Promise<Project[] | undefined>{
+    async all(data: { developer?: Developer , admin?: Developer | Admin}): Promise<Project[] | undefined>{
         try{
             const projects = await this.database.client.project.findMany({ 
-                where: { developerID: data.developer.id },
+                where: { developerID: data.developer?.credentialID, adminID: data.admin?.credentialID },
                 include: { keys: true }
             });
 

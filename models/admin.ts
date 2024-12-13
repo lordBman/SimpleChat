@@ -1,11 +1,11 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, SeedResult } from "../config";
 import Database from "../config/database";
-import { Developer, Organization, Project, Client, Credential } from "@prisma/client";
+import { Developer, Organization, Project, Client, Credential, Admin } from "@prisma/client";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
 
-class DeveloperModel{
+class AdminModel{
     database: Database;
     constructor(){
         this.database = DBManager.instance();
@@ -13,9 +13,9 @@ class DeveloperModel{
 
     async create(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential } | undefined>{
         try{
-            const client = await new ClientModel().create({ ...data, role: "developer" });
+            const client = await new ClientModel().create({ ...data, role: "admin" });
             if(client){
-                await this.database.client.developer.create({ data: { credentialID: client.credentialID, adminID: data.project.adminID! } });
+                await this.database.client.admin.create({ data: { credentialID: client.credentialID } });
 
                 return client;
             }
@@ -24,10 +24,10 @@ class DeveloperModel{
         }
     }
 
-    async delete(developer: Developer): Promise<string | undefined>{
+    async delete(admin: Admin): Promise<string | undefined>{
         try{
-            await this.database.client.developer.delete({ where: developer });
-            await this.database.client.credential.delete({ where: { id: developer.credentialID } });
+            await this.database.client.admin.delete({ where: admin });
+            await this.database.client.credential.delete({ where: { id: admin.credentialID } });
             
             return "user was deleted successfully";
         }catch(error){
@@ -35,12 +35,12 @@ class DeveloperModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Developer & { projects: Project [] } | undefined>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Admin & { projects: Project [] } | undefined>{
         try{
-            const developer = await this.database.client.developer.findUnique({ where: { credentialID: data.credential.id } });
+            const admin = await this.database.client.admin.findUnique({ where: { credentialID: data.credential.id } });
             const client = await new ClientModel().get(data);
-            if(developer && client){
-                const projects = await new ProjectModel().all({ developer });
+            if(admin && client){
+                const projects = await new ProjectModel().all({ admin });
 
                 const init: Array<Project & { userCount: number }> = [];
                 for(let index = 0; index < projects?.length!; index++){
@@ -50,7 +50,7 @@ class DeveloperModel{
                     init.push({ ...project, userCount: userCount! });
                 }
 
-                return { ...developer, ...client, projects: init };
+                return { ...admin, ...client, projects: init };
             }
         }catch(error){
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when initialing user");
@@ -58,4 +58,4 @@ class DeveloperModel{
     }
 }
 
-export default DeveloperModel;
+export default AdminModel;

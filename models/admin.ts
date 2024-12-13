@@ -11,19 +11,6 @@ class AdminModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential } | undefined>{
-        try{
-            const client = await new ClientModel().create({ ...data, role: "admin" });
-            if(client){
-                await this.database.client.admin.create({ data: { credentialID: client.credentialID } });
-
-                return client;
-            }
-        }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
-        }
-    }
-
     async delete(admin: Admin): Promise<string | undefined>{
         try{
             await this.database.client.admin.delete({ where: admin });

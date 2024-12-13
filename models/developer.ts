@@ -83,6 +83,21 @@ class DeveloperModel{
             this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when initialing user");
         }
     }
+
+    async all(data: { admin: Credential }): Promise<Developer[] | undefined>{
+        try{
+            const developers = await this.database.client.developer.findMany({
+                where: { adminID: data.admin.id }, 
+                include: { 
+                    projects: { select: { id: true, name: true } }, 
+                    credential: { select: { id: true, name: true, surname: true, email: true, username: true } }},
+            });
+            
+            return developers;
+        }catch(error){
+            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when deleting user");
+        }
+    }
 }
 
 export default DeveloperModel;

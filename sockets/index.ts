@@ -1,6 +1,5 @@
 import jetLogger from "jet-logger";
-import { Namespace, Server, Socket } from "socket.io";
-import { ExtendedError } from "socket.io/dist/namespace";
+import { ExtendedError, Namespace, Server, Socket } from "socket.io";
 import { ConnectedSockets } from "./utils";
 import FriendModel from "../models/friends";
 import jwt from "jsonwebtoken";

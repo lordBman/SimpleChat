@@ -1,6 +1,5 @@
 import * as esbuild from "esbuild";
 import { sassPlugin } from "esbuild-sass-plugin";
-import path from "path";
 
 let ctx = await esbuild.context({
     entryPoints: [

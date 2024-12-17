@@ -1,5 +1,5 @@
 import { HttpStatusCode } from "axios";
-import { DBManager, Err, SeedResult } from "../config";
+import { DBManager, Err } from "../config";
 import Database from "../config/database";
 import { Developer, Organization, Project, Credential, Admin } from "@prisma/client";
 import ProjectModel from "./projects";

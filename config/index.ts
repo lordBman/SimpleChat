@@ -40,7 +40,7 @@ class DBManager{
 }
 
 export class SeedResult{
-    projectID: number;
+    projectID: string;
     organizationID: number
 
     static result: SeedResult;

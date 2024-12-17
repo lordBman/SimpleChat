@@ -55,7 +55,7 @@ model Client{
     organizationID  Int?
     organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
     
-    projectID         Int         
+    projectID         String         
     project           Project     @relation(fields: [projectID], references: [id], onDelete: Cascade)
 
     requester       Friend[]      @relation("requester")
@@ -69,10 +69,8 @@ model Client{
 }
 
 model Project{
-    id                Int              @id @default(autoincrement())
+    id                String              @id @default(uuid())
     name              String           @unique
-    
-    accessToken       String           @default(uuid())
 
     ownerID           String
     developer         Developer?       @relation("developerProjects", fields: [ownerID], references: [credentialID], map: "developer_fk", onDelete: Cascade)
@@ -91,7 +89,7 @@ model AccessKey{
     name              String            @unique
     enabled           Boolean           @default(false)
 
-    projectID         Int
+    projectID         String
     project           Project           @relation(fields: [projectID], references: [id], onDelete: Cascade)
 
     @@unique([projectID, name])
@@ -101,7 +99,7 @@ model Organization {
    id               Int           @id @default(autoincrement())
    name             String
 
-   projectID        Int
+   projectID        String
    project          Project       @relation(fields: [projectID], references: [id])
 
    clients          Client[]
@@ -143,7 +141,7 @@ model Friend{
     organizationID  Int?
     organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: Cascade)
 
-    projectID       Int
+    projectID       String
     project         Project        @relation(fields: [projectID], references: [id])
 
     @@unique([requesterID, acceptorID, projectID])
@@ -161,7 +159,7 @@ model Group {
     organizationID  Int?
     organization    Organization?        @relation(fields: [organizationID], references: [id], onDelete: Cascade)
 
-    projectID       Int
+    projectID       String
     project         Project             @relation(fields: [projectID], references: [id])
 
     members         Member[]

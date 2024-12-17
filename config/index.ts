@@ -1,7 +1,21 @@
+import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import Database from "./database";
-import ErrorHandler from "./error";
 import jetLogger from "jet-logger";
+
+export class Err extends Error{
+    code : HttpStatusCode;
+    error: any; 
+    message: string;
+
+    constructor(code : HttpStatusCode, error: any, message: string){
+        super(message);
+
+        this.code = code;
+        this.error = error;
+        this.message = message;
+    }
+}
 
 class DBManager{
     private static db: Database;
@@ -10,8 +24,10 @@ class DBManager{
 
     static instance = () =>{
         if(!DBManager.db){
-            DBManager.db = new Database(new ErrorHandler());
-            DBManager.db.connect();
+            DBManager.db = new Database();
+            DBManager.db.connect().catch((error)=>{
+                console.log(error)
+            });
         }
         return DBManager.db;
     }
@@ -51,10 +67,12 @@ export async function seed() {
         create: { credentialID: credential.id }
     });
 
+    jetLogger.info(JSON.stringify(credential));
+
     let project = await database.client.project.upsert({ 
         where: { name: process.env.PROJECT_NAME! },
         update: {},
-        create: { name: process.env.PROJECT_NAME!, adminID: admin.credentialID, accessToken: uuid() }
+        create: { name: process.env.PROJECT_NAME!, ownerID: admin.credentialID }
     });
 
     let organization = await database.client.organization.upsert({ 
@@ -69,7 +87,7 @@ export async function seed() {
 
     let accessKey = await database.client.accessKey.findFirst({ where:{ projectID: project?.id } });
     if(!accessKey){
-        accessKey = await database.client.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
+        accessKey = await database.client.accessKey.create({ data: { id: uuid(), projectID: project.id, name: "default", key: uuid(), enabled: true } });
     }
 
     database.client.developer.findMany().then(results=>{

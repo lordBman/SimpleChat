@@ -1,36 +1,56 @@
 import express, { NextFunction, Request, Response } from "express";
 import chatRouter from "./chat";
 import friendRouter from "./friends";
-import userRouter from "./users";
 import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "axios";
 import jetLogger from "jet-logger";
 import AccessKeyModel from "../models/access-keys";
 import authRouter from "./auth";
-import developerRouter from "./developer";
 import accessKeyRouter from "./access-keys";
-import { OrganizationModel } from "../models";
+import { AdminModel, OrganizationModel } from "../models";
+import { Err, SeedResult } from "../config";
+import { Credential, Project } from "@prisma/client";
+import ClientModel from "../models/clients";
+import DeveloperModel from "../models/developer";
+import projectRouter from "./projects";
 
-export const UserAPIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
-    if(req.cookies.token && (req.body.key || req.query.key)){
+export const KeyAuthenication = async (req: Request, res: Response, next: NextFunction) => {
+    if(req.body.key || req.query.key){
         try{
-            req.body.user = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).user;
-    
-            const accessKey = await new AccessKeyModel().get(req.body.key || req.query.key); console.log(`${req.body.key || req.query.key} - ${JSON.stringify(accessKey)}`);
-            if(accessKey?.enabled){            
+            const accessKey = await new AccessKeyModel().get(req.body.key ?? req.query.key);
+
+            console.log(`${req.body.key ?? req.query.key} - ${JSON.stringify(accessKey)}`);
+            if(accessKey.enabled){            
                 req.body.project = accessKey.project;
+                req.body.admin = accessKey.project.admin?.credential;
+                req.body.developer = accessKey.project.developer?.credential;
                 if(req.body.organization || req.query.organization){
-                    const organizationName = req.body.organization || req.query.organization;
-                    const organization = await new OrganizationModel().get({ project: accessKey.project, name: organizationName });
-                    if(organization){
-                        req.body.organization = organization;
-                        return next();
-                    }
-                    return res.status(HttpStatusCode.NotFound).send({message: "Organization specified not found" });
+                    const organizationName = req.body.organization ?? req.query.organization;
+                    req.body.organization = await new OrganizationModel().get({ project: accessKey.project, name: organizationName });
                 }
                 return next()
+            }else{
+                return res.status(HttpStatusCode.Unauthorized).send({message: "API Access key found but has been deactivated" });
             }
-            return res.status(HttpStatusCode.Unauthorized).send({message: "API Access key found but has been deactivated" });
+        }catch(error){
+            jetLogger.err(error);
+            if(error instanceof Err){
+                const init = error as Err;
+                return res.send(init.code).send({ message: init.message });
+            }else{
+                return res.status(HttpStatusCode.InternalServerError).send({message: "error encountered when authenticating acess key"});
+            }
+        }
+    }
+    return res.status(HttpStatusCode.Unauthorized).send({message: "access key not found expired"});
+};
+
+export const APIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
+    if(req.cookies.token){
+        try{
+            req.body.credential = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).credential;
+    
+            return next()
         }catch(error){
             jetLogger.err(error);
             if(error instanceof jwt.TokenExpiredError){
@@ -43,33 +63,73 @@ export const UserAPIAuthenication = async (req: Request, res: Response, next: Ne
     return res.status(HttpStatusCode.Unauthorized).send({message: "access token expired, try refreshing or login again"});
 };
 
-export const DeveloperAPIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
-    if(req.cookies.token){
-        try{
-            req.body.developer = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).developer;
+export const AdminFilter = async (req: Request, res: Response, next: NextFunction) => {
+    if(req.body.credential && (req.body.credential as Credential).role === "admin"){
+        const credential = (req.body.credential as Credential);
+        const project = (req.body.project as Project);
 
-            return next();
-        }catch(error){
-            jetLogger.err(error);
-            if(error instanceof jwt.TokenExpiredError){
-                return res.status(HttpStatusCode.Unauthorized).send({message: "access token expired, try refreshing or login again"});
-            }else{
-                return res.status(HttpStatusCode.InternalServerError).send({message: "error encountered when authenticating user"});
-            }
+        const seedResult = SeedResult.instance();
+
+        if(seedResult.projectID === project.id && project.ownerID === credential.id){
+            return next()
+        }else{
+            return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have addministrative access" });
         }
     }
-    return res.status(HttpStatusCode.Unauthorized).send({message: "access token expired, try refreshing or login again"});
+    return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have permission to access this route" });
+};
+
+export const DeveloperFilter = async (req: Request, res: Response, next: NextFunction) => {
+    if(req.body.credential && (req.body.credential as Credential).role === "developer"){
+        const credential = (req.body.credential as Credential);
+        const project = (req.body.project as Project);
+
+        if(project.ownerID === credential.id){
+            return next()
+        }else{
+            return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have developer access" });
+        }
+    }
+    return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have permission to access this route" });
 };
 
 const api = express.Router();
 
-api.use("/chats", UserAPIAuthenication, chatRouter);
-api.use("/friends", UserAPIAuthenication, friendRouter);
-api.use("/users", UserAPIAuthenication, userRouter);
+const projectAPI = express.Router();
+projectAPI.use("/", projectRouter);
+projectAPI.use("/access-key", accessKeyRouter);
 
-api.use("/developer", DeveloperAPIAuthenication, developerRouter);
-api.use("/access-key", DeveloperAPIAuthenication, accessKeyRouter);
+const adminAPI = express.Router();
 
-api.use("/auth", authRouter);
+api.use("/project", KeyAuthenication, APIAuthenication, DeveloperFilter, projectAPI);
+api.use("/admin", KeyAuthenication, APIAuthenication, AdminFilter, adminAPI);
+
+api.use("/chats", KeyAuthenication, APIAuthenication, chatRouter);
+api.use("/friends", KeyAuthenication, APIAuthenication, friendRouter);
+
+api.use("/auth", KeyAuthenication, authRouter);
+api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
+    try{
+        let model: ClientModel | DeveloperModel | AdminModel =  new ClientModel();
+        switch((req.body.credential as Credential).role){
+            case "admin":
+                model = new AdminModel();
+                break;
+            case "developer":
+                model = new DeveloperModel();
+                break;
+        }
+        const init = await model.get(req.body);
+
+        return res.status(HttpStatusCode.Ok).send(init);
+    }catch(error){
+        jetLogger.err(error);
+        if(error instanceof Err){
+            const err = error as Err;
+            return res.status(err.code).send({ message: err.message });
+        }
+        return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
+    }
+});
 
 export default api;

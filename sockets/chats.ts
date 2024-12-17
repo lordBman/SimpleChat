@@ -1,6 +1,6 @@
-import { Namespace, Server, Socket } from "socket.io";
+import { Namespace, Socket } from "socket.io";
 import { ChatModel } from "../models";
-import { Friend, Group, Member } from "@prisma/client";
+import { Friend, Member } from "@prisma/client";
 import { ConnectedSockets } from "./utils";
 
 export const joinChatRoom = (channel: Friend | Member ) => {
@@ -21,8 +21,8 @@ export const joinChatRoom = (channel: Friend | Member ) => {
         }
     }else{
         const member = channel as Member;
-        if(ConnectedSockets.getInstance().isOnline(member.userID)){
-            const socket = ConnectedSockets.getInstance().get(member.userID)!;
+        if(ConnectedSockets.getInstance().isOnline(member.credentialID)){
+            const socket = ConnectedSockets.getInstance().get(member.credentialID)!;
             if(!socket.rooms.has(member.groupID)){
                 socket.join(member.groupID);
             }
@@ -36,7 +36,7 @@ export default (namespace: Namespace, socket: Socket) => {
 
         console.log(`current room: ${room}`);
 
-        chatModel.create({ ...data, user: socket.handshake.auth.user}).then((chat)=>{
+        chatModel.create({ ...data, credential: socket.handshake.auth.credentail}).then((chat)=>{
             console.log(JSON.stringify(chat));
 
             namespace.to((data.friendID || data.groupID)!).emit("chat", chat, (data.friendID || data.groupID));
@@ -45,6 +45,6 @@ export default (namespace: Namespace, socket: Socket) => {
 
     socket.on("typing", (data: string, room)=>{
         console.log(data);
-        socket.broadcast.to(room).emit("typing", {room, message:`${socket.handshake.auth.user.name} is typing...` });
+        socket.broadcast.to(room).emit("typing", {room, message:`${socket.handshake.auth.credentail.name} is typing...` });
     });
 }

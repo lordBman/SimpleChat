@@ -1,5 +1,5 @@
 import { Organization, Project } from "@prisma/client";
-import { DBManager } from "../config";
+import { DBManager, Err } from "../config";
 import Database from "../config/database";
 import { HttpStatusCode } from "axios";
 
@@ -9,21 +9,31 @@ class OrganizationModel{
         this.database = DBManager.instance();
     }
 
-    async get(data: { project: Project, name: string }): Promise<Organization | undefined>{
+    async create(data: { project: Project, name: string }): Promise<Organization>{
         try{
-            const organization = await this.database.client.organization.findUnique({ 
-                where: { name_projectID: { projectID: data.project.id, name: data.name } }
+            const organization = await this.database.client.organization.create({ 
+                data: { projectID: data.project.id, name: data.name }
             });
 
-            if(organization){
-                return organization;
-            }
+            return organization;
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while organization details");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while creating details");
         }
     }
 
-    async all(data: { project: Project }): Promise<Organization[] | undefined>{
+    async get(data: { project: Project, name: string }): Promise<Organization>{
+        try{
+            const organization = await this.database.client.organization.findUniqueOrThrow({ 
+                where: { name_projectID: { projectID: data.project.id, name: data.name } }
+            });
+
+            return organization;
+        }catch(error){
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while getting organization details");
+        }
+    }
+
+    async all(data: { project: Project }): Promise<Organization[]>{
         try{
             const organizations = await this.database.client.organization.findMany({ 
                 where: { projectID: data.project.id }
@@ -31,7 +41,19 @@ class OrganizationModel{
 
             return organizations;
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered while loading Organization list");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while loading Organization list");
+        }
+    }
+
+    async delete(data: { project: Project, groupID: number }): Promise<string>{
+        try{
+            const organizations = await this.database.client.organization.delete({ 
+                where: { projectID: data.project.id, id: data.groupID }
+            });
+
+            return "organization deletion successful";
+        }catch(error){
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while delteting Organization");
         }
     }
 }

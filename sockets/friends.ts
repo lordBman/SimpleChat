@@ -6,14 +6,14 @@ import { ConnectedSockets } from './utils';
 export default (namespace: Namespace, socket: Socket) => {
     socket.on('cancel', async(input: { friendID: string }, room: string) => {
         const model = new FriendModel();
-        const response = await model.reject({ id: input.friendID });
+        const response = await model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID });
 
         ConnectedSockets.getInstance().send("cancel", [ response?.acceptorID!, response?.requesterID! ], response);
     });
 
     socket.on("accept", async(input: { friendID: string }, room: string)=>{
         const model = new FriendModel();
-        const response = await model.accept({ id: input.friendID });
+        const response = await model.accept({ credential: socket.handshake.auth.credentail, id: input.friendID });
 
         console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
 
@@ -21,10 +21,21 @@ export default (namespace: Namespace, socket: Socket) => {
     
         namespace.to(response?.id!).emit('accept', response);
     });
+
+    socket.on("reject", async(input: { friendID: string }, room: string)=>{
+        const model = new FriendModel();
+        const response = await model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID });
+
+        console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
+
+        joinChatRoom(response!);
+    
+        namespace.to(response?.id!).emit('reject', response);
+    });
     
     socket.on("request", async(input: { userID: string })=>{
         const model = new FriendModel();
-        const response = await model.request({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, user: socket.handshake.auth.user, userID: input.userID });
+        const response = await model.request({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail, userID: input.userID });
 
         ConnectedSockets.getInstance().send("cancel", [ response?.acceptorID!, response?.requesterID! ], response);
     });

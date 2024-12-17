@@ -1,6 +1,6 @@
 import { HttpStatusCode } from "axios";
 import { Chat, Notification, Credential } from "@prisma/client";
-import { DBManager } from "../config";
+import { DBManager, Err } from "../config";
 import Database from "../config/database";
 
 class ChatModel {
@@ -9,7 +9,7 @@ class ChatModel {
         this.database = DBManager.instance();
     }
 
-    async create(data: { credential: Credential, message: string, friendID?: string, groupID?:string }): Promise<Chat | undefined>{
+    async create(data: { credential: Credential, message: string, friendID?: string, groupID?:string }): Promise<Chat>{
         try{
             const chat = await this.database.client.chat.create({ 
                 data: { senderID: data.credential.id, message: data.message, ownerID: (data.groupID || data.friendID)! },
@@ -33,11 +33,11 @@ class ChatModel {
             }
             return chat;
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when processing chat");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when processing chat");
         }
     }
 
-    async reply(data: { credential: Credential, message: string, chatID: number, friendID?: string, groupID?: string }): Promise<[Chat, Notification] | undefined>{
+    async reply(data: { credential: Credential, message: string, chatID: number, friendID?: string, groupID?: string }): Promise<[Chat, Notification]>{
         try{
             const chat = await this.database.client.chat.create({
                 data: { message: data.message, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!, referenceID: data.chatID },
@@ -70,11 +70,11 @@ class ChatModel {
 
             return [chat, notification];
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when replying to chat");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when replying to chat");
         }
     }
 
-    async update(data: { credential: Credential, message: string, chatID: number, friendID?: string, groupID?: string }): Promise<Chat | undefined>{
+    async update(data: { credential: Credential, message: string, chatID: number, friendID?: string, groupID?: string }): Promise<Chat>{
         try{
             const chat = await this.database.client.chat.update({
                 where: { id: data.chatID, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)! },
@@ -111,11 +111,11 @@ class ChatModel {
             }
             return chat;
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when updating chat");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when updating chat");
         }
     }
 
-    async seen(data: { credential: Credential, chatID: number, friendID?: string, groupID?: string }): Promise<Chat | undefined>{
+    async seen(data: { credential: Credential, chatID: number, friendID?: string, groupID?: string }): Promise<Chat>{
         try{
             const chat = await this.database.client.chat.update({
                 where: { id: data.chatID, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!  },
@@ -128,18 +128,18 @@ class ChatModel {
             });
             return chat;
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when updating chat");
+            throw new Err(HttpStatusCode.InternalServerError, `${error}`, "error encountered when updating chat");
         }
     }
 
-    async delete(data: { credential: Credential, chatID: number }): Promise<string| undefined>{
+    async delete(data: { credential: Credential, chatID: number }): Promise<string>{
         try{
             await this.database.client.chat.delete({
                 where: { id: data.chatID, senderID: data.credential.id, },
             });
             return "chat deleting sucessful";
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating deleting");
+            throw new Err(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating deleting");
         }
     }
 }

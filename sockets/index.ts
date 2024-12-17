@@ -14,14 +14,14 @@ const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | und
         if(!socket.handshake.auth.token){
             next(Error("access token not found, try sigining in agian"));
         }
-        socket.handshake.auth.user = (jwt.verify(socket.handshake.auth.token, process.env.SECRET || "test" ) as any).user;
+        socket.handshake.auth.credentail = (jwt.verify(socket.handshake.auth.token, process.env.SECRET || "test" ) as any).credentail;
 
         if(!socket.handshake.auth.key){
             next(Error("API Access key not found"));
         }
 
         const accessKey = await new AccessKeyModel().get(socket.handshake.auth.key);
-        if(accessKey?.enabled){
+        if(accessKey.enabled){
             const token = socket.handshake.auth.token;
             jetLogger.info(JSON.stringify(token));
         
@@ -53,13 +53,13 @@ export default (io: Server) => {
     ConnectedSockets.getInstance().use(namespace);
 
     namespace.on("connection", (socket: Socket)=>{
-        console.log(`user connected: ${socket.id}: ${JSON.stringify(socket.handshake.auth.user)}`);
+        console.log(`user connected: ${socket.id}: ${JSON.stringify(socket.handshake.auth.credentail)}`);
     
-        ConnectedSockets.getInstance().add(socket.handshake.auth.user.id, socket);
+        ConnectedSockets.getInstance().add(socket.handshake.auth.credentail.id, socket);
     
         const friendModel = new FriendModel();
         
-        friendModel.all({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, user: socket.handshake.auth.user }).then((channels)=>{
+        friendModel.all({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail }).then((channels)=>{
             if(channels){
                 const init = channels.map((channel)=> channel.id);
                 socket.join(init);
@@ -68,7 +68,7 @@ export default (io: Server) => {
         });
     
         socket.on("close", () => {
-            ConnectedSockets.getInstance().remove(socket.handshake.auth.user.id);
+            ConnectedSockets.getInstance().remove(socket.handshake.auth.credentail.id);
             console.log(`user left`);
         });
 

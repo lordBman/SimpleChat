@@ -9,13 +9,12 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "postgresql"
     url      = env("DATABASE_URL")
 }
 
 model Credential{
-    id                  String            @id @unique()
-    client              Client?
+    id                  String            @id @unique @default(uuid())
 
     username            String?
     email               String?
@@ -26,30 +25,31 @@ model Credential{
 
     role                String            @default("client")
     
+    client              Client?
     admin               Admin?
     developer           Developer?
 }
 
 model Admin{
-    credentialID        String            @id @unique()
+    credentialID        String            @id
     credential          Credential        @relation(fields: [credentialID], references: [id])
 
     developers          Developer[]
-    projects            Project[]
+    projects            Project[]         @relation("adminProjects")
 }
 
 model Developer{
-    credentialID        String            @id @unique()
+    credentialID        String            @id
     credential          Credential        @relation(fields: [credentialID], references: [id])
 
     adminID             String
     admin               Admin            @relation(fields: [adminID], references: [credentialID])
 
-    projects            Project[]
+    projects            Project[]       @relation("developerProjects")
 }
 
 model Client{
-    credentialID        String            @id @unique()
+    credentialID        String            @id
     credential          Credential        @relation(fields: [credentialID], references: [id])
 
     organizationID  Int?
@@ -72,13 +72,11 @@ model Project{
     id                Int              @id @default(autoincrement())
     name              String           @unique
     
-    accessToken       String
+    accessToken       String           @default(uuid())
 
-    developerID       String?
-    developer         Developer?        @relation(fields: [developerID], references: [credentialID], onDelete: Cascade)
-
-    adminID             String?
-    admin               Admin?          @relation(fields: [adminID], references: [credentialID])
+    ownerID           String
+    developer         Developer?       @relation("developerProjects", fields: [ownerID], references: [credentialID], map: "developer_fk", onDelete: Cascade)
+    admin             Admin?           @relation("adminProjects", fields: [ownerID], references: [credentialID], map: "admin_fk", onDelete: Cascade)
 
     keys              AccessKey[]
     clients           Client[]
@@ -88,12 +86,15 @@ model Project{
 }
 
 model AccessKey{
-    key               String            @id @unique
-    name              String  
+    id                String            @id @default(uuid())
+    key               String            @unique
+    name              String            @unique
     enabled           Boolean           @default(false)
 
     projectID         Int
     project           Project           @relation(fields: [projectID], references: [id], onDelete: Cascade)
+
+    @@unique([projectID, name])
 }
 
 model Organization {
@@ -103,7 +104,7 @@ model Organization {
    projectID        Int
    project          Project       @relation(fields: [projectID], references: [id])
 
-   client           Client[]
+   clients          Client[]
    friends          Friend[]
    groups           Group[]
 

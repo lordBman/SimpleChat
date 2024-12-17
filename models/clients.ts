@@ -1,7 +1,6 @@
 import { HttpStatusCode } from "axios";
-import { DBManager } from "../config";
+import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import jwt from "jsonwebtoken";
 import { Chat, Friend, Member, Organization, Project, Credential, Client, Group } from "@prisma/client";
 import { uuid } from "../utils";
 import FriendModel from "./friends";
@@ -9,7 +8,7 @@ import FriendModel from "./friends";
 class ClientModel{
     database: Database = DBManager.instance();
 
-    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: string }): Promise<Client & { credential: Credential } | undefined>{
+    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: string }): Promise<Client & { credential: Credential }>{
         try{
             const id = data.id ?? uuid();
             const credential = await this.database.client.credential.create({
@@ -21,15 +20,13 @@ class ClientModel{
                 data: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id },
             });
 
-            //const token = jwt.sign({ user:  }, process.env.SECRET || "test", { expiresIn: "7 days" } );
-
             return { ...init, credential: { ...credential, password: "" } };
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
         }
     }
 
-    async signin(data: {  project: Project, organization?: Organization, email?: string, username?: string, password: string }): Promise<string | undefined>{
+    async signin(data: {  project: Project, organization?: Organization, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
         try{
             const credentials = await this.database.client.credential.findMany({ where: { OR: [ { email: data.email} , { username: data.username } ] } });
             if(credentials.length > 0){
@@ -37,26 +34,29 @@ class ClientModel{
                     const credential = credentials[i];
                     if(data.password === credential.password){
                         console.log(JSON.stringify(data.password));
-                        const client = await this.database.client.client.findUnique({ where: { credentialID: credential.id } });
-                        const token = jwt.sign({ client: { ...credential, ...client, password: undefined }}, process.env.SECRET || "test", { expiresIn: "7 days" } );
-                        return token;
+                        const client = await this.database.client.client.findUniqueOrThrow({ where: { credentialID: credential.id } });
+                        
+                        return { ...client, credential: { ...credential, password: "" } };
                     }
                 }
-                this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
+                throw new Err(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
             }
-            this.database.errorHandler.add(HttpStatusCode.Unauthorized, ``, "account does not exists, try signing up");
+            throw new Err(HttpStatusCode.Unauthorized, ``, "account does not exists, try signing up");
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when getting user");
+            if(error instanceof Err){
+                throw error;
+            }
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when getting user");
         }
     }
 
-    async delete(client: Client): Promise<string | undefined>{
+    async delete(client: Client): Promise<string>{
         try{
             await this.database.client.client.delete({ where: { credentialID: client.credentialID } });
 
             return "user was deleted successfully";
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
         }
     }
 
@@ -68,7 +68,7 @@ class ClientModel{
 
             return init!;
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
         }
     }
 
@@ -101,7 +101,10 @@ class ClientModel{
 
             return { ...data.credential, chats, friends: friends!, members };
         }catch(error){
-            this.database.errorHandler.add(HttpStatusCode.InternalServerError, `${error}`, "error encountered when creating user");
+            if(error instanceof Err){
+                throw error;
+            }
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
         }
     }
 }

@@ -8,19 +8,18 @@ import FriendModel from "./friends";
 class ClientModel{
     database: Database = DBManager.instance();
 
-    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: Roles }): Promise<Client & { credential: Credential }>{
+    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: Roles }): Promise<Credential>{
         try{
             const id = data.id ?? uuid();
             const credential = await this.database.client.credential.create({
                 data: { id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
-                select: { id: true, name: true, surname:  true, email: true, username: true, role: true }
             });
 
             const init = await this.database.client.client.create({
                 data: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id },
             });
 
-            return { ...init, credential: { ...credential, password: "" } };
+            return { ...credential, password: "" };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
         }

@@ -64,7 +64,7 @@ export const APIAuthenication = async (req: Request, res: Response, next: NextFu
 };
 
 export const AdminFilter = async (req: Request, res: Response, next: NextFunction) => {
-    if(req.body.credential && (req.body.credential as Credential).role === "admin"){
+    if(req.body.credential && (req.body.credential as Credential).role === "Admin"){
         const credential = (req.body.credential as Credential);
         const project = (req.body.project as Project);
 
@@ -80,11 +80,11 @@ export const AdminFilter = async (req: Request, res: Response, next: NextFunctio
 };
 
 export const DeveloperFilter = async (req: Request, res: Response, next: NextFunction) => {
-    if(req.body.credential && (req.body.credential as Credential).role === "developer"){
-        const credential = (req.body.credential as Credential);
+    if(req.body.credential && (req.body.credential as Credential).role !== "Client"){
         const project = (req.body.project as Project);
 
-        if(project.ownerID === credential.id){
+        const seedResult = SeedResult.instance();
+        if(seedResult.projectID === project.id){
             return next()
         }else{
             return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have developer access" });
@@ -112,10 +112,10 @@ api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
     try{
         let model: ClientModel | DeveloperModel | AdminModel =  new ClientModel();
         switch((req.body.credential as Credential).role){
-            case "admin":
+            case "Admin":
                 model = new AdminModel();
                 break;
-            case "developer":
+            case "Developer":
                 model = new DeveloperModel();
                 break;
         }

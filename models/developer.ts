@@ -14,7 +14,7 @@ class DeveloperModel{
 
     async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
         try{
-            const client = await new ClientModel().create({ ...data, role: "developer" });
+            const client = await new ClientModel().create({ ...data, role: "Developer" });
 
             await this.database.client.developer.create({ data: { credentialID: client.credentialID, adminID: data.admin.id } });
             await this.database.client.friend.create({ data: {

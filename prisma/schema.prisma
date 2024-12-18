@@ -13,6 +13,11 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum Roles{
+    Client
+    Admin
+    Developer
+}
 model Credential{
     id                  String            @id @unique @default(uuid())
 
@@ -23,29 +28,15 @@ model Credential{
     name                String
     surname             String
 
-    role                String            @default("client")
+    role                Roles            @default(Client)
     
     client              Client?
-    admin               Admin?
-    developer           Developer?
-}
-
-model Admin{
-    credentialID        String            @id
-    credential          Credential        @relation(fields: [credentialID], references: [id])
-
-    developers          Developer[]
-    projects            Project[]         @relation("adminProjects")
-}
-
-model Developer{
-    credentialID        String            @id
-    credential          Credential        @relation(fields: [credentialID], references: [id])
-
-    adminID             String
-    admin               Admin            @relation(fields: [adminID], references: [credentialID])
-
-    projects            Project[]       @relation("developerProjects")
+    
+    adminID             String?
+    admin               Credential?            @relation("developers",fields: [adminID], references: [id])
+    developers          Credential[]           @relation("developers")
+    
+    projects            Project[]
 }
 
 model Client{
@@ -70,17 +61,18 @@ model Client{
 
 model Project{
     id                String              @id @default(uuid())
-    name              String           @unique
+    name              String
 
     ownerID           String
-    developer         Developer?       @relation("developerProjects", fields: [ownerID], references: [credentialID], map: "developer_fk", onDelete: Cascade)
-    admin             Admin?           @relation("adminProjects", fields: [ownerID], references: [credentialID], map: "admin_fk", onDelete: Cascade)
+    owner             Credential       @relation(fields: [ownerID], references: [id], onDelete: Cascade)
 
     keys              AccessKey[]
     clients           Client[]
     groups            Group[]
     friends           Friend[]
     organizations     Organization[]
+
+    @@unique([name, ownerID])
 }
 
 model AccessKey{
@@ -109,6 +101,10 @@ model Organization {
    @@unique([name, projectID])
 }
 
+enum ChatType{
+    Group
+    Friends
+}
 model Chat{
     id              Int           @id @default(autoincrement())
     message         String
@@ -119,6 +115,9 @@ model Chat{
     sender          Client         @relation(fields: [senderID], references: [credentialID])
 
     ownerID         String
+    friend          Friend?       @relation(fields: [ownerID], references: [id], map: "friend_fk", onDelete: Cascade)
+    group           Group?        @relation(fields: [ownerID], references: [id], map: "group_fk", onDelete: Cascade)
+    type            ChatType
 
     reply           Chat[]        @relation("reference")
     referenceID     Int?
@@ -128,7 +127,7 @@ model Chat{
 }
 
 model Friend{
-    id              String        @id
+    id              String        @id  @default(uuid())
 
     requesterID     String
     requester       Client          @relation("requester", fields: [requesterID], references: [credentialID])
@@ -144,11 +143,13 @@ model Friend{
     projectID       String
     project         Project        @relation(fields: [projectID], references: [id])
 
+    chats           Chat[]
+
     @@unique([requesterID, acceptorID, projectID])
 }
 
 model Group {
-    id              String              @id @unique
+    id              String              @id @unique @default(uuid())
     name            String
     last            DateTime            @default(now())
     attachment      String?
@@ -164,6 +165,12 @@ model Group {
 
     members         Member[]
     notifications   Notification[]
+    chats           Chat[]
+}
+
+enum MemberRole{
+    Member
+    Admin
 }
 
 model Member {
@@ -174,7 +181,7 @@ model Member {
     groupID           String
 
     joined            DateTime          @default(now())
-    role              String            @default("member")
+    role              MemberRole        @default(Member)
 
     accepted          Boolean           @default(false)
 

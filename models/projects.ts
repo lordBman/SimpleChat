@@ -24,7 +24,7 @@ class ProjectModel{
         }
     }
 
-    async get(data: { credential: Credential, projectID: number }): Promise<Project>{
+    async get(data: { credential: Credential, projectID: string }): Promise<Project>{
         try{
             const projects = await this.database.client.project.findUniqueOrThrow({ 
                 where: { id: data.projectID, ownerID: data.credential.id },

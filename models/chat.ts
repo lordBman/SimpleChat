@@ -12,7 +12,7 @@ class ChatModel {
     async create(data: { credential: Credential, message: string, friendID?: string, groupID?:string }): Promise<Chat>{
         try{
             const chat = await this.database.client.chat.create({ 
-                data: { senderID: data.credential.id, message: data.message, ownerID: (data.groupID || data.friendID)! },
+                data: { senderID: data.credential.id, message: data.message, ownerID: (data.groupID || data.friendID)!, type: (data.groupID ? "Group" : "Friends") },
                 include: {
                     sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } }
                 }
@@ -40,7 +40,7 @@ class ChatModel {
     async reply(data: { credential: Credential, message: string, chatID: number, friendID?: string, groupID?: string }): Promise<[Chat, Notification]>{
         try{
             const chat = await this.database.client.chat.create({
-                data: { message: data.message, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!, referenceID: data.chatID },
+                data: { message: data.message, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!, type: (data.groupID ? "Group" : "Friends"), referenceID: data.chatID },
                 include: {
                     sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } },
                     reply: { include: { sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } } } },

@@ -1,6 +1,6 @@
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Group, Member, Organization, Project, Credential } from "@prisma/client";
+import { Group, Member, Organization, Project, Credential, MemberRole } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
@@ -27,7 +27,7 @@ class GroupModel{
                 });
     
                 const member = await this.database.client.member.create({
-                    data: {  groupID: init.id, credentialID: init.creatorID, role: "admin" }
+                    data: {  groupID: init.id, credentialID: init.creatorID, role: "Admin" }
                 });
 
                 return member;
@@ -78,7 +78,7 @@ class GroupModel{
     async rename(data: { project: Project, organization?: Organization, credential: Credential, groupID: string, name: string }): Promise<Group>{
         try{
             const member = await this.database.client.member.findUniqueOrThrow({ where: { groupID: data.groupID, credentialID: data.credential.id } });
-            if(member.role != "admin"){
+            if(member.role != "Admin"){
                 throw new Err(HttpStatusCode.Unauthorized, '', "you do not have authorization to rename this group");
             }
 
@@ -121,7 +121,7 @@ class GroupModel{
             });
 
             if(admin){
-                if(admin.role === "admin"){
+                if(admin.role === "Admin"){
                     const init = await this.database.client.member.update({
                         where: { credentialID_groupID: {groupID: data.groupID, credentialID: data.userID} },
                         data: { accepted: true },
@@ -170,7 +170,7 @@ class GroupModel{
             });
 
             if(admin){
-                if(admin.role === "admin"){
+                if(admin.role === "Admin"){
                     const init = await this.database.client.member.delete({
                         where: { credentialID_groupID: {groupID: data.groupID, credentialID: data.userID} },
                         include: { client: { include: { credential: { select: { id: true, email:  true, name: true, password: false } } } } }
@@ -198,7 +198,7 @@ class GroupModel{
         }   
     }
 
-    async assign(data: { credential: Credential, userID: string, groupID: string, role: string} ): Promise<Member>{
+    async assign(data: { credential: Credential, userID: string, groupID: string, role: MemberRole} ): Promise<Member>{
         try{
             const admin = await this.database.client.member.findUnique({
                 where: { credentialID_groupID: { groupID: data.groupID, credentialID: data.credential.id }  },
@@ -206,7 +206,7 @@ class GroupModel{
             });
 
             if(admin){
-                if(admin.role === "admin"){
+                if(admin.role === "Admin"){
                     const init = await this.database.client.member.update({
                         where: { credentialID_groupID: {groupID: data.groupID, credentialID: data.userID} },
                         data: { role: data.role },

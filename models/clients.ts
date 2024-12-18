@@ -1,18 +1,18 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Chat, Friend, Member, Organization, Project, Credential, Client, Group } from "@prisma/client";
+import { Chat, Friend, Member, Organization, Project, Credential, Client, Group, Roles } from "@prisma/client";
 import { uuid } from "../utils";
 import FriendModel from "./friends";
 
 class ClientModel{
     database: Database = DBManager.instance();
 
-    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: string }): Promise<Client & { credential: Credential }>{
+    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: Roles }): Promise<Client & { credential: Credential }>{
         try{
             const id = data.id ?? uuid();
             const credential = await this.database.client.credential.create({
-                data: { id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "client" },
+                data: { id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
                 select: { id: true, name: true, surname:  true, email: true, username: true, role: true }
             });
 

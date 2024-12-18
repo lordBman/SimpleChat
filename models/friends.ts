@@ -32,7 +32,7 @@ class FriendModel{
                 });
 
                 if(acceptor && requester){
-                    friends.push({ ...results[i], acceptor: { ...acceptor, password: "", role: "" }, requester: { ...requester, password: "", role: "" } });
+                    friends.push({ ...results[i], acceptor: { ...acceptor, password: "", role: "Client" }, requester: { ...requester, password: "", role: "Client" } });
                 }
             }
 
@@ -63,7 +63,7 @@ class FriendModel{
                 }
             });
            
-            const friend: RequestFriendResponse = { ...result, acceptor: { ...acceptor!, password: "", role: "" }, requester: data.credential };
+            const friend: RequestFriendResponse = { ...result, acceptor: { ...acceptor!, password: "", role: "Client" }, requester: data.credential };
             joinChatRoom(friend);
 
             return friend;
@@ -83,7 +83,7 @@ class FriendModel{
                 where: { id: result.requesterID }, 
                 select: { name: true, surname: true, email: true, username: true, id: true } });
 
-            const friend: Friend & { acceptor: Credential, requester: Credential, } = { ...result, requester: { ...requester!, password: "", role: "" }, acceptor: data.credential };
+            const friend: Friend & { acceptor: Credential, requester: Credential, } = { ...result, requester: { ...requester!, password: "", role: "Client" }, acceptor: data.credential };
 
             await this.database.client.notification.create({
                 data: { 
@@ -154,7 +154,7 @@ class FriendModel{
                 if(init){
                     results.push(init);
                 }else{
-                    results.push({ ...credentials[i], password: "", role: "" });
+                    results.push({ ...credentials[i], password: "", role: "Client" });
                 }
             }
             return results;

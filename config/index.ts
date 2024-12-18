@@ -58,7 +58,7 @@ export async function seed() {
     
     let credential = await database.client.credential.findFirst({ where: { email: process.env.COMPANY_EMAIL!, name: process.env.NAME, surname: process.env.SURNAME } });
     if(!credential){
-        credential = await database.client.credential.create({ data: { id: uuid(), email: process.env.COMPANY_EMAIL!, name: process.env.NAME!, surname: process.env.SURNAME!, password: process.env.COMPANY_PASSWORD!, role: "admin" } });
+        credential = await database.client.credential.create({ data: { id: uuid(), email: process.env.COMPANY_EMAIL!, name: process.env.NAME!, surname: process.env.SURNAME!, password: process.env.COMPANY_PASSWORD!, role: "Admin" } });
     }
 
     let admin = await database.client.admin.upsert({ 
@@ -70,9 +70,9 @@ export async function seed() {
     jetLogger.info(JSON.stringify(credential));
 
     let project = await database.client.project.upsert({ 
-        where: { name: process.env.PROJECT_NAME! },
+        where: { name_ownerID: { name: process.env.PROJECT_NAME!, ownerID: admin.credentialID } },
         update: {},
-        create: { name: process.env.PROJECT_NAME!, ownerID: admin.credentialID }
+        create: { name: process.env.PROJECT_NAME!, ownerID: admin.credentialID, type: "Admin" }
     });
 
     let organization = await database.client.organization.upsert({ 

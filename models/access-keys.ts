@@ -22,7 +22,7 @@ class AccessKeyModel{
         }
     }
 
-    async all(projectID: number): Promise<AccessKey[]>{
+    async all(projectID: string): Promise<AccessKey[]>{
         try{
             const accessKey = await this.database.client.accessKey.findMany({
                 where: { projectID: projectID }
@@ -34,7 +34,7 @@ class AccessKeyModel{
         }
     }
 
-    async add(data: { name: string, projectID: number }): Promise<AccessKey>{
+    async add(data: { name: string, projectID: string }): Promise<AccessKey>{
         try{
             const accessKey = await this.database.client.accessKey.create({
                 data: { id: uuid(), key: uuid(), name: data.name,  projectID: data.projectID }

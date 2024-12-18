@@ -22,8 +22,7 @@ export const KeyAuthenication = async (req: Request, res: Response, next: NextFu
             console.log(`${req.body.key ?? req.query.key} - ${JSON.stringify(accessKey)}`);
             if(accessKey.enabled){            
                 req.body.project = accessKey.project;
-                req.body.admin = accessKey.project.admin?.credential;
-                req.body.developer = accessKey.project.developer?.credential;
+                req.body.owner = accessKey.project.owner;
                 if(req.body.organization || req.query.organization){
                     const organizationName = req.body.organization ?? req.query.organization;
                     req.body.organization = await new OrganizationModel().get({ project: accessKey.project, name: organizationName });

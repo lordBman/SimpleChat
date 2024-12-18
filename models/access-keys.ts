@@ -11,8 +11,7 @@ class AccessKeyModel{
         try{
             const accessKey = await this.database.client.accessKey.findUniqueOrThrow({
                 where: { key }, include: { project: { include: { 
-                    admin: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } } },
-                    developer: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } } }
+                    owner: { select: { id: true, name: true, surname: true, username: true, email: true } }
                 } } }
             });
 

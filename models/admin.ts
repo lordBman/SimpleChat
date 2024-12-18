@@ -1,7 +1,7 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Developer, Organization, Project, Credential, Admin } from "@prisma/client";
+import { Organization, Project, Credential } from "@prisma/client";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
 import DeveloperModel from "./developer";
@@ -12,10 +12,9 @@ class AdminModel{
         this.database = DBManager.instance();
     }
 
-    async delete(admin: Admin): Promise<string>{
+    async delete(admin: Credential): Promise<string>{
         try{
-            await this.database.client.admin.delete({ where: admin });
-            await this.database.client.credential.delete({ where: { id: admin.credentialID } });
+            await this.database.client.credential.delete({ where: { id: admin.id} });
             
             return "user was deleted successfully";
         }catch(error){
@@ -23,9 +22,8 @@ class AdminModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Admin & { projects: Project [], developers: Developer[] }>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Credential & { projects: Project [], developers: Credential[] }>{
         try{
-            const admin = await this.database.client.admin.findUniqueOrThrow({ where: { credentialID: data.credential.id } });
             const client = await new ClientModel().get(data);
             const developers = await new DeveloperModel().all({ admin: data.credential });
 
@@ -39,7 +37,7 @@ class AdminModel{
                 init.push({ ...project, userCount: userCount! });
             }
 
-            return { ...admin, ...client, projects: init, developers };
+            return { ...data.credential, ...client, projects: init, developers };
         }catch(error){
             if(error instanceof Err){
                 throw error;

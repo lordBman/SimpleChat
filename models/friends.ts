@@ -25,10 +25,10 @@ class FriendModel{
             for(let i = 0; i < results.length; i++){
                 const acceptor = await this.database.client.credential.findUnique({ 
                     where: { id: results[i].acceptorID }, 
-                    select: { id: true, name: true, surname: true, email: true, username: true } });
+                    select: { id: true, name: true, surname: true, email: true, username: true, adminID: true } });
                 const requester = await this.database.client.credential.findUnique({ 
                     where: { id: results[i].requesterID },
-                    select: { id: true, name: true, surname: true, email: true, username: true }
+                    select: { id: true, name: true, surname: true, email: true, username: true, adminID: true }
                 });
 
                 if(acceptor && requester){
@@ -54,7 +54,7 @@ class FriendModel{
 
             const acceptor = await this.database.client.credential.findUniqueOrThrow({ 
                 where: { id: result.acceptorID }, 
-                select: { id: true, name: true, surname: true, email: true, username: true } });
+                select: { id: true, name: true, surname: true, email: true, username: true, adminID: true } });
 
             await this.database.client.notification.create({
                 data: { 
@@ -81,7 +81,7 @@ class FriendModel{
 
             const requester = await this.database.client.credential.findUniqueOrThrow({ 
                 where: { id: result.requesterID }, 
-                select: { name: true, surname: true, email: true, username: true, id: true } });
+                select: { name: true, surname: true, email: true, username: true, id: true, adminID: true } });
 
             const friend: Friend & { acceptor: Credential, requester: Credential, } = { ...result, requester: { ...requester!, password: "", role: "Client" }, acceptor: data.credential };
 
@@ -134,7 +134,7 @@ class FriendModel{
         try{
             const credentials = (await this.database.client.client.findMany({
                 where: { projectID: data.project.id, organizationID: data.organization?.id, NOT: { credentialID: data.credential.id } },
-                include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }
+                include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true, adminID: true } } }
             })).filter((client)=>{
                 return client.credential.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             }).map((client) => client.credential);
@@ -147,8 +147,8 @@ class FriendModel{
                         OR:[ { acceptorID: data.credential.id, requesterID: credentials[i].id }, { requesterID: data.credential.id, acceptorID: credentials[i].id } ] 
                     },
                     include: { 
-                        requester: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }}, 
-                        acceptor: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true } } }} 
+                        requester: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true, adminID: true } } }}, 
+                        acceptor: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true, adminID: true } } }} 
                     }
                 });
                 if(init){

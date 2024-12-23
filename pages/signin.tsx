@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider, useMutation } from "react-query";
-import { axiosInstance, extract } from "./utils";
+import { axiosInstance, extract, ProjectKey } from "./utils";
 import { useState } from "react";
 
 const Signin = () =>{
@@ -22,7 +22,7 @@ const Signin = () =>{
 
     const loginMutation = useMutation({
         mutationKey: ["user"],
-        mutationFn: (data: { email: string, password: string })=> axiosInstance.post("/auth/login", data),
+        mutationFn: (data: { email: string, password: string })=> axiosInstance.post("/auth/login", { ...data, key: ProjectKey }),
         onSuccess: done,
         onError: (error)=> setError(error)
     });

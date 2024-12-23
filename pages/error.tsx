@@ -1,7 +1,7 @@
 const ErrorPage = () =>{
     return (
         <div>
-            You are not a developer
+            You do not have permission to access this page.
         </div>
     );
 }

@@ -61,18 +61,12 @@ export async function seed() {
         credential = await database.client.credential.create({ data: { id: uuid(), email: process.env.COMPANY_EMAIL!, name: process.env.NAME!, surname: process.env.SURNAME!, password: process.env.COMPANY_PASSWORD!, role: "Admin" } });
     }
 
-    let admin = await database.client.admin.upsert({ 
-        where: { credentialID: credential.id },
-        update: {},
-        create: { credentialID: credential.id }
-    });
-
     jetLogger.info(JSON.stringify(credential));
 
     let project = await database.client.project.upsert({ 
-        where: { name_ownerID: { name: process.env.PROJECT_NAME!, ownerID: admin.credentialID } },
+        where: { name_ownerID: { name: process.env.PROJECT_NAME!, ownerID: credential.id } },
         update: {},
-        create: { name: process.env.PROJECT_NAME!, ownerID: admin.credentialID, type: "Admin" }
+        create: { name: process.env.PROJECT_NAME!, ownerID: credential.id }
     });
 
     let organization = await database.client.organization.upsert({ 
@@ -82,19 +76,13 @@ export async function seed() {
     });
     
     await database.client.client.upsert({
-        where: { credentialID: admin.credentialID }, update: {}, create: { credentialID: admin.credentialID, organizationID: organization.id, projectID: project.id } 
+        where: { credentialID: credential.id }, update: {}, create: { credentialID: credential.id, organizationID: organization.id, projectID: project.id } 
     });
 
     let accessKey = await database.client.accessKey.findFirst({ where:{ projectID: project?.id } });
     if(!accessKey){
         accessKey = await database.client.accessKey.create({ data: { id: uuid(), projectID: project.id, name: "default", key: uuid(), enabled: true } });
     }
-
-    database.client.developer.findMany().then(results=>{
-        results.forEach((result)=>{
-            console.log(JSON.stringify(result));
-        });
-    });
 
     SeedResult.set({ projectID: project.id, organizationID: organization.id });
     

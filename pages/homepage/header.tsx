@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { axiosInstance } from "../utils";
+import { axiosInstance, ProjectKey } from "../utils";
 
 const Header = (props:{active?: string}) =>{
     const [active, setActive] = useState(props.active || "about");
@@ -16,13 +16,13 @@ const Header = (props:{active?: string}) =>{
     }
 
     const initQuery = useQuery({
-        queryKey: ['developer'],
-        queryFn: () => axiosInstance.get('/developer'),
+        queryKey: ['user'],
+        queryFn: () => axiosInstance.get(`/?key=${ProjectKey}`),
     });
 
     const logoutMutation = useMutation({
-        mutationKey: ['developer'],
-        mutationFn: () => axiosInstance.get('/auth/logout'),
+        mutationKey: ['user'],
+        mutationFn: () => axiosInstance.get(`/auth/logout?key=${ProjectKey}`),
         onSuccess: () => {
             window.location.reload();
         },
@@ -31,7 +31,6 @@ const Header = (props:{active?: string}) =>{
 
     const init = useCallback(()=>{
         if(header.current){
-            console.log("socdcmdvodvd");
             window.addEventListener("scroll", function (){
                 if (document.body.scrollTop > 80 || document.documentElement.scrollTop > 80) {
                     header.current?.classList.remove("header-transparent");

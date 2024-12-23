@@ -1,7 +1,7 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err, SeedResult } from "../config";
 import Database from "../config/database";
-import { Developer, Organization, Project, Client, Credential, Admin } from "@prisma/client";
+import { Organization, Project, Client, Credential } from "@prisma/client";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
 import { uuid } from "../utils";
@@ -12,23 +12,9 @@ class DeveloperModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
+    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Credential>{
         try{
             const client = await new ClientModel().create({ ...data, role: "Developer" });
-
-            await this.database.client.developer.create({ data: { credentialID: client.credentialID, adminID: data.admin.id } });
-            await this.database.client.friend.create({ data: {
-                id: uuid(),
-                projectID: data.project.id, organizationID: data.organization?.id,
-                requesterID: client.credentialID, acceptorID: data.project.ownerID, accepted: true,
-            } });
-
-            await this.database.client.notification.create({
-                data: { 
-                    recieverID: client.credentialID,
-                    alert: `Hi ${data.name}, greetings from ${process.env.COMPANY_NAME}. my name is ${process.env.NAME}. Welcome to my Chat API platform. feel free to reach out to me if you want anything, I hope you enjoy using our services.`
-                }
-            });
 
             await this.database.client.notification.create({
                 data: { 
@@ -46,27 +32,8 @@ class DeveloperModel{
         }
     }
 
-    async delete(data: { credential: Credential, admin: Credential }): Promise<string>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Credential & { projects: Project [] }>{
         try{
-            await this.database.client.developer.delete({ where: { credentialID: data.credential.id } });
-            await this.database.client.credential.delete({ where: { id: data.credential.id } });
-
-            await this.database.client.notification.create({
-                data: { 
-                    recieverID: data.admin.id,
-                    alert: `${data.credential.name} deleted his/her developer account`
-                }
-            });
-            
-            return "user was deleted successfully";
-        }catch(error){
-            throw new Err(HttpStatusCode.InternalServerError, `${error}`, "error encountered when deleting user");
-        }
-    }
-
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Developer & { projects: Project [] }>{
-        try{
-            const developer = await this.database.client.developer.findUniqueOrThrow({ where: { credentialID: data.credential.id } });
             const client = await new ClientModel().get(data);
             
             const projects = await new ProjectModel().all({ credential: data.credential });
@@ -79,7 +46,7 @@ class DeveloperModel{
                 init.push({ ...project, userCount: userCount! });
             }
 
-            return { ...developer, ...client, projects: init };
+            return { ...data.credential, ...client, projects: init };
         }catch(error){
             if(error instanceof Err){
                 throw error;
@@ -88,18 +55,18 @@ class DeveloperModel{
         }
     }
 
-    async all(data: { admin: Credential }): Promise<Developer[]>{
+    async all(data: { admin: Credential }): Promise<Credential[]>{
         try{
-            const developers = await this.database.client.developer.findMany({
+            const developers = (await this.database.client.credential.findMany({
                 where: { adminID: data.admin.id }, 
                 include: { 
-                    projects: { select: { id: true, name: true } }, 
-                    credential: { select: { id: true, name: true, surname: true, email: true, username: true } }},
-            });
+                    projects: { select: { id: true, name: true } }
+                }
+            })).map((developer) => { return { ...developer, password: "" }; });
             
             return developers;
         }catch(error){
-            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when deleting user");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when getting developers");
         }
     }
 }

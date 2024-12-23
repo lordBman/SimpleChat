@@ -12,10 +12,10 @@ class ClientModel{
         try{
             const id = data.id ?? uuid();
             const credential = await this.database.client.credential.create({
-                data: { id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
+                data: { adminID: data.project.ownerID, id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
             });
 
-            const init = await this.database.client.client.create({
+            await this.database.client.client.create({
                 data: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id },
             });
 
@@ -49,10 +49,10 @@ class ClientModel{
         }
     }
 
-    async delete(client: Client): Promise<string>{
+    async delete(credential: Credential): Promise<string>{
         try{
-            await this.database.client.client.delete({ where: { credentialID: client.credentialID } });
-
+            await this.database.client.client.delete({ where: { credentialID: credential.id } });
+            await this.database.client.credential.delete({ where: { id: credential.id } });
             return "user was deleted successfully";
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");

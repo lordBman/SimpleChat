@@ -5,7 +5,6 @@ import { AppContext, AppContextType } from './app-provider';
 import { ProjectKey, TypingManager, axiosInstance } from '../utils';
 import { ChatResponse, ChatsResponse, FriendResponse, GroupResponse } from '../responses';
 import { FriendsContext, FriendsContextType } from './friends-provider';
-import { MainContext, MainContextType, MainPage } from './main-provider';
 
 interface ChatState{
     chats: ChatsResponse;
@@ -32,13 +31,13 @@ export type ChatContextType = {
 export const ChatContext = React.createContext<ChatContextType | null>(null);
 
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { data, socket } = React.useContext(AppContext) as AppContextType;
+    const { user, socket } = React.useContext(AppContext) as AppContextType;
     const { friends } = React.useContext(FriendsContext) as FriendsContextType;
-    const { main, set } = React.useContext(MainContext) as MainContextType;
-
     const [current, setCurrent] = useState<GroupResponse | FriendResponse>();
     const [status, setStatus] = useState<{ room?:string, message?: string }>({});
-    const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: data?.chats! });
+    const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: user?.chats! });
+
+    //const navigate = useNavigate();
 
     if(socket){
         socket.on("chat", (data, room)=>{
@@ -104,9 +103,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const makeCurrent = (response: GroupResponse | FriendResponse)=> {
         setCurrent(response);
-        if(main !== MainPage.Chat){
-            set(MainPage.Chat);
-        }
+        //navigate(`/dashboard/chats/${response.id}`);
     }
 
     const send = (message: string) =>{

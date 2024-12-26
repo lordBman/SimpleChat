@@ -1,11 +1,10 @@
-import React from "react";
 import "../css/chats/back-button.scss";
-import { MainContext, MainContextType } from "../providers/main-provider";
+import { useHistory } from "react-router-dom";
 
 const BackButton = () =>{
-    const { clear } = React.useContext(MainContext) as MainContextType;
+    const history = useHistory();
 
-    const clicked = () => clear();
+    const clicked = () => history.goBack();
 
     return (
         <span className="back-btn" onClick={clicked}>

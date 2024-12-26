@@ -4,6 +4,7 @@ import { Friend, Organization, Project, Credential } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
+import { log } from "console";
 
 type FrientSearchResponse = Credential | Friend;
 type RequestFriendResponse = Friend & { acceptor: Credential,  requester: Credential };
@@ -21,6 +22,8 @@ class FriendModel{
                 where: { project: data.project, organizationID: data.organization?.id,  OR: [ { requesterID: data.credential.id }, { acceptorID: data.credential.id } ] },
             });
 
+            console.log(JSON.stringify(results));
+
             const friends: AllFriendsResponse = [];
             for(let i = 0; i < results.length; i++){
                 const acceptor = await this.database.client.credential.findUnique({ 
@@ -36,11 +39,11 @@ class FriendModel{
                 }
             }
 
-            friends.forEach((friend)=> joinChatRoom(friend));
+            //friends.forEach((friend)=> joinChatRoom(friend));
 
             return friends;
         }catch(error){
-            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while sending friend request");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while getting friend lists");
         }
     }
 

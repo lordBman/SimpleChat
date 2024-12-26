@@ -26,8 +26,8 @@ export type FriendsContextType = {
 export const FriendsContext = React.createContext<FriendsContextType | null>(null);
 
 const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { data, socket } = React.useContext(AppContext) as AppContextType;
-    const [friendsState, setFriendsState] = useState<FriendsState>({ loading: false, isError: false, friends: data?.friends!  });
+    const { user, socket } = React.useContext(AppContext) as AppContextType;
+    const [friendsState, setFriendsState] = useState<FriendsState>({ loading: false, isError: false, friends: user?.friends!  });
 
     if(socket){
         socket.on("request", (response: FriendResponse) =>{

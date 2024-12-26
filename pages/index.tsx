@@ -3,11 +3,10 @@ import express, { NextFunction, Response, Request } from "express";
 import jwt from "jsonwebtoken";
 import jetLogger from "jet-logger";
 import Signin from "./signin";
-import Chat from "./chat";
 import Homepage from "./homepage";
-import DashBoard from "./developer";
 import Docs from "./docs";
 import { Roles, Credential } from "@prisma/client";
+import DashBoard from "./dashboard";
 
 const signinRenderer = (res: Response) =>{
     const root = ReactDOMServer.renderToString(<Signin />);
@@ -112,7 +111,7 @@ pages.get("/signin", async(req, res) =>{
 });
 
 pages.get("/dashboard", secureRoute, async(req, res) =>{
-    const root = ReactDOMServer.renderToString(<DashBoard />);
+    const root = ReactDOMServer.renderToStaticMarkup(<DashBoard />);
 
     const html = `
         <html lang="en">
@@ -120,31 +119,11 @@ pages.get("/dashboard", secureRoute, async(req, res) =>{
                 <title>Simple Chat | Dashboard</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <link rel="stylesheet" href="/assets/css/icons.css" />
-                <link rel="stylesheet" href="/assets/dist/developer.css" />
+                <link rel="stylesheet" href="/assets/dist/dashboard.css" />
             </head>
             <body>
                 <main id="root">${root}</main>
-                <script src="/assets/dist/developer.js"></script>
-            </body>
-        </html>
-    `;
-    res.status(200).contentType("text/html").send(Buffer.from(html));
-});
-
-pages.get("/chats", secureRoute, async(req, res) =>{
-    const root = ReactDOMServer.renderToString(<Chat/>);
-
-    const html = `
-        <html lang="en">
-            <head>
-                <title>Simple Chat | Chat</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <link rel="stylesheet" href="/assets/css/icons.css" />
-                <link rel="stylesheet" href="/assets/dist/chat.css" />
-            </head>
-            <body>
-                <main id="root">${root}</main>
-                <script src="/assets/dist/chat.js"></script>
+                <script src="/assets/dist/dashboard.js"></script>
             </body>
         </html>
     `;

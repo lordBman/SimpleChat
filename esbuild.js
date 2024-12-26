@@ -3,9 +3,8 @@ import { sassPlugin } from "esbuild-sass-plugin";
 
 let ctx = await esbuild.context({
     entryPoints: [
-        "./pages/client-entries/developer.tsx",
+        "./pages/client-entries/dashboard.tsx",
         "./pages/client-entries/signin.tsx",
-        "./pages/client-entries/chat.tsx",
         "./pages/client-entries/docs.tsx",
         "./pages/client-entries/homepage.tsx",
         "./pages/client-entries/error.tsx"

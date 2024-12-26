@@ -6,14 +6,14 @@ import jetLogger from "jet-logger";
 export class Err extends Error{
     code : HttpStatusCode;
     error: any; 
-    message: string;
 
     constructor(code : HttpStatusCode, error: any, message: string){
         super(message);
 
         this.code = code;
         this.error = error;
-        this.message = message;
+
+        Object.setPrototypeOf(this, new.target.prototype);
     }
 }
 

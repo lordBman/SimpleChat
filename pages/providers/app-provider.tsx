@@ -1,49 +1,51 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { useQuery } from 'react-query';
-import { Credential } from '@prisma/client';
+import { AccessKey, Credential, Project } from '@prisma/client';
 import { Socket, io } from "socket.io-client";
 import { ProjectKey, axiosInstance } from '../utils';
 import { ChatsResponse, FriendResponse, MemberResponse } from '../responses';
 
-export type AppState = {
-    data?: Credential & { token: string } & { members: MemberResponse[], friends: FriendResponse[], chats: ChatsResponse }
-    message?: any;
-};
+export type UserState = Credential & { 
+    token: string, 
+    members: MemberResponse[],
+    adminID?: number,
+    projects?: Array<Project & { keys: AccessKey[], userCount: number }>,
+    developers?: Credential[], friends: FriendResponse[], chats: ChatsResponse }
 
 export type AppContextType = {
-    data?: Credential & { token: string } & { members: MemberResponse[], friends: FriendResponse[], chats: ChatsResponse }
+    user?: UserState
     loading: boolean;
     isError: boolean;
     message?: any;
     socket?: Socket;
 };
 
-export const AppContext = React.createContext<AppContextType | undefined>(undefined);
+export const AppContext = React.createContext<AppContextType>({ loading: false, isError: false });
 
 const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const [state, setState] = useState<AppState>();
+    const [state, setState] = useState<{ user?: UserState, message: any }>({ message: "" });
 
     const initQuery = useQuery({
         queryKey:  ["data"],
-        queryFn: () => axiosInstance.get(`/users?key=${ProjectKey}`),
-        onSuccess(data) {
-            setState(init => { return { ...init, loading: false, isError: false, data: data.data }});  
+        queryFn: () => axiosInstance.get(`/?key=${ProjectKey}`),
+        onSuccess: (data) => {
+            setState({ user: data.data, message: ""});  
         },
-        onError(error) {
-            setState(init => { return { ...init, loading: false, isError: true, message: error}});
+        onError: (error) => {
+            setState({ user: undefined, message: error });
         },
     });
 
     const socket = React.useMemo(() => {
-        if(state?.data){
-            const init = io("/", { auth: { token: state?.data.token, access: "access-key",  key: ProjectKey } });
+        if(state){
+            const init = io("/", { auth: { token: state.user?.token, access: "access-key",  key: ProjectKey } });
             init.on("connected", ()=>{
                 console.log(init.connected);
             });
             return init;
         }
-    }, [state?.data]);
+    }, [state]);
     
     return (
         <AppContext.Provider value={{ ...state, isError: initQuery.isError, loading: initQuery.isLoading, socket }}>{ children }</AppContext.Provider>

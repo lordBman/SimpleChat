@@ -13,7 +13,7 @@ const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | und
         if(!socket.handshake.auth.token){
             next(Error("access token not found, try sigining in agian"));
         }
-        socket.handshake.auth.credentail = (jwt.verify(socket.handshake.auth.token, process.env.SECRET || "test" ) as any).credentail;
+        socket.handshake.auth.credential = (jwt.verify(socket.handshake.auth.token, process.env.SECRET || "test" ) as any).credential;
 
         if(!socket.handshake.auth.key){
             next(Error("API Access key not found"));
@@ -52,13 +52,13 @@ export default (io: Server) => {
     ConnectedSockets.getInstance().use(namespace);
 
     namespace.on("connection", (socket: Socket)=>{
-        console.log(`user connected: ${socket.id}: ${JSON.stringify(socket.handshake.auth.credentail)}`);
+        console.log(`user connected: ${socket.id}: ${JSON.stringify(socket.handshake.auth.credential)}`);
     
-        ConnectedSockets.getInstance().add(socket.handshake.auth.credentail.id, socket);
+        ConnectedSockets.getInstance().add(socket.handshake.auth.credential.id, socket);
     
         const friendModel = new FriendModel();
         
-        friendModel.all({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail }).then((channels)=>{
+        friendModel.all({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credential }).then((channels)=>{
             if(channels){
                 const init = channels.map((channel)=> channel.id);
                 socket.join(init);

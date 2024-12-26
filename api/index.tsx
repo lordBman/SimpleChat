@@ -120,7 +120,7 @@ api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
         }
         const init = await model.get(req.body);
 
-        return res.status(HttpStatusCode.Ok).send(init);
+        return res.status(HttpStatusCode.Ok).send({ ...init, token: req.cookies.token });
     }catch(error){
         jetLogger.err(error);
         if(error instanceof Err){

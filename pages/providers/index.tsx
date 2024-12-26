@@ -5,11 +5,10 @@ import FriendsProvider from "./friends-provider";
 import MultiProvider from "./multiple-provider";
 import AppProvider, { AppContext, AppContextType } from "./app-provider";
 import MembersProvider from "./members-provider";
-import MainProvider from "./main-provider";
 
 const Provider: React.FC<PropsWithChildren> = ({children}) =>{
     return (
-        <MultiProvider providers={[MainProvider, MembersProvider, FriendsProvider, ChatProvider]}>
+        <MultiProvider providers={[MembersProvider, FriendsProvider, ChatProvider]}>
             {children}
         </MultiProvider>
     );

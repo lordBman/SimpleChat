@@ -23,8 +23,8 @@ export type MembersContextType = {
 export const MembersContext = React.createContext<MembersContextType | null>(null);
 
 const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { data } = React.useContext(AppContext) as AppContextType;
-    const [membersState, setMembersState] = useState<MembersState>({ loading: false, isError: false, members: data?.members!  });
+    const { user } = React.useContext(AppContext) as AppContextType;
+    const [membersState, setMembersState] = useState<MembersState>({ loading: false, isError: false, members: user?.members!  });
 
     const refreshMembersMutation = useMutation({
         mutationKey:  ["groups"],

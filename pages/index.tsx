@@ -6,7 +6,6 @@ import Signin from "./signin";
 import Homepage from "./homepage";
 import Docs from "./docs";
 import { Roles, Credential } from "@prisma/client";
-import DashBoard from "./dashboard";
 
 const signinRenderer = (res: Response) =>{
     const root = ReactDOMServer.renderToString(<Signin />);
@@ -110,8 +109,8 @@ pages.get("/signin", async(req, res) =>{
     return signinRenderer(res);
 });
 
-pages.get("/dashboard", secureRoute, async(req, res) =>{
-    const root = ReactDOMServer.renderToStaticMarkup(<DashBoard />);
+pages.use("/dashboard", secureRoute, async(req, res) =>{
+    //const root = ReactDOMServer.renderToStaticMarkup(<DashBoard />);
 
     const html = `
         <html lang="en">
@@ -122,7 +121,7 @@ pages.get("/dashboard", secureRoute, async(req, res) =>{
                 <link rel="stylesheet" href="/assets/dist/dashboard.css" />
             </head>
             <body>
-                <main id="root">${root}</main>
+                <main id="root"></main>
                 <script src="/assets/dist/dashboard.js"></script>
             </body>
         </html>

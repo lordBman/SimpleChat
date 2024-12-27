@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import ProviderWraper, { AppProvider } from "../providers";
 import { BottomNavigation, DashBoard as DashBoardView, Loading, MobileHeader } from "../conponents";
 import Options from "../conponents/dashboard/menu/options";
-import React from "react";
+import React, { useMemo } from "react";
 import { AppContext, AppContextType } from "../providers/app-provider";
 import { Roles } from "@prisma/client";
 import { BrowserRouter, Route, Switch, useHistory, useLocation } from "react-router-dom";
@@ -16,18 +16,27 @@ const App = () =>{
     const location = useLocation();
     const history = useHistory();
 
-    const chosen = (id: string)=> history.push(`dashbaord/${id}`);
+    const chosen = (id: string)=> history.push(`/dashboard/${id}`);
 
-    const current = location.pathname.split("/")[1];
+    const current = location.pathname.split("/")[2] ?? "home";
+
+    const hideSection = useMemo(()=>{
+        console.log(location.pathname);
+        const paths =  location.pathname.split('/');
+        if(paths.length == 2 || current === "home"){
+            return true;
+        }
+        return false;
+    },[location.pathname]);
     
     return (
         <DashBoardView>
             <DashBoardView.Menu initial={current} choose={chosen}>
                 <Options>
-                    <Options.Item id="profile" isMiddle icon="guidance--user-1" label="Profile" />
+                    <Options.Item id="home" isMiddle icon="hugeicons--dashboard-square-02" label="Home" />
                     <Options.Item id="projects" isMiddle icon="hugeicons--code" label="Projects" hide={user?.role === Roles.Client} />
                     <Options.Item id="chats" isMiddle icon="fluent--chat-20-regular" label="Chats" />
-                    <Options.Item id="notifications" isMiddle icon="solar--bell-linear" label="Notifications" />
+                    <Options.Item id="notifications" isMiddle icon="solar--bell-linear" label="Notifications" hide={true} />
                     <Options.Item id="developers" isMiddle icon="heroicons--user-group" label="Developers" hide={user?.role !== Roles.Admin} />
                     <Options.Item id="groups" isMiddle icon="heroicons--user-group" label="Groups" />
                     <Options.Item id="friends" isMiddle icon="system-uicons--contacts" label="Friends" />
@@ -38,7 +47,7 @@ const App = () =>{
                     <Options.Item id="info" icon="clarity--help-info-line" label="Info" />
                 </Options>
             </DashBoardView.Menu>
-            <DashBoardView.Section>
+            <DashBoardView.Section hide={hideSection}>
                 <MobileHeader />
                 <Switch>
                     <Route path="dashboard/chats">
@@ -62,7 +71,7 @@ const App = () =>{
                 <Main />
             </DashBoardView.Content>
             <DashBoardView.Bottom active={current}  choose={chosen}>
-                <BottomNavigation.Item id="profile" icon="guidance--user-1" label="Profile" />
+                <BottomNavigation.Item id="home" icon="hugeicons--dashboard-square-02" label="Home" />
                 <BottomNavigation.Item id="chats" icon="fluent--chat-20-regular" label="Chats" />
                 <BottomNavigation.Item id="groups" icon="heroicons--user-group" label="Groups" />
                 <BottomNavigation.Item id="friends" icon="system-uicons--contacts" label="Friends" />

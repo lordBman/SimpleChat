@@ -62,7 +62,6 @@ export default (io: Server) => {
             if(channels){
                 const init = channels.map((channel)=> channel.id);
                 socket.join(init);
-                console.log(JSON.stringify(init));
             }
         });
     

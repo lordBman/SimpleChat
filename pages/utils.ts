@@ -1,4 +1,6 @@
 import axios from "axios";
+import { FriendResponse, GroupResponse, MemberResponse } from "./responses";
+import { Credential } from "@prisma/client";
 
 export const  ProjectKey = "b5d37840828b4b490489609915df97fd37f5";
 
@@ -15,6 +17,18 @@ export const axiosInstance =  axios.create({
 	},
 	withCredentials: true,
 	baseURL: "/api" });
+
+export const getName = ( user: Credential, response : FriendResponse | MemberResponse):string =>{
+    if((response as any).group){
+        const init = response as MemberResponse;
+
+        return init.group.name;
+    }else{
+        const init = response as FriendResponse;
+
+        return init.acceptorID === user.id ? init.acceptor.name : init.requester.name;
+    }
+}
 
 export const formatMonth = (date: Date)=>{
     switch(date.getMonth()){

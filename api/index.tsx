@@ -9,10 +9,12 @@ import authRouter from "./auth";
 import accessKeyRouter from "./access-keys";
 import { AdminModel, OrganizationModel } from "../models";
 import { Err, SeedResult } from "../config";
-import { Credential, Project } from "@prisma/client";
+import { Credential, Friend, Group, Member, Project } from "@prisma/client";
 import ClientModel from "../models/clients";
 import DeveloperModel from "../models/developer";
 import projectRouter from "./projects";
+import FriendModel from "../models/friends";
+import GroupModel from "../models/groups";
 
 export const KeyAuthenication = async (req: Request, res: Response, next: NextFunction) => {
     if(req.body.key || req.query.key){
@@ -129,6 +131,46 @@ api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
         }
         return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
     }
+});
+
+api.get("/search:query", async(req, res)=>{
+    if(req.query.query){
+        try{
+            const query = req.query.query as string;
+
+            const friendsResponse = await new FriendModel().find({ ...req.body, query });
+            const groupResponse = await new GroupModel().find({ ...req.body, query });
+
+            const getName = (result: { user: Credential, friend?: Friend } | { group: Group, member?: Member }):string =>{
+                if((result as any).user){
+                    const init = result as { user: Credential, friend?: Friend };
+
+                    return init.user.name;
+                }else{
+                    const init = result as { group: Group, member?: Member };
+
+                    return init.group.name;
+                }
+            }
+
+            const response = [...friendsResponse, ...groupResponse].sort((a,b)=>{
+                const aName = getName(a);
+                const bName = getName(b);
+
+                return aName.localeCompare(bName);
+            });
+            
+            return res.status(HttpStatusCode.Ok).send(response);
+        }catch(error){
+            jetLogger.err(error);
+            if(error instanceof Err){
+                const err = error as Err;
+                return res.status(err.code).send({ message: err.message });
+            }
+            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while searching for users" });
+        }
+    }
+    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 export default api;

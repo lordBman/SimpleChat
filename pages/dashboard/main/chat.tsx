@@ -24,7 +24,7 @@ const length = (date: Date) =>{
 }
 
 const Chat = () =>{
-    const { data } = React.useContext(AppContext) as AppContextType;
+    const { user } = React.useContext(AppContext) as AppContextType;
     const { current, send, chats, typing, stoppedTyping, } = React.useContext(ChatContext) as ChatContextType;
     const [message, setMessage] = useState("");
     const [containerScrollState, setContainerScrollState] = useState<boolean>();
@@ -57,7 +57,7 @@ const Chat = () =>{
         if(current){
             if(isFriend(current)){
                 const friend = (current as FriendResponse);
-                if(friend?.acceptorID === data?.id){
+                if(friend?.acceptorID === user?.id){
                     return { name: friend?.requester.name, init: friend?.requester.name.charAt(0).toLocaleUpperCase()};
                 }
                 return { name: friend?.acceptor.name, init: friend?.acceptor.name.charAt(0).toLocaleUpperCase() };

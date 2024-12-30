@@ -6,7 +6,6 @@ import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
 import { log } from "console";
 
-type FrientSearchResponse = Credential | Friend;
 type RequestFriendResponse = Friend & { acceptor: Credential,  requester: Credential };
 type AllFriendsResponse = Array<RequestFriendResponse>;
 
@@ -133,16 +132,16 @@ class FriendModel{
         }
     }
 
-    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<FrientSearchResponse[]>{
+    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<{ user: Credential, friend?: Friend }[]>{
         try{
             const credentials = (await this.database.client.client.findMany({
                 where: { projectID: data.project.id, organizationID: data.organization?.id, NOT: { credentialID: data.credential.id } },
-                include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true, adminID: true } } }
+                include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true, adminID: true, role: true } } }
             })).filter((client)=>{
                 return client.credential.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             }).map((client) => client.credential);
 
-            let results: FrientSearchResponse[] = [];
+            let results: { user: Credential, friend?: Friend }[] = [];
             for(let i = 0; i < credentials.length; i++ ){
                 const init = await this.database.client.friend.findFirst({ 
                     where: {
@@ -154,11 +153,7 @@ class FriendModel{
                         acceptor: { include: { credential: { select: { id: true, name: true, surname: true, username: true, email: true, adminID: true } } }} 
                     }
                 });
-                if(init){
-                    results.push(init);
-                }else{
-                    results.push({ ...credentials[i], password: "", role: "Client" });
-                }
+                results.push({ user: { ...credentials[i], password: "" }, friend: init === null ? undefined : init });
             }
             return results;
         }catch(error){

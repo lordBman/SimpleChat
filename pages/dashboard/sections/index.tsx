@@ -1,9 +1,30 @@
+import { Route, Switch } from "react-router-dom";
 import Chats from "./chats";
-import Friends from "./friends";
-import Groups from "./groups";
+import Groups from "./connections";
 import Info from "./info";
-import Notifications from "./notifications";
-import Profile from "./profile";
 import Settings from "./settings";
+import Connections from "./connections";
 
-export { Chats, Friends, Groups, Info, Notifications, Profile, Settings }
+const Sections = () =>{
+    return (
+        <Switch>
+            <Route path="/dashboard/chats">
+                <Chats />
+            </Route>
+                <Route path="/dashboard/groups">
+            <Groups />
+            </Route>
+            <Route path="/dashboard/connections">
+                <Connections />
+            </Route>
+            <Route path="/dashboard/settings">
+                <Settings />
+            </Route>
+            <Route path="/dashboard/info">
+                <Info />
+            </Route>
+        </Switch>
+    );
+}
+
+export default Sections;

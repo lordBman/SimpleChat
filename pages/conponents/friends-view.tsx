@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { CircleLoading } from ".";
-import { Friend, User } from "@prisma/client";
+import { Friend, Credential } from "@prisma/client";
 import { AppContext, AppContextType } from "../providers/app-provider";
 import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
 import { ChatContext, ChatContextType } from "../providers/chats-provider";
@@ -9,11 +9,11 @@ import { ProjectKey, axiosInstance } from "../utils";
 import { FriendResponse } from "../responses";
 
 interface FriendResultViewProps{
-    result: { user: User, friend?: Friend }
+    result: { user: Credential, friend?: Friend }
 }
 
 const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
-    const { data} = useContext(AppContext) as AppContextType;
+    const {user} = useContext(AppContext) as AppContextType;
     const { refreshFriends } = useContext(FriendsContext) as FriendsContextType;
     const { makeCurrent } = useContext(ChatContext) as ChatContextType;
 
@@ -55,8 +55,8 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
     let accepted = state.friend && state.friend.accepted;
 
     let loading = requestMutation.isLoading || acceptMutation.isLoading || cancelMutation.isLoading;
-    let requesting = !accepted && state.friend && state.friend.acceptorID === data?.id;
-    let requested = !accepted && state.friend && state.friend.requesterID === data?.id;
+    let requesting = !accepted && state.friend && state.friend.acceptorID === user?.id;
+    let requested = !accepted && state.friend && state.friend.requesterID === user?.id;
 
     const message = () => accepted && makeCurrent(state.friend);
 
@@ -88,7 +88,7 @@ interface FriendViewProps{
 } 
 
 const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{
-    const { data} = useContext(AppContext) as AppContextType;
+    const { user} = useContext(AppContext) as AppContextType;
     const { cancel, accept } = useContext(FriendsContext) as FriendsContextType;
     const { makeCurrent } = useContext(ChatContext) as ChatContextType;
 
@@ -96,10 +96,10 @@ const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{
     const cancelRequest = () => cancel(friend.id);
 
     let loading = false;
-    let requesting = !friend.accepted && friend.acceptorID === data?.id;
-    let requested = !friend.accepted && friend.requesterID === data?.id;
+    let requesting = !friend.accepted && friend.acceptorID === user?.id;
+    let requested = !friend.accepted && friend.requesterID === user?.id;
 
-    const init = (friend.requesterID === data?.id ? friend.acceptor : friend.requester)!;
+    const init = (friend.requesterID === user?.id ? friend.acceptor : friend.requester)!;
 
     const message = () => friend.accepted && makeCurrent(friend);
 

@@ -5,8 +5,6 @@ import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
 
-interface Result{ group: Group, member?: Member }
-
 class GroupModel{
     database: Database;
     constructor(){
@@ -246,13 +244,13 @@ class GroupModel{
         }   
     }
 
-    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<Result[]>{
+    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<{ group: Group, member?: Member }[]>{
         try{
             const groups = (await this.database.client.group.findMany({ where: { projectID: data.project.id, organizationID: data.organization?.id } })).filter((group)=>{
                 return group.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             });
 
-            let results: Result[] = [];
+            let results: { group: Group, member?: Member }[] = [];
             for(let i = 0; i < groups.length; i++ ){
                 const init = await this.database.client.member.findFirst({ 
                     where: { groupID: groups[i].id },

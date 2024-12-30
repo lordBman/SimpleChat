@@ -1,4 +1,8 @@
-import React, { ReactElement } from "react";
+import React, { ReactElement, useMemo } from "react";
+
+const paragraph = (word: string): string =>{
+    return word.replace(word.charAt(0), word.charAt(0).toUpperCase());
+}
 
 export interface ToolBarItemProps{
     icon: string,
@@ -26,9 +30,27 @@ export interface ToolBarProps{
 }
 
 const ToolBar: React.FC<ToolBarProps> & { Item: React.FC<ToolBarItemProps> } = ({ title, children }) =>{
+    const current  = useMemo(()=>{
+        const paths =  location.pathname.split('/');
+
+        let currents: string[] =  [];
+        for(let i = 2; i < paths.length; i++){
+            if(paths[i] && paths[i] !== ""){
+                currents.push(paths[i])
+            }else{
+                if(currents.length === 0){
+                    currents = ["Home"];
+                }
+                break;
+            }
+        }
+        
+        return currents;
+    }, [location.pathname]);
+    
     return (
         <div className="tool-bar">
-            <h2 style={{ color: "whitesmoke" }}>{title}</h2>
+            <h2 style={{ color: "whitesmoke" }}>{title} { current.map((init)=>(<span style={{ fontWeight: 200, fontSize: 18, fontFamily: "monospace" }}> | {paragraph(init)}</span>)) }</h2>
             <div className="tool-bar-item-container">{children}</div>
         </div>
     );

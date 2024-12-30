@@ -1,9 +1,9 @@
-import { User, Friend, Chat, Group, Member} from "@prisma/client";
+import { Credential, Friend, Chat, Group, Member} from "@prisma/client";
 
-export type ChatResponse = Chat & { sender: User }
+export type ChatResponse = Chat & { sender: Credential }
 export type ChatsResponse = { [key: string]: ChatResponse[] };
 
-export type GroupResponse = Group & { creator: User };
+export type GroupResponse = Group & { creator: Credential };
 export type MemberResponse = Member & { group: GroupResponse };
 
-export type FriendResponse = Friend & { acceptor: User, requester: User  };
+export type FriendResponse = Friend & { acceptor: Credential, requester: Credential };

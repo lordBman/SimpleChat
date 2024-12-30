@@ -13,7 +13,7 @@ const Chats = () =>{
             </div>
             <form className="search-form">
                 <span className="formkit--search"></span>
-                <input className="search-input" type="search" placeholder="search users ..." />
+                <input className="search-input" type="search" placeholder="Search chats..." />
             </form>
             <div className="messages-root-container">
                 <h4 className="messages-title">Messages</h4>

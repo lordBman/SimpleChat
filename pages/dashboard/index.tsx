@@ -1,5 +1,4 @@
-import { Chats, Friends, Groups, Info, Notifications, Settings } from "./sections";
-
+import Sections from "./sections";
 import Main from "./main";
 import { QueryClient, QueryClientProvider } from "react-query";
 import ProviderWraper, { AppProvider } from "../providers";
@@ -8,7 +7,7 @@ import Options from "../conponents/dashboard/menu/options";
 import React, { useMemo } from "react";
 import { AppContext, AppContextType } from "../providers/app-provider";
 import { Roles } from "@prisma/client";
-import { BrowserRouter, Route, Switch, useHistory, useLocation } from "react-router-dom";
+import { BrowserRouter, useHistory, useLocation } from "react-router-dom";
 import { ToolBarItem } from "../conponents/dashboard/tool-bar";
 
 
@@ -28,7 +27,11 @@ const App = () =>{
         }
 
         let hideSection = false;
-        if(paths.length == 2 || current === "" || current === "home"){
+        if(paths.length === 2 || current === "" || current === "home"){
+            hideSection = true;
+        }
+
+        if(paths.length === 3 && (current === "projects" || current === "developers")){
             hideSection = true;
         }
         return [current, hideSection];
@@ -42,8 +45,7 @@ const App = () =>{
                     <Options.Item id="developers" isMiddle icon="hugeicons--computer-programming-01" label="Developers" hide={user?.role !== Roles.Admin} />
                     <Options.Item id="projects" isMiddle icon="hugeicons--code" label="Projects" hide={user?.role === Roles.Client} />
                     <Options.Item id="chats" isMiddle icon="fluent--chat-20-regular" label="Chats" />
-                    <Options.Item id="groups" isMiddle icon="heroicons--user-group" label="Groups" />
-                    <Options.Item id="friends" isMiddle icon="system-uicons--contacts" label="Friends" />
+                    <Options.Item id="connections" isMiddle icon="heroicons--user-group" label="Connections" />
                 </Options>
                 <Options>
                     <Options.Item id="settings" icon="et--gears" label="Settings" />
@@ -57,23 +59,7 @@ const App = () =>{
             </DashBoardView.ToolBar>
             <DashBoardView.Section hide={hideSection}>
                 <MobileHeader />
-                <Switch>
-                    <Route path="dashboard/chats">
-                        <Chats />
-                    </Route>
-                        <Route path="dashboard/groups">
-                    <Groups />
-                    </Route>
-                    <Route path="dashboard/friends">
-                        <Friends />
-                    </Route>
-                    <Route path="dashboard/settings">
-                        <Settings />
-                    </Route>
-                    <Route path="dashboard/info">
-                        <Info />
-                    </Route>
-                </Switch>
+                <Sections />
             </DashBoardView.Section>
             <DashBoardView.Content>
                 <Main />

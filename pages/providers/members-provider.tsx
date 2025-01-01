@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useMutation } from 'react-query';
 import { ProjectKey, axiosInstance } from '../utils';
 import { AppContext, AppContextType } from './app-provider';
-import { FriendResponse, MemberResponse } from '../responses';
+import { MemberResponse } from '../responses';
 
 interface MembersState{
     loading: boolean,
@@ -21,6 +21,13 @@ export type MembersContextType = {
 }
 
 export const MembersContext = React.createContext<MembersContextType | null>(null);
+export const useMembersContext = () => {
+    const init = React.useContext(MembersContext);
+    if(init === null){
+        throw Error("Component has to be wrapped by SimpleChatProver in order to use MembersContext");
+    }
+    return init;
+}
 
 const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { user } = React.useContext(AppContext) as AppContextType;

@@ -2,7 +2,7 @@ import axios from "axios";
 import { FriendResponse, GroupResponse, MemberResponse } from "./responses";
 import { Credential } from "@prisma/client";
 
-export const  ProjectKey = "b5d37840828b4b490489609915df97fd37f5";
+export const  ProjectKey = "1b3ef54583e8884a419bb3da00db59d3c9ff";
 
 export interface LooseObject {
     [key: string]: any

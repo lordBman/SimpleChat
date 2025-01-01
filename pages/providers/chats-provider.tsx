@@ -29,6 +29,13 @@ export type ChatContextType = {
 }
 
 export const ChatContext = React.createContext<ChatContextType | null>(null);
+export const useChatContext = () => {
+    const init = React.useContext(ChatContext);
+    if(init === null){
+        throw Error("Component has to be wrapped by SimpleChatProver in order to call ChatContext");
+    }
+    return init;
+}
 
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { user, socket } = React.useContext(AppContext) as AppContextType;

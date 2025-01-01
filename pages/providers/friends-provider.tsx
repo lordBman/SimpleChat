@@ -24,6 +24,13 @@ export type FriendsContextType = {
 }
 
 export const FriendsContext = React.createContext<FriendsContextType | null>(null);
+export const useFriendsContext = () => {
+    const init = React.useContext(FriendsContext);
+    if(init === null){
+        throw Error("Component has to be wrapped by SimpleChatProver in order to use FriendsContext");
+    }
+    return init;
+}
 
 const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { user, socket } = React.useContext(AppContext) as AppContextType;

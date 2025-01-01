@@ -22,6 +22,13 @@ export type AppContextType = {
 };
 
 export const AppContext = React.createContext<AppContextType>({ loading: false, isError: false });
+export const useAppContext = () => {
+    const init = React.useContext(AppContext);
+    if(init === null){
+        throw Error("Component has to be wrapped by SimpleChatProver in order to call AppContext");
+    }
+    return init;
+}
 
 const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const [state, setState] = useState<{ user?: UserState, message: any }>({ message: "" });

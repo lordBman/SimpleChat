@@ -1,0 +1,1 @@
+import { Credential } from "@prisma/client";

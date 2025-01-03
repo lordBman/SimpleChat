@@ -43,8 +43,10 @@ export default (namespace: Namespace, socket: Socket) => {
         });
     });
 
-    socket.on("typing", (data: string, room)=>{
+    socket.on("typing", (data: { status: boolean }, room)=>{
         console.log(data);
-        socket.broadcast.to(room).emit("typing", {room, message:`${socket.handshake.auth.credentail.name} is typing...` });
+        if(data.status){
+            socket.broadcast.to(room).emit("typing", {room, message:`${socket.handshake.auth.credentail.name} is typing...` });
+        }
     });
 }

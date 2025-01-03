@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { TypingManager, axiosInstance } from '../utils';
 import { useUserContext } from './user-provider';
 import { useMutation } from '@tanstack/react-query';
-import { Chat, Chats, Friend, Group, Member } from '../models';
+import { Chat, Chats, Friend, Group, Member } from '../../simplechat/models';
 import { useFriendsContext } from './friend-provider';
 
 interface ChatState{
@@ -20,9 +20,9 @@ export type ChatContextType = {
     isError: boolean,
     message?: any, 
     refreshChats: CallableFunction;
-    send: (message: string, targetID: string) => void;
+    send: (message: string, targetID: Member | Friend) => void;
     status: { message?: string, room?: string },
-    typing: (targetID: string) => void;
+    typing: (targetID: Member | Friend) => void;
 }
 
 export const ChatContext = React.createContext<ChatContextType | null>(null);
@@ -59,13 +59,13 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         });
     
         socket.on("typing", (message: string, room: string)=>{
-            if(room === status.room){
+            /*if(room === status.room){
                 if(status.message !== message){
                     setStatus({ message, room });
                 }                
             }else if(room === current?.id){
                 setStatus({ message, room });
-            }
+            }*/
         });
     }
 
@@ -96,12 +96,6 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }).map((init)=> init[0]);
     }, [state.chats]);
 
-    const typingManager = React.useMemo(()=>{
-        return new TypingManager(1000, ()=>{
-            socket?.emit("typing", true , current?.id);
-        });
-    }, [current])
-
     const send = (message: string, targert: Friend | Member) =>{
         if("acceptorID" in targert){
             const friend = targert as Friend;
@@ -116,26 +110,24 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }
     }
 
-    const typing = () => typingManager.run();
-
-    const stoppedTyping = () =>{
-        typingManager.stop();
-        socket?.emit("typing", false, current?.id);
-    }
-
-    const init = React.useCallback(()=>{
-        if(!current && order.length > 0){
-            const init = friends.find((value)=> value.id === order[0])
-            setCurrent(init);
+    const typing = (targert: Friend | Member) => {
+        if("acceptorID" in targert){
+            const friend = targert as Friend;
+            if(socket && friend.accepted){
+                socket.emit("typing", { status: true }, friend.id);
+            }
+        }else{
+            const member = targert as Member;
+            if(socket && member.accepted){
+                socket.emit("typing", { status: true }, member.group.id);
+            }
         }
-    }, [order]);
-
-    React.useEffect(()=> init(), [init, order]);
+    }
 
     const refreshChats = () => refreshChatsMutation.mutate();
 
     return (
-        <ChatContext.Provider value={{ ...state, status, refreshChats, send, typing, stoppedTyping, order }}>{ children }</ChatContext.Provider>
+        <ChatContext.Provider value={{ ...state, status, refreshChats, send, typing, order }}>{ children }</ChatContext.Provider>
     );
 }
 

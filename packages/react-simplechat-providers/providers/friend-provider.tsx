@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { axiosInstance } from '../utils';
-import { Friend } from '../models';
+import { Friend } from '../../simplechat/models';
 import { useUserContext } from './user-provider';
 import { useMutation } from '@tanstack/react-query';
 

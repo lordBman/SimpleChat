@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Socket, io } from "socket.io-client";
 import { axiosInstance } from '../utils';
-import { AccessKey, Chats, Friend, Member, Project } from '../models';
+import { AccessKey, Chats, Friend, Member, Project } from '../../simplechat/models';
 import { useQuery } from '@tanstack/react-query';
 
 export type UserState = Credential & { 

@@ -1,0 +1,22 @@
+{
+    "name": "simplechat",
+    "version": "1.0.0",
+    "description": "Simple Chat API Client",
+    "license": "ISC",
+    "author": "Nobel Okelekele",
+    "type": "commonjs",
+    "main": "index.js",
+    "scripts": {
+      "test": "dev"
+    },
+    "devDependencies": {
+      "@types/node": "^22.10.3",
+      "esbuild": "^0.24.2",
+      "typescript": "^5.7.2"
+    },
+    "dependencies": {
+      "axios": "^1.7.9",
+      "react": "^18.3.1",
+      "socket.io-client": "^4.8.1"
+    }
+}

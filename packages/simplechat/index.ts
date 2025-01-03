@@ -3,7 +3,7 @@ import { axiosInstance } from "./uitls";
 import { Chats, Friend, Member } from "./models";
 import { AxiosError } from "axios";
 
-type SimpleChatClientConfig = {
+export type SimpleChatClientConfig = {
     name: string,
     surname: string,
     accessKey: string,
@@ -47,4 +47,6 @@ class SimpleChatClient{
         }
     }
 }
+
+export default SimpleChatClient;
 

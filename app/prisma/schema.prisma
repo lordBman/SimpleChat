@@ -63,6 +63,8 @@ model Project{
     id                String              @id @default(uuid())
     name              String
 
+    token             String              @default(uuid())
+
     ownerID           String
     owner             Credential       @relation(fields: [ownerID], references: [id], onDelete: Cascade)
 

@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { HttpStatusCode } from "axios";
 import jetLogger from "jet-logger";
 import AccessKeyModel from "../models/access-keys";
-import authRouter from "./auth";
+import authRouter, { cookieResponse } from "./auth";
 import accessKeyRouter from "./access-keys";
 import { AdminModel, OrganizationModel } from "../models";
 import { Err, SeedResult } from "../config";
@@ -109,6 +109,29 @@ api.use("/chats", KeyAuthenication, APIAuthenication, chatRouter);
 api.use("/friends", KeyAuthenication, APIAuthenication, friendRouter);
 
 api.use("/auth", KeyAuthenication, authRouter);
+api.get("/connect", KeyAuthenication, async(req, res) =>{
+    if(req.body.name && req.body.surname && (req.body.email || req.body.username) && req.body.password && req.body.token){
+        if(req.body.project.token === req.body.token){
+            try{
+                let model: ClientModel =  new ClientModel();
+                
+                const init = await model.connect(req.body);
+    
+                return cookieResponse(res, init);
+            }catch(error){
+                jetLogger.err(error);
+                if(error instanceof Err){
+                    const err = error as Err;
+                    return res.status(err.code).send({ message: err.message });
+                }
+                return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
+            }
+        }
+        return res.status(HttpStatusCode.BadRequest).send({message: "project token mismatch"});
+    }
+    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
+});
+
 api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
     try{
         let model: ClientModel | DeveloperModel | AdminModel =  new ClientModel();
@@ -133,7 +156,7 @@ api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
     }
 });
 
-api.get("/search:query", async(req, res)=>{
+api.get("/search:query", KeyAuthenication, APIAuthenication, async(req, res)=>{
     if(req.query.query){
         try{
             const query = req.query.query as string;

@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import ClientModel from "../models/clients";
 import jetLogger from "jet-logger";
 
-const cookieResponse = (res: Response<any>, result: any & { credential: Credential }) =>{
+export const cookieResponse = (res: Response<any>, result: any & { credential: Credential }) =>{
     const token = jwt.sign({ credential: result.credential }, process.env.SECRET || "test", { expiresIn: "7 days" } );
             
     res.cookie(`token`, token, { httpOnly: true });

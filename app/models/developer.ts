@@ -12,7 +12,7 @@ class DeveloperModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Credential>{
+    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
         try{
             const client = await new ClientModel().create({ ...data, role: "Developer" });
 

@@ -1,3 +1,12 @@
+-- CreateEnum
+CREATE TYPE "Roles" AS ENUM ('Client', 'Admin', 'Developer');
+
+-- CreateEnum
+CREATE TYPE "ChatType" AS ENUM ('Group', 'Friends');
+
+-- CreateEnum
+CREATE TYPE "MemberRole" AS ENUM ('Member', 'Admin');
+
 -- CreateTable
 CREATE TABLE "Credential" (
     "id" TEXT NOT NULL,
@@ -6,24 +15,10 @@ CREATE TABLE "Credential" (
     "password" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "surname" TEXT NOT NULL,
-    "role" TEXT NOT NULL DEFAULT 'client',
+    "role" "Roles" NOT NULL DEFAULT 'Client',
+    "adminID" TEXT,
 
     CONSTRAINT "Credential_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Admin" (
-    "credentialID" TEXT NOT NULL,
-
-    CONSTRAINT "Admin_pkey" PRIMARY KEY ("credentialID")
-);
-
--- CreateTable
-CREATE TABLE "Developer" (
-    "credentialID" TEXT NOT NULL,
-    "adminID" TEXT NOT NULL,
-
-    CONSTRAINT "Developer_pkey" PRIMARY KEY ("credentialID")
 );
 
 -- CreateTable
@@ -39,6 +34,7 @@ CREATE TABLE "Client" (
 CREATE TABLE "Project" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
     "ownerID" TEXT NOT NULL,
 
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
@@ -72,6 +68,7 @@ CREATE TABLE "Chat" (
     "delivered" BOOLEAN NOT NULL DEFAULT false,
     "senderID" TEXT NOT NULL,
     "ownerID" TEXT NOT NULL,
+    "type" "ChatType" NOT NULL,
     "referenceID" INTEGER,
 
     CONSTRAINT "Chat_pkey" PRIMARY KEY ("id")
@@ -107,7 +104,7 @@ CREATE TABLE "Member" (
     "credentialID" TEXT NOT NULL,
     "groupID" TEXT NOT NULL,
     "joined" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "role" TEXT NOT NULL DEFAULT 'member',
+    "role" "MemberRole" NOT NULL DEFAULT 'Member',
     "accepted" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Member_pkey" PRIMARY KEY ("credentialID","groupID")
@@ -130,7 +127,7 @@ CREATE TABLE "Notification" (
 CREATE UNIQUE INDEX "Credential_id_key" ON "Credential"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Project_name_key" ON "Project"("name");
+CREATE UNIQUE INDEX "Project_name_ownerID_key" ON "Project"("name", "ownerID");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "AccessKey_key_key" ON "AccessKey"("key");
@@ -157,13 +154,7 @@ CREATE UNIQUE INDEX "Group_id_key" ON "Group"("id");
 CREATE UNIQUE INDEX "Member_credentialID_key" ON "Member"("credentialID");
 
 -- AddForeignKey
-ALTER TABLE "Admin" ADD CONSTRAINT "Admin_credentialID_fkey" FOREIGN KEY ("credentialID") REFERENCES "Credential"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Developer" ADD CONSTRAINT "Developer_credentialID_fkey" FOREIGN KEY ("credentialID") REFERENCES "Credential"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Developer" ADD CONSTRAINT "Developer_adminID_fkey" FOREIGN KEY ("adminID") REFERENCES "Admin"("credentialID") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Credential" ADD CONSTRAINT "Credential_adminID_fkey" FOREIGN KEY ("adminID") REFERENCES "Credential"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Client" ADD CONSTRAINT "Client_credentialID_fkey" FOREIGN KEY ("credentialID") REFERENCES "Credential"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -175,10 +166,7 @@ ALTER TABLE "Client" ADD CONSTRAINT "Client_organizationID_fkey" FOREIGN KEY ("o
 ALTER TABLE "Client" ADD CONSTRAINT "Client_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Project" ADD CONSTRAINT "developer_fk" FOREIGN KEY ("ownerID") REFERENCES "Developer"("credentialID") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Project" ADD CONSTRAINT "admin_fk" FOREIGN KEY ("ownerID") REFERENCES "Admin"("credentialID") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Project" ADD CONSTRAINT "Project_ownerID_fkey" FOREIGN KEY ("ownerID") REFERENCES "Credential"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AccessKey" ADD CONSTRAINT "AccessKey_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -188,6 +176,12 @@ ALTER TABLE "Organization" ADD CONSTRAINT "Organization_projectID_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "Chat" ADD CONSTRAINT "Chat_senderID_fkey" FOREIGN KEY ("senderID") REFERENCES "Client"("credentialID") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Chat" ADD CONSTRAINT "friend_fk" FOREIGN KEY ("ownerID") REFERENCES "Friend"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Chat" ADD CONSTRAINT "group_fk" FOREIGN KEY ("ownerID") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Chat" ADD CONSTRAINT "Chat_referenceID_fkey" FOREIGN KEY ("referenceID") REFERENCES "Chat"("id") ON DELETE SET NULL ON UPDATE CASCADE;

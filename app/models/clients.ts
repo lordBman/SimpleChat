@@ -8,20 +8,40 @@ import FriendModel from "./friends";
 class ClientModel{
     database: Database = DBManager.instance();
 
-    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: Roles }): Promise<Credential>{
+    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: Roles }): Promise<Client & { credential: Credential }>{
         try{
             const id = data.id ?? uuid();
             const credential = await this.database.client.credential.create({
                 data: { adminID: data.project.ownerID, id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
             });
 
-            await this.database.client.client.create({
+            const client = await this.database.client.client.create({
                 data: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id },
             });
 
-            return { ...credential, password: "" };
+            return { ...client, credential: { ...credential, password: "" } };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
+        }
+    }
+
+    async connect(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string }): Promise<Client & { credential: Credential }>{
+        try{
+            let credential = await this.database.client.credential.findFirst({ where: {  adminID: data.project.ownerID, name: data.name, surname: data.surname, email: data.email, username: data.username } });
+            if(credential === null){
+                credential = await this.database.client.credential.create({
+                    data: { adminID: data.project.ownerID, name: data.name, surname: data.surname, email: data.email, username: data.username, password: uuid(), role: "Client" },
+                });
+            }
+
+            const client = await this.database.client.client.upsert({
+                where: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id }, update: {},
+                create: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id }
+            });
+
+            return { ...client, credential: { ...credential, password: "" } };
+        }catch(error){
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when connecting user");
         }
     }
 

@@ -74,6 +74,6 @@ export type MembersContextType = {
     accept: (userID: string, groupID: string) => void,
     decline: (userID: string, groupID: string) => void,
     assign: (userID: string, groupID: string, role: "Member" | "Admin") => void,
-    delete: (groupID: string) => void,
+    remove: (groupID: string) => void,
     leave: (groupID: string)  => void
 }

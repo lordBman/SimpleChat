@@ -111,6 +111,35 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { user, accessKey, socket } = useUserContext();
     const [membersState, setMembersState] = useState<MembersState>({ loading: false, isError: false, members: user?.members!  });
 
+    const initCallback = useCallback(()=>{
+        if(socket){
+            socket.on("request", (response: Friend) =>{
+                const init = [response, ...friendsState.friends]
+                setFriendsState(state => ({...state, friends: init }));
+            });
+        
+            socket.on("accept", (response: Friend) =>{
+                console.log(JSON.stringify(`just recieved: ${response}`));
+                
+                const index = friendsState.friends.findIndex((value)=> response.id === value.id);
+                const init = [...friendsState.friends];
+                init.splice(index, 1, response);
+        
+                setFriendsState(state => ({...state, friends: init }));
+            });
+        
+            socket.on("cancel", (response: Friend) =>{
+                const index = friendsState.friends.findIndex((value)=> response.id === value.id);
+                const init = [...friendsState.friends];
+                init.splice(index, 1);
+        
+                setFriendsState(state => ({...state, friends: init }));
+            });
+        }
+    }, [socket]);
+
+    useEffect(()=> initCallback(), [ initCallback, socket ]);
+
     const refreshMembersMutation = useMutation({
         mutationKey:  ["groups"],
         mutationFn: () => axiosInstance.get(`/groups?key=${accessKey}`),
@@ -159,34 +188,38 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const [status, setStatus] = useState<{ room?:string, message?: string }>({});
     const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: user?.chats! });
 
-    if(socket){
-        socket.on("chat", (data, room)=>{
-            let reponse: Chat[] = [data];
-    
-            console.log(JSON.stringify(data));
-    
-            if(state.chats[room]){
-                reponse = state.chats[room].concat();
-                reponse.push(data);
-            }
-            let chats = {...state.chats};
-            chats[room] = reponse;
-    
-            setState((init)=> { return {...init, chats: chats } });
-    
-            console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data)}`);
-        });
-    
-        socket.on("typing", (message: string, room: string)=>{
-            /*if(room === status.room){
-                if(status.message !== message){
+    const initCallback = useCallback(()=>{
+        if(socket){
+            socket.on("chat", (data, room)=>{
+                let reponse: Chat[] = [data];
+        
+                console.log(JSON.stringify(data));
+        
+                if(state.chats[room]){
+                    reponse = state.chats[room].concat();
+                    reponse.push(data);
+                }
+                let chats = {...state.chats};
+                chats[room] = reponse;
+        
+                setState((init)=> { return {...init, chats: chats } });
+        
+                console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data)}`);
+            });
+        
+            socket.on("typing", (message: string, room: string)=>{
+                /*if(room === status.room){
+                    if(status.message !== message){
+                        setStatus({ message, room });
+                    }                
+                }else if(room === current?.id){
                     setStatus({ message, room });
-                }                
-            }else if(room === current?.id){
-                setStatus({ message, room });
-            }*/
-        });
-    }
+                }*/
+            });
+        }
+    }, [socket]);
+
+    useEffect(()=> initCallback(), [ initCallback, socket ]);
 
     const refreshChatsMutation = useMutation({
         mutationKey:  ["chats"],

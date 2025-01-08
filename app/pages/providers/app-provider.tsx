@@ -4,7 +4,6 @@ import { useQuery } from 'react-query';
 import { AccessKey, Credential, Project } from '@prisma/client';
 import { Socket, io } from "socket.io-client";
 import { ProjectKey, axiosInstance } from '../utils';
-import { ChatsResponse, FriendResponse, MemberResponse } from '../responses';
 
 export type UserState = Credential & { 
     token: string, 

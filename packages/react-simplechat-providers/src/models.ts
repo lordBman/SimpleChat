@@ -1,4 +1,4 @@
-import { Member, Friend, Chats, Project, AccessKey } from "simplechat/src/models";
+import { Member, Friend, Chats, Project, AccessKey } from "../../simplechat/src/models";
 import { Socket } from "socket.io-client";
 
 export type UserState = Credential & { 

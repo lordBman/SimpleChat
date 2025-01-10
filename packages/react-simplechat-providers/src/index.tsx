@@ -1,12 +1,11 @@
 import { PropsWithChildren, useCallback, useEffect, useState } from "react";
-import { SimpleChatClientConfig } from "simplechat/src";
+import { SimpleChatClientConfig } from "../../simplechat/src";
 import React from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Chat, Friend, Member } from "simplechat/src/models";
 import { io } from "socket.io-client";
 import { ChatState, FriendsState, MembersState } from "./models";
 import { ChatContext, FriendsContext, MembersContext, UserContext, useUserContext } from "./contexts";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+import { Chat, Friend, Member } from "../../simplechat/src/models";
 
 const axiosInstance =  axios.create({
 	headers: { 
@@ -18,10 +17,49 @@ const axiosInstance =  axios.create({
 	withCredentials: true,
 	baseURL: "/api" });
 
+const useRequest = (props: { fn: () => Promise<AxiosResponse<any, any>> }) =>{
+    const [ state, setState ] = useState<{ data?: AxiosResponse<any, any>, error?: any, loading: boolean, isError: boolean }>({ loading: true, isError: false });
+
+    const init = useCallback(()=>{
+        props.fn().then((value)=>{
+            setState(init => { return { ...init, data: value } });
+        }).catch((error)=>{
+            setState(init => { return { ...init, error: error, isError: true } });
+        }).finally(()=>{
+            setState(init => { return { ...init, loading: false } });
+        });
+    }, [props.fn]);
+
+    useEffect(()=> init(), [init, props.fn]);
+
+    return state;
+}
+
+const useRequestCallBack = (props: { fn: () => Promise<AxiosResponse<any, any>>,  started?: () => void, success?: (data: AxiosResponse<any, any>) => void, failed?: (error: any) => void }) =>{
+    const [ state, setState ] = useState<{ data?: AxiosResponse<any, any>, error?: any, loading: boolean, isError: boolean }>({ loading: false, isError: false });
+
+    const init = useCallback(()=>{
+        setState(init => { return { ...init, loading: true } });
+        props.started && props.started();
+        props.fn().then((value)=>{
+            setState(init => { return { ...init, data: value } });
+            props.success && props.success(value);
+        }).catch((error)=>{
+            setState(init => { return { ...init, error: error, isError: true } });
+            props.failed && props.failed(error);
+        }).finally(()=>{
+            setState(init => { return { ...init, loading: false } });
+        });
+    }, [props.fn]);
+
+    const run = () => init();
+
+    return { ...state, run };
+}
+
 const UserProvider: React.FC<React.PropsWithChildren & { config: SimpleChatClientConfig }> = ({ children, config }) => {
-    const { data, error, isLoading, isError } = useQuery({
-        queryKey:  ["data"],
-        queryFn: () => axiosInstance.get(`/?key=${config.accessKey}`),
+    const { data, error, loading, isError } = useRequest({
+        fn: () => axiosInstance.get(`/?key=${config.accessKey}`),
     });
 
     const socket = React.useMemo(() => {
@@ -35,7 +73,7 @@ const UserProvider: React.FC<React.PropsWithChildren & { config: SimpleChatClien
     }, [data?.data]);
     
     return (
-        <UserContext.Provider value={{ user: data?.data, isError, loading: isLoading, message: error, socket, accessKey: config.accessKey }}>{ children }</UserContext.Provider>
+        <UserContext.Provider value={{ user: data?.data, isError, loading, message: error, socket, accessKey: config.accessKey }}>{ children }</UserContext.Provider>
     );
 }
 
@@ -88,19 +126,18 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             socket.emit("cancel", { friendID }, friendID);
     }
 
-    const refreshFriendsMutation = useMutation({
-        mutationKey:  ["friend"],
-        mutationFn: () => axiosInstance.get(`/friends?key=${accessKey}`),
-        onMutate:()=> setFriendsState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
-        onSuccess(data) {
+    const refreshFriendsMutation = useRequestCallBack({
+        fn: () => axiosInstance.get(`/friends?key=${accessKey}`),
+        started:()=> setFriendsState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
+        success(data) {
             setFriendsState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});
         },
-        onError(error) {
+        failed(error) {
             setFriendsState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
 
-    const refreshFriends = () => refreshFriendsMutation.mutate();
+    const refreshFriends = () => refreshFriendsMutation.run();
 
     return (
         <FriendsContext.Provider value={{ ...friendsState, refreshFriends, accept, cancel, request }}>{ children }</FriendsContext.Provider>
@@ -140,19 +177,18 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     useEffect(()=> initCallback(), [ initCallback, socket ]);
 
-    const refreshMembersMutation = useMutation({
-        mutationKey:  ["groups"],
-        mutationFn: () => axiosInstance.get(`/groups?key=${accessKey}`),
-        onMutate:()=> setMembersState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
-        onSuccess(data) {
+    const refreshMembersMutation = useRequestCallBack({
+        fn: () => axiosInstance.get(`/groups?key=${accessKey}`),
+        started:()=> setMembersState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
+        success(data) {
             setMembersState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});
         },
-        onError(error) {
+        failed(error) {
             setMembersState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
 
-    const refreshMembers = () => refreshMembersMutation.mutate();
+    const refreshMembers = () => refreshMembersMutation.run();
 
     const create = (name: string) => {
 
@@ -221,16 +257,15 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     useEffect(()=> initCallback(), [ initCallback, socket ]);
 
-    const refreshChatsMutation = useMutation({
-        mutationKey:  ["chats"],
-        mutationFn: () => axiosInstance.get(`/chats?key=${accessKey}`),
-        onMutate:()=> setState(init => { return { ...init, loading: true, isError: false, messages: "refreshing chats list"}}),
-        onSuccess(response) {
+    const refreshChatsMutation = useRequestCallBack({
+        fn: () => axiosInstance.get(`/chats?key=${accessKey}`),
+        started:()=> setState(init => { return { ...init, loading: true, isError: false, messages: "refreshing chats list"}}),
+        success(response) {
             setState(init => {
                 return { ...init, loading: false, isError: false, message: "", chats: response.data }
             });
         },
-        onError(error) {
+        failed(error) {
             setState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
@@ -276,7 +311,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }
     }
 
-    const refreshChats = () => refreshChatsMutation.mutate();
+    const refreshChats = () => refreshChatsMutation.run();
 
     return (
         <ChatContext.Provider value={{ ...state, status, refreshChats, send, typing, order }}>{ children }</ChatContext.Provider>

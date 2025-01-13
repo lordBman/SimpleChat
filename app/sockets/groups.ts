@@ -2,42 +2,77 @@ import { Namespace, Socket } from 'socket.io';
 import { joinChatRoom } from './chats';
 import { ConnectedSockets } from './utils';
 import { GroupModel } from '../models';
+import { MemberRole } from '@prisma/client';
+import jetLogger from 'jet-logger';
+import { Err } from '../config';
 
 export default (namespace: Namespace, socket: Socket) => {
-    socket.on('groups/create', async(input: { name: string }, room: string) => {
+    socket.on('groups/create', (input: { name: string }, room: string) => {
         const model = new GroupModel();
-        const response = await model.create({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail, ...input });
+        model.create({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail, ...input }).then((response)=>{
+            joinChatRoom(response!);
+            namespace.to(response?.groupID!).emit('groups/accept', response);
+        }).catch((error) =>{
+            const err = error as Err;
 
-        ConnectedSockets.getInstance().send("groups/reject", [ response?.credentialID!, socket.handshake.auth.credentail.id ], response);
+            jetLogger.err(err.error);
+            socket.emit("groups/error", err.message);
+        });
     });
 
-    socket.on("groups/accept", async(input: { userID: string, groupID: string }, room: string)=>{
+    socket.on("groups/accept", (input: { userID: string, groupID: string }, room: string)=>{
         const model = new GroupModel();
-        const response = await model.accept({ credential: socket.handshake.auth.credentail, ...input });
+        model.accept({ credential: socket.handshake.auth.credentail, ...input }).then((response)=>{
+            console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
 
-        console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
+            joinChatRoom(response!);
+            namespace.to(response?.groupID!).emit('groups/accept', response);
+        }).catch((error) =>{
+            const err = error as Err;
 
-        joinChatRoom(response!);
-    
-        namespace.to(response?.groupID!).emit('accept', response);
+            jetLogger.err(err.error);
+            socket.emit("groups/error", err.message);
+        });
     });
 
-    socket.on("groups/reject", async(input: { userID: string, groupID: string }, room: string)=>{
+    socket.on("groups/reject", (input: { userID: string, groupID: string }, room: string)=>{
         const model = new GroupModel();
-        const response = await model.reject({ credential: socket.handshake.auth.credentail, ...input });
-
-        console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
-
-        joinChatRoom(response!);
+        model.reject({ credential: socket.handshake.auth.credentail, ...input }).then((response)=>{
+            console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
     
-        namespace.to(response?.groupID!).emit('groups/reject', response);
+            namespace.to(response?.groupID!).emit('groups/reject', response);
+        }).catch((error) =>{
+            const err = error as Err;
+
+            jetLogger.err(err.error);
+            socket.emit("groups/error", err.message);
+        });
     });
     
-    socket.on("groups/request", async(input: { groupID: string })=>{
+    socket.on("groups/request", (input: { groupID: string })=>{
         const model = new GroupModel();
-        const response = await model.request({ credential: socket.handshake.auth.credentail, groupID: input.groupID });
+        model.request({ credential: socket.handshake.auth.credentail, groupID: input.groupID }).then((response)=>{
+            namespace.to(response?.groupID!).emit('groups/request', response);
+            ConnectedSockets.getInstance().send("groups/request", [ response?.credentialID! ], response);
+        }).catch((error) =>{
+            const err = error as Err;
 
-        namespace.to(response?.groupID!).emit('groups/request', response);
-        ConnectedSockets.getInstance().send("groups/request", [ response?.credentialID! ], response);
+            jetLogger.err(err.error);
+            socket.emit("groups/error", err.message);
+        });
+    });
+
+    socket.on("groups/assign", (input: { userID: string, groupID: string, role: MemberRole }, room: string)=>{
+        const model = new GroupModel();
+        model.assign({ credential: socket.handshake.auth.credentail, ...input }).then((response)=>{
+            console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
+    
+            namespace.to(response?.groupID!).emit('groups/assign', response);
+        }).catch((error) =>{
+            const err = error as Err;
+
+            jetLogger.err(err.error);
+            socket.emit("groups/error", err.message);
+        });
     });
 };

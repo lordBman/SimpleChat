@@ -2,6 +2,8 @@ import { Namespace, Socket } from "socket.io";
 import { ChatModel } from "../models";
 import { Friend, Member } from "@prisma/client";
 import { ConnectedSockets } from "./utils";
+import jetLogger from "jet-logger";
+import { Err } from "../config";
 
 export const joinChatRoom = (channel: Friend | Member ) => {
     if("acceptorID" in channel){
@@ -35,11 +37,14 @@ export default (namespace: Namespace, socket: Socket) => {
         const chatModel = new ChatModel();
 
         console.log(`current room: ${room}`);
-
         chatModel.create({ ...data, credential: socket.handshake.auth.credentail}).then((chat)=>{
             console.log(JSON.stringify(chat));
 
             namespace.to((data.friendID || data.groupID)!).emit("chat", chat, (data.friendID || data.groupID));
+        }).catch((error)=>{
+            const err = error as Err;
+            jetLogger.err(err.error);
+            socket.emit("error", err.message);
         });
     });
 

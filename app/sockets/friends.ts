@@ -2,41 +2,60 @@ import { Namespace, Socket } from 'socket.io';
 import FriendModel from '../models/friends';
 import { joinChatRoom } from './chats';
 import { ConnectedSockets } from './utils';
+import { Err } from '../config';
+import jetLogger from 'jet-logger';
 
 export default (namespace: Namespace, socket: Socket) => {
     socket.on('friends/cancel', async(input: { friendID: string }, room: string) => {
         const model = new FriendModel();
-        const response = await model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID });
-
-        ConnectedSockets.getInstance().send("friends/cancel", [ response?.acceptorID!, response?.requesterID! ], response);
+        model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
+            ConnectedSockets.getInstance().send("friends/cancel", [ response?.acceptorID!, response?.requesterID! ], response);
+        }).catch((error)=>{
+            const err = error as Err;
+            jetLogger.err(err.error);
+            socket.emit("friends/error", err.message);
+        });
     });
 
-    socket.on("friends/accept", async(input: { friendID: string }, room: string)=>{
+    socket.on("friends/accept", (input: { friendID: string }, room: string)=>{
         const model = new FriendModel();
-        const response = await model.accept({ credential: socket.handshake.auth.credentail, id: input.friendID });
+        
+        model.accept({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
+            console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
 
-        console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
-
-        joinChatRoom(response!);
-    
-        namespace.to(response?.id!).emit('friends/accept', response);
+            joinChatRoom(response!);
+            namespace.to(response?.id!).emit('friends/accept', response);
+        }).catch((error)=>{
+            const err = error as Err;
+            jetLogger.err(err.error);
+            socket.emit("friends/error", err.message);
+        });
     });
 
-    socket.on("friends/reject", async(input: { friendID: string }, room: string)=>{
+    socket.on("friends/reject", (input: { friendID: string }, room: string)=>{
         const model = new FriendModel();
-        const response = await model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID });
+        model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
+            console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
 
-        console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
+            joinChatRoom(response!);
+            namespace.to(response?.id!).emit('friends/reject', response);
+        }).catch((error)=>{
+            const err = error as Err;
 
-        joinChatRoom(response!);
-    
-        namespace.to(response?.id!).emit('friends/reject', response);
+            jetLogger.err(err.error);
+            socket.emit("friends/error", err.message);
+        });
     });
     
-    socket.on("friends/request", async(input: { userID: string })=>{
+    socket.on("friends/request", (input: { userID: string })=>{
         const model = new FriendModel();
-        const response = await model.request({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail, userID: input.userID });
+        model.request({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail, userID: input.userID }).then((response)=>{
+            ConnectedSockets.getInstance().send("friends/request", [ response?.acceptorID!, response?.requesterID! ], response);
+        }).catch((error)=>{
+            const err = error as Err;
 
-        ConnectedSockets.getInstance().send("friends/request", [ response?.acceptorID!, response?.requesterID! ], response);
+            jetLogger.err(err.error);
+            socket.emit("friends/error", err.message);
+        });
     });
 };

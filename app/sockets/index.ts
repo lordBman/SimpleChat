@@ -7,6 +7,7 @@ import chatsSocketPort from "./chats";
 import friendsSocketPort from "./friends";
 import AccessKeyModel from "../models/access-keys";
 import { OrganizationModel } from "../models";
+import { Err } from "../config";
 
 const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | undefined)=>void)=>{
     try{
@@ -58,12 +59,17 @@ export default (io: Server) => {
     
         const friendModel = new FriendModel();
         
-        friendModel.all({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credential }).then((channels)=>{
-            if(channels){
-                const init = channels.map((channel)=> channel.id);
-                socket.join(init);
-            }
-        });
+        try{
+            friendModel.all({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credential }).then((channels)=>{
+                if(channels){
+                    const init = channels.map((channel)=> channel.id);
+                    socket.join(init);
+                }
+            });
+        }catch(error){
+            const err = error as Err;
+            jetLogger.err(err.error);
+        }
     
         socket.on("close", () => {
             ConnectedSockets.getInstance().remove(socket.handshake.auth.credentail.id);

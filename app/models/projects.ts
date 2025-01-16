@@ -1,4 +1,4 @@
-import { Credential, Project } from "@prisma/client";
+import { Credential, Project, ResourceType } from "@prisma/client";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
 import { HttpStatusCode } from "axios";
@@ -53,6 +53,20 @@ class ProjectModel{
             });
 
             return projects;
+        }catch(error){
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while loading project list");
+        }
+    }
+
+    async delete(data: { credential: Credential, projectID: string }): Promise<{message: string}>{
+        try{
+            const project = await this.database.client.project.findUniqueOrThrow({ 
+                where: { id: data.projectID, ownerID: data.credential.id },
+            });
+
+            await this.database.client.deleted.create({ data: { resourceID: project.id, type: ResourceType.Project } });
+
+            return { message: "Project deletion successfull" };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while loading project list");
         }

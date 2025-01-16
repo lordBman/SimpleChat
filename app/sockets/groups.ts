@@ -11,6 +11,20 @@ export default (namespace: Namespace, socket: Socket) => {
         const model = new GroupModel();
         model.create({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail, ...input }).then((response)=>{
             joinChatRoom(response!);
+            namespace.to(response?.groupID!).emit('groups/create', response);
+        }).catch((error) =>{
+            const err = error as Err;
+
+            jetLogger.err(err.error);
+            socket.emit("groups/error", err.message);
+        });
+    });
+
+    socket.on("groups/cancel", (input: { userID: string, groupID: string }, room: string)=>{
+        const model = new GroupModel();
+        model.cancel({ credential: socket.handshake.auth.credentail, ...input }).then((response)=>{
+            console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
+
             namespace.to(response?.groupID!).emit('groups/accept', response);
         }).catch((error) =>{
             const err = error as Err;
@@ -68,6 +82,20 @@ export default (namespace: Namespace, socket: Socket) => {
             console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
     
             namespace.to(response?.groupID!).emit('groups/assign', response);
+        }).catch((error) =>{
+            const err = error as Err;
+
+            jetLogger.err(err.error);
+            socket.emit("groups/error", err.message);
+        });
+    });
+
+    socket.on("groups/deleted", (input: { userID: string, groupID: string }, room: string)=>{
+        const model = new GroupModel();
+        model.delete({ credential: socket.handshake.auth.credentail, ...input }).then((response)=>{
+            console.log(`input ${JSON.stringify(input.groupID)}: ${JSON.stringify(response)}`);
+
+            namespace.to(response?.id!).emit('groups/deteted', response);
         }).catch((error) =>{
             const err = error as Err;
 

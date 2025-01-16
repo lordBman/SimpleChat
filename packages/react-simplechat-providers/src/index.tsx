@@ -84,12 +84,12 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const initCallback = useCallback(()=>{
         if(socket){
-            socket.on("request", (response: Friend) =>{
+            socket.on("friends/request", (response: Friend) =>{
                 const init = [response, ...friendsState.friends]
                 setFriendsState(state => ({...state, friends: init }));
             });
         
-            socket.on("accept", (response: Friend) =>{
+            socket.on("friends/accept", (response: Friend) =>{
                 console.log(JSON.stringify(`just recieved: ${response}`));
                 
                 const index = friendsState.friends.findIndex((value)=> response.id === value.id);
@@ -99,12 +99,16 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
                 setFriendsState(state => ({...state, friends: init }));
             });
         
-            socket.on("cancel", (response: Friend) =>{
+            socket.on("friends/cancel", (response: Friend) =>{
                 const index = friendsState.friends.findIndex((value)=> response.id === value.id);
                 const init = [...friendsState.friends];
                 init.splice(index, 1);
         
                 setFriendsState(state => ({...state, friends: init }));
+            });
+
+            socket.on("friends/error", (error: any) =>{
+                
             });
         }
     }, [socket]);
@@ -113,17 +117,17 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const request = (userID: string) =>{
         if(socket)
-            socket.emit("request", { userID });
+            socket.emit("friends/request", { userID });
     }
 
     const accept = (friendID: string) =>{
         if(socket)
-            socket.emit("accept", { friendID }, friendID);
+            socket.emit("friends/accept", { friendID }, friendID);
     }
 
     const cancel = (friendID: string) =>{
         if(socket)
-            socket.emit("cancel", { friendID }, friendID);
+            socket.emit("friends/cancel", { friendID }, friendID);
     }
 
     const refreshFriendsMutation = useRequestCallBack({
@@ -150,19 +154,19 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const initCallback = useCallback(()=>{
         if(socket){
-            socket.on("request", (response: Friend) =>{
-                const init = [response, ...friendsState.friends]
-                setFriendsState(state => ({...state, friends: init }));
+            socket.on("groups/request", (response: Member) =>{
+                const init = [response, ...membersState.members]
+                setMembersState(state => ({...state, members: init }));
             });
         
-            socket.on("accept", (response: Friend) =>{
+            socket.on("groups/accept", (response: Member) =>{
                 console.log(JSON.stringify(`just recieved: ${response}`));
                 
-                const index = friendsState.friends.findIndex((value)=> response.id === value.id);
-                const init = [...friendsState.friends];
+                const index = membersState.members.findIndex((value)=> response.credentialID === value.credentialID);
+                const init = [...membersState.members];
                 init.splice(index, 1, response);
         
-                setFriendsState(state => ({...state, friends: init }));
+                setMembersState(state => ({...state, members: init }));
             });
         
             socket.on("cancel", (response: Friend) =>{

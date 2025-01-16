@@ -1,6 +1,6 @@
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Group, Member, Organization, Project, Credential, MemberRole } from "@prisma/client";
+import { Group, Member, Organization, Project, Credential, MemberRole, ResourceType } from "@prisma/client";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
@@ -14,7 +14,7 @@ class GroupModel{
     async create(data: { project: Project, organization?: Organization, credential: Credential, name: string }): Promise<Member>{
         try{
             const exists = await this.database.client.group.findMany({
-                where: { projectID: data.project.id, organization: data.organization, name: data.name },
+                where: { projectID: data.project.id, organizationID: data.organization?.id, name: data.name },
             });
 
             if(exists.length > 0){
@@ -53,7 +53,7 @@ class GroupModel{
 
             return members;
         }catch(error){
-            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while sending friend request");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while getting all groups");
         }
     }
 
@@ -62,14 +62,28 @@ class GroupModel{
             const member = await this.database.client.member.create({ 
                 data: { credentialID: data.credential.id, groupID: data.groupID },
                 include: {
-                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, password: false } } } } } } 
+                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, password: false, isDeleted: false } } } } } } 
                 }
             });
             joinChatRoom(member);
 
             return member;
         }catch(error){
-            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while sending friend request");
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while sending membership request");
+        }
+    }
+
+    async cancel(data: { credential: Credential, groupID: string }): Promise<Member>{
+        try{
+            const member = await this.database.client.member.delete({ 
+                where: { credentialID: data.credential.id, groupID: data.groupID },
+                include: {
+                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, password: false } } } } } } 
+                }
+            });
+            return member;
+        }catch(error){
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while canceling membership request");
         }
     }
 
@@ -246,7 +260,7 @@ class GroupModel{
 
     async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<{ group: Group, member?: Member }[]>{
         try{
-            const groups = (await this.database.client.group.findMany({ where: { projectID: data.project.id, organizationID: data.organization?.id } })).filter((group)=>{
+            const groups = (await this.database.client.group.findMany({ where: { projectID: data.project.id, organizationID: data.organization?.id, isDeleted: false } })).filter((group)=>{
                 return group.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
             });
 
@@ -262,6 +276,43 @@ class GroupModel{
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when searching for groups");
         }
+    }
+
+    async delete(data: { credential: Credential, userID: string, groupID: string } ): Promise<Group>{
+        try{
+            const group = await this.database.client.group.findUnique({
+                where: { id: data.groupID }
+            });
+
+            if(group?.creatorID === data.credential.id){
+                const members = await this.database.client.member.findMany({ where:{ groupID: data.groupID } });
+
+                await this.database.client.deleted.create({ data: { resourceID: group.id, type: ResourceType.Group } });
+
+                const init = await this.database.client.group.update({
+                    where: { id: data.groupID }, data: { isDeleted: true }
+                });
+                
+                members.forEach(async  (member)=>{
+                    if(data.credential.id !== member.credentialID && member.credentialID !== data.userID){
+                        await this.database.client.notification.create({
+                            data: {
+                                groupID: data.groupID, recieverID: member.credentialID,
+                                alert: `${data.credential.name} deleted the ${group.name} group`,
+                            }
+                        });
+                    }
+                });
+                return init;
+            }else{
+                throw new Err(HttpStatusCode.Unauthorized, ``, "you are not a owner of this group");
+            }
+        }catch(error){
+            if(error instanceof Err){
+                throw error;
+            }
+            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when assigning user role");
+        }   
     }
 }
 

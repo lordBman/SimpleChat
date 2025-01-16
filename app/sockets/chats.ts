@@ -5,7 +5,7 @@ import { ConnectedSockets } from "./utils";
 import jetLogger from "jet-logger";
 import { Err } from "../config";
 
-export const joinChatRoom = (channel: Friend | Member ) => {
+export const joinChatRoom = (channel: Partial<Friend> | Partial<Member> ) => {
     if("acceptorID" in channel){
         const friend = channel as Friend;
         if(ConnectedSockets.getInstance().isOnline(friend.requesterID)){

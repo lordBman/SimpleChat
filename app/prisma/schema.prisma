@@ -20,6 +20,10 @@ enum Roles{
 }
 model Credential{
     id                  String            @id @unique @default(uuid())
+    
+    created           DateTime              @default(now())
+    deleted           Deleted?
+    isDeleted         Boolean               @default(false)
 
     username            String?
     email               String?
@@ -43,7 +47,7 @@ model Client{
     credentialID        String            @id
     credential          Credential        @relation(fields: [credentialID], references: [id])
 
-    organizationID  Int?
+    organizationID  String?
     organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: SetNull)
     
     projectID         String         
@@ -74,6 +78,10 @@ model Project{
     friends           Friend[]
     organizations     Organization[]
 
+    created           DateTime              @default(now())
+    isDeleted         Boolean               @default(false)
+    deleted         Deleted?
+
     @@unique([name, ownerID])
 }
 
@@ -90,7 +98,7 @@ model AccessKey{
 }
 
 model Organization {
-   id               Int           @id @default(autoincrement())
+   id               String           @id @default(uuid())
    name             String
 
    projectID        String
@@ -108,10 +116,14 @@ enum ChatType{
     Friends
 }
 model Chat{
-    id              Int           @id @default(autoincrement())
+    id              String           @id @default(uuid())
     message         String
     created         DateTime      @default(now())
+    deleted         Deleted?
+
     delivered       Boolean       @default(false)
+
+    isDeleted         Boolean               @default(false)
 
     senderID        String
     sender          Client         @relation(fields: [senderID], references: [credentialID])
@@ -122,7 +134,7 @@ model Chat{
     type            ChatType
 
     reply           Chat[]        @relation("reference")
-    referenceID     Int?
+    referenceID     String?
     reference       Chat?         @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
 
     @@unique([id, ownerID])
@@ -130,6 +142,9 @@ model Chat{
 
 model Friend{
     id              String        @id  @default(uuid())
+    created           DateTime              @default(now())
+    isDeleted         Boolean               @default(false)
+    deleted         Deleted?
 
     requesterID     String
     requester       Client          @relation("requester", fields: [requesterID], references: [credentialID])
@@ -139,7 +154,7 @@ model Friend{
 
     accepted        Boolean       @default(false)
 
-    organizationID  Int?
+    organizationID  String?
     organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: Cascade)
 
     projectID       String
@@ -156,10 +171,14 @@ model Group {
     last            DateTime            @default(now())
     attachment      String?
 
+    created           DateTime              @default(now())
+    isDeleted         Boolean               @default(false)
+    deleted         Deleted?
+
     creatorID       String
     creator         Client                @relation(fields: [creatorID], references: [credentialID], onDelete: NoAction)
 
-    organizationID  Int?
+    organizationID  String?
     organization    Organization?        @relation(fields: [organizationID], references: [id], onDelete: Cascade)
 
     projectID       String
@@ -182,10 +201,13 @@ model Member {
     group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
     groupID           String
 
-    joined            DateTime          @default(now())
+    joined            DateTime?
     role              MemberRole        @default(Member)
 
     accepted          Boolean           @default(false)
+
+    deleted           DateTime?
+    isDeleted         Boolean               @default(false)
 
     @@id([credentialID, groupID])
 }
@@ -202,4 +224,24 @@ model Notification{
 
     reciecver         Client            @relation(fields: [recieverID], references: [credentialID], onDelete: Cascade)
     recieverID        String
+}
+
+enum ResourceType{
+    Credential
+    Project
+    Group
+    Chat
+    Friend
+}
+
+model Deleted{
+    resourceID          String @unique
+    on                  DateTime  @default(now())
+
+    credential          Credential?   @relation(fields: [resourceID], references: [id], map: "credential_fk", onDelete: Cascade)
+    friend              Friend?       @relation(fields: [resourceID], references: [id], map: "friend_fk", onDelete: Cascade)
+    group               Group?        @relation(fields: [resourceID], references: [id], map: "group_fk", onDelete: Cascade)
+    chat                Chat?         @relation(fields: [resourceID], references: [id], map: "chat_fk", onDelete: Cascade)
+    project             Project?   @relation(fields: [resourceID], references: [id], map: "project_fk", onDelete: Cascade)
+    type                ResourceType
 }

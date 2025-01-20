@@ -37,7 +37,7 @@ class ChatModel {
         }
     }
 
-    async reply(data: { credential: Credential, message: string, chatID: number, friendID?: string, groupID?: string }): Promise<[Chat, Notification]>{
+    async reply(data: { credential: Credential, message: string, chatID: string, friendID?: string, groupID?: string }): Promise<[Chat, Notification]>{
         try{
             const chat = await this.database.client.chat.create({
                 data: { message: data.message, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!, type: (data.groupID ? "Group" : "Friends"), referenceID: data.chatID },
@@ -74,7 +74,7 @@ class ChatModel {
         }
     }
 
-    async update(data: { credential: Credential, message: string, chatID: number, friendID?: string, groupID?: string }): Promise<Chat>{
+    async update(data: { credential: Credential, message: string, chatID: string, friendID?: string, groupID?: string }): Promise<Chat>{
         try{
             const chat = await this.database.client.chat.update({
                 where: { id: data.chatID, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)! },
@@ -115,7 +115,7 @@ class ChatModel {
         }
     }
 
-    async seen(data: { credential: Credential, chatID: number, friendID?: string, groupID?: string }): Promise<Chat>{
+    async seen(data: { credential: Credential, chatID: string, friendID?: string, groupID?: string }): Promise<Chat>{
         try{
             const chat = await this.database.client.chat.update({
                 where: { id: data.chatID, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!  },
@@ -132,7 +132,7 @@ class ChatModel {
         }
     }
 
-    async delete(data: { credential: Credential, chatID: number }): Promise<string>{
+    async delete(data: { credential: Credential, chatID: string }): Promise<string>{
         try{
             await this.database.client.chat.delete({
                 where: { id: data.chatID, senderID: data.credential.id, },

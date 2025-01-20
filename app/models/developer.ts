@@ -12,7 +12,7 @@ class DeveloperModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
+    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Partial<Credential> }>{
         try{
             const client = await new ClientModel().create({ ...data, role: "Developer" });
 
@@ -32,17 +32,17 @@ class DeveloperModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Credential & { projects: Project [] }>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Partial<Credential> & { projects: Partial<Project> [] }>{
         try{
             const client = await new ClientModel().get(data);
             
             const projects = await new ProjectModel().all({ credential: data.credential });
 
-            const init: Array<Project & { userCount: number }> = [];
+            const init: Array<Partial<Project> & { userCount: number }> = [];
             for(let index = 0; index < projects?.length!; index++){
                 const project = projects![index];
 
-                const userCount = await new ClientModel().count({ project });
+                const userCount = await this.database.client.client.count({ where: { projectID: project.id! }});
                 init.push({ ...project, userCount: userCount! });
             }
 
@@ -55,7 +55,7 @@ class DeveloperModel{
         }
     }
 
-    async all(data: { admin: Credential }): Promise<Credential[]>{
+    async all(data: { admin: Credential }): Promise<Partial<Credential>[]>{
         try{
             const developers = (await this.database.client.credential.findMany({
                 where: { adminID: data.admin.id }, 

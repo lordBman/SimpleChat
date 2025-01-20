@@ -164,8 +164,8 @@ api.get("/search:query", KeyAuthenication, APIAuthenication, async(req, res)=>{
             const friendsResponse = await new FriendModel().find({ ...req.body, query });
             const groupResponse = await new GroupModel().find({ ...req.body, query });
 
-            const getName = (result: { user: Credential, friend?: Friend } | { group: Group, member?: Member }):string =>{
-                if((result as any).user){
+            const getName = (result: { user: Partial<Credential>, friend?: Partial<Friend> } | { group: Group, member?: Member }):string =>{
+                if('user' in result){
                     const init = result as { user: Credential, friend?: Friend };
 
                     return init.user.name;

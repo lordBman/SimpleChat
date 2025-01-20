@@ -45,7 +45,7 @@ class OrganizationModel{
         }
     }
 
-    async delete(data: { project: Project, groupID: number }): Promise<string>{
+    async delete(data: { project: Project, groupID: string }): Promise<string>{
         try{
             const organizations = await this.database.client.organization.delete({ 
                 where: { projectID: data.project.id, id: data.groupID }

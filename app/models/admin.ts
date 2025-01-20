@@ -22,18 +22,18 @@ class AdminModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Credential & { projects: Project [], developers: Credential[] }>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Partial<Credential> & { projects: Partial<Project>[], developers: Partial<Credential>[] }>{
         try{
             const client = await new ClientModel().get(data);
             const developers = await new DeveloperModel().all({ admin: data.credential });
 
             const projects = await new ProjectModel().all({ credential: data.credential });
 
-            const init: Array<Project & { userCount: number }> = [];
+            const init: Array<Partial<Project> & { userCount: number }> = [];
             for(let index = 0; index < projects?.length!; index++){
                 const project = projects![index];
 
-                const userCount = await new ClientModel().count({ project });
+                const userCount = await this.database.client.client.count({ where: { projectID: project.id! }});
                 init.push({ ...project, userCount: userCount! });
             }
 

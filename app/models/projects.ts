@@ -1,4 +1,4 @@
-import { Credential, Project, ResourceType } from "@prisma/client";
+import { Credential, Project, ResourceType, AccessKey } from "@prisma/client";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
 import { HttpStatusCode } from "axios";
@@ -10,21 +10,22 @@ class ProjectModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { credentials: Credential , name: string }): Promise<Project>{
+    async create(data: { credentials: Credential , name: string }): Promise<Partial<Project & { keys: AccessKey[] }>>{
         try{
             let project = await this.database.client.project.create({ 
-                data: { name: data.name, ownerID: data.credentials.id, }
+                data: { name: data.name, ownerID: data.credentials.id, },
+                select: { id: true, name: true, token: true, ownerID: true }
             });
         
-            await this.database.client.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
+            const key = await this.database.client.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
 
-            return project;
+            return { ...project, keys: [key] };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while loading project list");
         }
     }
 
-    async get(data: { credential: Credential, projectID: string }): Promise<Project>{
+    async get(data: { credential: Credential, projectID: string }): Promise<Partial<Project>>{
         try{
             const projects = await this.database.client.project.findUniqueOrThrow({ 
                 where: { id: data.projectID, ownerID: data.credential.id },
@@ -45,14 +46,14 @@ class ProjectModel{
         }
     }
 
-    async all(data: { credential: Credential }): Promise<Project[]>{
+    async all(data: { credential: Credential }): Promise<Partial<Project>[]>{
         try{
             const projects = await this.database.client.project.findMany({ 
-                where: { ownerID: data.credential.id },
+                where: { ownerID: data.credential.id, isDeleted: false },
                 include: { keys: { select: { id: true, name: true, enabled: true } } }
             });
 
-            return projects;
+            return projects.map((project) => { return {...project, isDeleted: undefined} });
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while loading project list");
         }

@@ -8,29 +8,34 @@ import FriendModel from "./friends";
 class ClientModel{
     database: Database = DBManager.instance();
 
-    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: Roles }): Promise<Client & { credential: Credential }>{
+    async create(data: { id?: string, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string, role?: Roles }): Promise<Client & { credential: Partial<Credential> }>{
         try{
             const id = data.id ?? uuid();
             const credential = await this.database.client.credential.create({
                 data: { adminID: data.project.ownerID, id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
+                select: { id: true, name: true, surname: true, email: true, username: true, adminID: true, role: true }
             });
 
             const client = await this.database.client.client.create({
                 data: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id },
             });
 
-            return { ...client, credential: { ...credential, password: "" } };
+            return { ...client, credential };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
         }
     }
 
-    async connect(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string }): Promise<Client & { credential: Credential }>{
+    async connect(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string }): Promise<Client & { credential: Partial<Credential> }>{
         try{
-            let credential = await this.database.client.credential.findFirst({ where: {  adminID: data.project.ownerID, name: data.name, surname: data.surname, email: data.email, username: data.username } });
+            let credential = await this.database.client.credential.findFirst({ 
+                where: {  adminID: data.project.ownerID, name: data.name, surname: data.surname, email: data.email, username: data.username },
+                select: { id: true, name: true, surname: true, email: true, username: true, adminID: true, role: true }
+            });
             if(credential === null){
                 credential = await this.database.client.credential.create({
                     data: { adminID: data.project.ownerID, name: data.name, surname: data.surname, email: data.email, username: data.username, password: uuid(), role: "Client" },
+                    select: { id: true, name: true, surname: true, email: true, username: true, adminID: true, role: true }
                 });
             }
 
@@ -39,13 +44,13 @@ class ClientModel{
                 create: { credentialID: credential.id, projectID: data.project.id, organizationID: data.organization?.id }
             });
 
-            return { ...client, credential: { ...credential, password: "" } };
+            return { ...client, credential };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when connecting user");
         }
     }
 
-    async signin(data: {  project: Project, organization?: Organization, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
+    async signin(data: {  project: Project, organization?: Organization, email?: string, username?: string, password: string }): Promise<Client & { credential: Partial<Credential> }>{
         try{
             const credentials = await this.database.client.credential.findMany({ where: { OR: [ { email: data.email} , { username: data.username } ] } });
             if(credentials.length > 0){
@@ -55,7 +60,7 @@ class ClientModel{
                         console.log(JSON.stringify(data.password));
                         const client = await this.database.client.client.findUniqueOrThrow({ where: { credentialID: credential.id } });
                         
-                        return { ...client, credential: { ...credential, password: "" } };
+                        return { ...client, credential: { ...credential, password: undefined } };
                     }
                 }
                 throw new Err(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
@@ -91,7 +96,7 @@ class ClientModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential}): Promise<Credential & { chats: { [key: string]: Chat[] } } & { friends: Friend[] } & { members: Member[] } | undefined>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential}): Promise<Partial<Credential> & { chats: { [key: string]: Chat[] } } & { friends: Partial<Friend>[] } & { members: Member[] } | undefined>{
         try{
             const friends = await new FriendModel().all({ ...data });
 

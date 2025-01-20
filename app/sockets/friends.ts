@@ -9,7 +9,7 @@ export default (namespace: Namespace, socket: Socket) => {
     socket.on('friends/cancel', async(input: { friendID: string }, room: string) => {
         const model = new FriendModel();
         model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
-            ConnectedSockets.getInstance().send("friends/cancel", [ response?.acceptorID!, response?.requesterID! ], response);
+            ConnectedSockets.getInstance().send("friends/cancel", [ input.friendID, socket.handshake.auth.credentail.id ], response);
         }).catch((error)=>{
             const err = error as Err;
             jetLogger.err(err.error);
@@ -37,8 +37,7 @@ export default (namespace: Namespace, socket: Socket) => {
         model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
             console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
 
-            joinChatRoom(response!);
-            namespace.to(response?.id!).emit('friends/reject', response);
+            namespace.to(room).emit('friends/reject', response);
         }).catch((error)=>{
             const err = error as Err;
 

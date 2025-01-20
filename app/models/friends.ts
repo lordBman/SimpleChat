@@ -19,30 +19,25 @@ class FriendModel{
     
     async all(data: { project: Project, organization?: Organization, credential: Credential  }): Promise<AllFriendsResponse>{
         try{
-            const results = await this.database.client.friend.findMany({ 
+            return await this.database.client.friend.findMany({ 
                 where: { project: data.project, organizationID: data.organization?.id,  OR: [ { requesterID: data.credential.id }, { acceptorID: data.credential.id } ] },
-            });
+            }).then(async (results)=>{
+                const friends: AllFriendsResponse = [];
+                for(const result of results){
+                    const acceptor = await this.database.client.credential.findUnique({ 
+                        where: { id: result.acceptorID }, 
+                        select: { id: true, created: true, name: true, surname: true, email: true, username: true, adminID: true } });
+                    const requester = await this.database.client.credential.findUnique({ 
+                        where: { id: result.requesterID },
+                        select: { id: true, created: true, name: true, surname: true, email: true, username: true, adminID: true }
+                    });
 
-            console.log(JSON.stringify(results));
-
-            const friends: AllFriendsResponse = [];
-            for(let i = 0; i < results.length; i++){
-                const acceptor = await this.database.client.credential.findUnique({ 
-                    where: { id: results[i].acceptorID }, 
-                    select: { id: true, created: true, name: true, surname: true, email: true, username: true, adminID: true } });
-                const requester = await this.database.client.credential.findUnique({ 
-                    where: { id: results[i].requesterID },
-                    select: { id: true, created: true, name: true, surname: true, email: true, username: true, adminID: true }
-                });
-
-                if(acceptor && requester){
-                    friends.push({ ...results[i], acceptor, requester });
+                    if(acceptor && requester){
+                        friends.push({ ...result, acceptor, requester });
+                    }
                 }
-            }
-
-            //friends.forEach((friend)=> joinChatRoom(friend));
-
-            return friends;
+                return friends;
+            });
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while getting friend lists");
         }
@@ -50,32 +45,28 @@ class FriendModel{
 
     async request(data: { project: Project, organization?: Organization, credential: Credential, userID: string }): Promise<FriendResponse>{
         try{
-            const id = uuid();
-            console.log(JSON.stringify({ id, projectID: data.project.id, organization: data.organization, requesterID: data.credential.id, acceptorID: data.userID }));
-            const result = await this.database.client.friend.create({ 
-                data: { id, projectID: data.project.id, organizationID: data.organization?.id, requesterID: data.credential.id, acceptorID: data.userID },
+            const response = await this.database.client.friend.create({ 
+                data: { projectID: data.project.id, organizationID: data.organization?.id, requesterID: data.credential.id, acceptorID: data.userID },
+            }).then(async(friend)=>{
+                const requester = await this.database.client.credential.findUniqueOrThrow({ 
+                    where: { id: friend.requesterID }, 
+                    select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
+    
+                const acceptor = await this.database.client.credential.findUniqueOrThrow({ 
+                    where: { id: friend.acceptorID }, 
+                    select: { id: true, name: true, surname: true, email: true, username: true, created: true } });
+
+                return { ...friend, acceptor, requester }
             });
-
-            const requester = await this.database.client.credential.findUniqueOrThrow({ 
-                where: { id: result.requesterID }, 
-                select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
-
-            const acceptor = await this.database.client.credential.findUniqueOrThrow({ 
-                where: { id: result.acceptorID }, 
-                select: { id: true, name: true, surname: true, email: true, username: true, created: true } });
 
             await this.database.client.notification.create({
                 data: { 
-                    recieverID: acceptor.id,
+                    recieverID: response.id,
                     alert: `${data.credential.name} sent you a friend request`
                 }
             });
-           
-            const friend: FriendResponse = { ...result, acceptor, requester };
-            joinChatRoom(friend);
 
-            return friend;
-
+            return response;
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while sending friend request");
         }
@@ -83,37 +74,29 @@ class FriendModel{
 
     async accept(data: { credential: Credential, id: string }): Promise<FriendResponse>{
         try{
-            const result = await this.database.client.friend.update({
+            const response = await this.database.client.friend.update({
                 where: { id: data.id }, data: { accepted: true }
-            });
+            }).then(async(friend)=>{
+                const requester = await this.database.client.credential.findUniqueOrThrow({ 
+                    where: { id: friend.requesterID }, 
+                    select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
+    
+                const acceptor = await this.database.client.credential.findUniqueOrThrow({ 
+                    where: { id: friend.requesterID }, 
+                    select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
 
-            const requester = await this.database.client.credential.findUniqueOrThrow({ 
-                where: { id: result.requesterID }, 
-                select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
-
-            const acceptor = await this.database.client.credential.findUniqueOrThrow({ 
-                where: { id: result.requesterID }, 
-                select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
-
-            const friend: FriendResponse = { ...result, requester, acceptor };
-
-            await this.database.client.notification.create({
-                data: { 
-                    recieverID: data.credential.id,
-                    alert: `You are now friends with ${requester.name}`
-                }
+                return { ...friend, requester, acceptor };
             });
 
             await this.database.client.notification.create({
-                data: { 
-                    recieverID: requester!.id,
-                    alert: `${data.credential.name} accepted your friend request`
-                }
+                data: { recieverID: data.credential.id, alert: `You are now friends with ${ response.requester.name}` }
             });
 
-            joinChatRoom(friend);
+            await this.database.client.notification.create({
+                data: { recieverID: response.requester!.id, alert: `${data.credential.name} accepted your friend request` }
+            });
 
-            return friend;
+            return response;
         }catch(error){
             throw new Err(HttpStatusCode.Unauthorized, error, "session expired, try logging in");
         }
@@ -147,35 +130,38 @@ class FriendModel{
             const credentials = await this.database.client.client.findMany({
                 where: { projectID: data.project.id, organizationID: data.organization?.id, NOT: { credentialID: data.credential.id } },
                 include: { credential: { select: { id: true, created: true, name: true, surname: true, username: true, email: true } } }
-            }).then(async (clients)=>{
-                return await clients.filter((client)=>{
+            }).then((clients)=>{
+                return clients.filter((client)=>{
                     return client.credential.name.toLowerCase().search(data.query.toLowerCase()) >= 0;
-                }).map(async (client) => {
-                    const init = await this.database.client.friend.findFirst({ 
-                        where: {
-                            projectID: data.project.id, organization: data.organization,
-                            OR:[ { acceptorID: data.credential.id, requesterID: client.credentialID }, { requesterID: data.credential.id, acceptorID: client.credentialID } ] 
-                        }
-                    }).then(async (result)=>{
-                        if(result){
-                            const requester = await this.database.client.credential.findUniqueOrThrow({ 
-                                where: { id: result.requesterID }, 
-                                select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
-                
-                            const acceptor = await this.database.client.credential.findUniqueOrThrow({ 
-                                where: { id: result.requesterID }, 
-                                select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
-    
-                            return { ...result, requester, acceptor };
-                        }
-                        return undefined;
-                    });
-                    
-                    return { user: client.credential, friend: init };
                 });
             });
+            
+            const results: FriendSearchResponse = [];
+            for(const client of credentials){
+                const init = await this.database.client.friend.findFirst({ 
+                    where: {
+                        projectID: data.project.id, organization: data.organization,
+                        OR:[ { acceptorID: data.credential.id, requesterID: client.credentialID }, { requesterID: data.credential.id, acceptorID: client.credentialID } ] 
+                    }
+                }).then(async (result)=>{
+                    if(result){
+                        const requester = await this.database.client.credential.findUniqueOrThrow({ 
+                            where: { id: result.requesterID }, 
+                            select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
+            
+                        const acceptor = await this.database.client.credential.findUniqueOrThrow({ 
+                            where: { id: result.requesterID }, 
+                            select: { created: true, name: true, surname: true, email: true, username: true, id: true } });
 
-            return credentials;
+                        return { ...result, requester, acceptor };
+                    }
+                    return undefined;
+                });
+                
+                results.push({ user: client.credential, friend: init });
+            }
+
+            return results;
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when searching for user");
         }

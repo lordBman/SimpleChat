@@ -80,7 +80,7 @@ model Project{
 
     created           DateTime              @default(now())
     isDeleted         Boolean               @default(false)
-    deleted         Deleted?
+    deleted           Deleted?
 
     @@unique([name, ownerID])
 }

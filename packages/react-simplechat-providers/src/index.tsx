@@ -170,11 +170,11 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             });
         
             socket.on("cancel", (response: Friend) =>{
-                const index = friendsState.friends.findIndex((value)=> response.id === value.id);
-                const init = [...friendsState.friends];
+                const index = membersState.members.findIndex((value)=> response.id === value.credentialID);
+                const init = [...membersState.members];
                 init.splice(index, 1);
         
-                setFriendsState(state => ({...state, friends: init }));
+                setMembersState(state => ({...state, members: init }));
             });
         }
     }, [socket]);

@@ -3,6 +3,6 @@
         "app",
         "shared",
         "simplechatjs",
-        "react-simplechat-providers"
+        "react-simplechat"
     ]
 }

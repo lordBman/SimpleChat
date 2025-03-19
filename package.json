@@ -1,0 +1,8 @@
+{
+    "workspaces": [
+        "app",
+        "shared",
+        "simplechatjs",
+        "react-simplechat-providers"
+    ]
+}

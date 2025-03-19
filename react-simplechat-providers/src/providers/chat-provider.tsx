@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { TypingManager } from '@simplechat/shared/utils';
 import { useUserContext } from './user-provider';
 import { useMutation } from '@tanstack/react-query';
 import { Chat, Chats, Friend, Group, Member } from '@simplechat/shared/models';
 import { useFriendsContext } from './friend-provider';
+import { axiosInstance } from '@simplechat/shared/utils';
 
 interface ChatState{
     chats: Chats;

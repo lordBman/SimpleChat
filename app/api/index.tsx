@@ -109,7 +109,7 @@ api.use("/chats", KeyAuthenication, APIAuthenication, chatRouter);
 api.use("/friends", KeyAuthenication, APIAuthenication, friendRouter);
 
 api.use("/auth", KeyAuthenication, authRouter);
-api.get("/connect", KeyAuthenication, async(req, res) =>{
+api.post("/connect", KeyAuthenication, async(req, res) =>{
     if(req.body.name && req.body.surname && (req.body.email || req.body.username) && req.body.password && req.body.token){
         if(req.body.project.token === req.body.token){
             try{

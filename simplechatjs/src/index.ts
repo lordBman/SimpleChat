@@ -1,9 +1,9 @@
 import { io, Socket } from "socket.io-client";
 import axios, { AxiosError } from "axios";
-import { Friend, Member } from "@simplechat/shared";
+import { Friend, Member, SimpleChatClientConfig, UserState } from "@simplechat/shared";
 import { Chat, Chats } from "@simplechat/shared/models";
 
-export const axiosInstance =  axios.create({
+const axiosInstance =  axios.create({
 	headers: { 
 		'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': '*',
@@ -13,19 +13,6 @@ export const axiosInstance =  axios.create({
 	withCredentials: true,
 	baseURL: "/api" });
 
-export type SimpleChatClientConfig = {
-    name: string,
-    surname: string,
-    accessKey: string,
-    token: string,
-    organization?: string
-};
-
-export type UserState = Credential & { 
-    token: string, 
-    members: Member[],
-    adminID?: number,
-    friends: Friend[], chats: Chats }
 
 class SimpleChatClient{
     private accessKey: string;

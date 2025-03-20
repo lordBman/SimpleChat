@@ -1,23 +1,16 @@
 import { AccessKey, Chats, Friend, Member, Project } from "@simplechat/shared/models";
+import { SimpleChatClient } from "simplechatjs";
 import { Socket } from "socket.io-client";
 
-export type UserState = Credential & { 
-    token: string, 
-    members: Member[],
-    adminID?: number,
-    friends: Friend[], 
-    chats: Chats,
-    projects?: Array<Project & { keys: AccessKey[], userCount: number }>,
-    developers?: Credential[]
+export type ClientState = { 
+    client?: SimpleChatClient
 };
 
-export type UserContextType = {
-    user?: UserState
+export type ClientContextType = {
+    client?: SimpleChatClient
     loading: boolean;
     isError: boolean;
-    accessKey?: string;
     message?: any;
-    socket?: Socket;
 };
 
 export type FriendsState = {

@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import axios, { AxiosError } from "axios";
-import { Friend, Member, SimpleChatClientConfig, UserState } from "@simplechat/shared";
+import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig, UserState } from "@simplechat/shared";
 import { Chat, Chats } from "@simplechat/shared/models";
 
 const axiosInstance =  axios.create({
@@ -21,8 +21,10 @@ class SimpleChatClient{
     state: UserState;
     messages: string[];
 
-    onMessage?: (target: string, chat: Chat) => void;
-    onFriendEvent?: (friend: Friend) => void;
+    onChatsChange?: (chats: Chats) => void;
+    onMessageChange?: (message: string[]) => void;
+    onFriendChange?: (friend: Friend[]) => void;
+    onMemberChange?: (member: Member[]) => void;
 
     private constructor(accessKey: string, socket: Socket, state: UserState){
         this.accessKey = accessKey;
@@ -39,9 +41,8 @@ class SimpleChatClient{
     
             console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data)}`);
 
-            if(this.onMessage){
-                this.onMessage(room, data);
-            }
+            this.onMessageChange && this.onMessageChange(this.messages);
+            this.onChatsChange && this.onChatsChange(this.state.chats);
         });
     
         this.socket.on("typing", (message: string, room: string)=>{
@@ -57,8 +58,8 @@ class SimpleChatClient{
         this.socket.on("request", (response: Friend) =>{
             this.state = { ...this.state, friends: [response, ...this.state.friends] }
 
-            if(this.onFriendEvent){
-                this.onFriendEvent(response);
+            if(this.onFriendChange){
+                this.onFriendChange(this.state.friends);
             }
         });
     
@@ -71,8 +72,8 @@ class SimpleChatClient{
     
             this.state = {...state, friends: init };
 
-            if(this.onFriendEvent){
-                this.onFriendEvent(response);
+            if(this.onFriendChange){
+                this.onFriendChange(this.state.friends);
             }
         });
     
@@ -83,8 +84,8 @@ class SimpleChatClient{
     
             this.state = {...state, friends: init };
 
-            if(this.onFriendEvent){
-                this.onFriendEvent(response);
+            if(this.onFriendChange){
+                this.onFriendChange(this.state.friends);
             }
         });
     }
@@ -135,6 +136,10 @@ class SimpleChatClient{
             const response = await axiosInstance.get(`/chats?key=${this.accessKey}`);
 
             this.state = { ...this.state, chats: response.data };
+
+            if(this.onChatsChange){
+                this.onChatsChange(this.state.chats);
+            }
         }catch(error){
             if(error instanceof AxiosError){
                 throw Error((error as AxiosError).message);
@@ -161,6 +166,10 @@ class SimpleChatClient{
             const response = await axiosInstance.get(`/friends?key=${this.accessKey}`);
 
             this.state = { ...this.state, friends: response.data };
+
+            if(this.onFriendChange){
+                this.onFriendChange(this.state.friends);
+            }
         }catch(error){
             if(error instanceof AxiosError){
                 throw Error((error as AxiosError).message);
@@ -175,6 +184,9 @@ class SimpleChatClient{
             const response = await axiosInstance.get(`/groups?key=${this.accessKey}`);
 
             this.state = { ...this.state, members: response.data };
+            if(this.onMemberChange){
+                this.onMemberChange(this.state.members);
+            }
         }catch(error){
             if(error instanceof AxiosError){
                 throw Error((error as AxiosError).message);
@@ -202,7 +214,31 @@ class SimpleChatClient{
             }
         }
     }
+
+    static async init(config: SimpleChatDeveloperConfig): Promise<SimpleChatClient>{
+        try{
+            axiosInstance.interceptors.request.use((init)=>{
+                init.headers.Cookie = `token=${config.accessToken}`;
+
+                return init;
+            })
+            const user = await axiosInstance.get(`/?key=${config.accessKey}`);
+            const response = await axiosInstance.get(`/?key=${config.accessKey}`);
+            const socket = io("/", { auth: { token: user.data?.token, access: "access-key",  key: config.accessKey } });
+            socket.on("connected", ()=>{
+                console.log(socket.connected);
+            });
+
+            return new SimpleChatClient(config.accessKey, socket, response.data);
+        }catch(error){
+            if(error instanceof AxiosError){
+                throw Error((error as AxiosError).message);
+            }else{
+                throw error;
+            }
+        }
+    }
 }
 
-export default SimpleChatClient;
+export { SimpleChatClient };
 

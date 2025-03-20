@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatContextType, FriendsContextType, MembersContextType, UserContextType } from "./models";
+import { ChatContextType, FriendsContextType, MembersContextType, ClientContextType } from "./models";
 
 export const FriendsContext = React.createContext<FriendsContextType | null>(null);
 export const useFriendsContext = () => {
@@ -10,11 +10,11 @@ export const useFriendsContext = () => {
     return init;
 }
 
-export const UserContext = React.createContext<UserContextType>({ loading: false, isError: false });
-export const useUserContext = () => {
-    const init = React.useContext(UserContext);
+export const ClientContext = React.createContext<ClientContextType>({ loading: false, isError: false });
+export const useClientContext = () => {
+    const init = React.useContext(ClientContext);
     if(init === null){
-        throw Error("Component has to be wrapped by SimpleChatProver in order to call UserContext");
+        throw Error("Component has to be wrapped by SimpleChatProver in order to call ClientContext");
     }
     return init;
 }

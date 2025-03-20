@@ -1,97 +1,29 @@
 import { PropsWithChildren, useCallback, useEffect, useState } from "react";
-import React from "react";
-import { io } from "socket.io-client";
-import { ChatContext, FriendsContext, MembersContext, UserContext, useUserContext } from "./contexts";
-import axios, { AxiosResponse } from "axios";
+import { ChatContext, ClientContext, FriendsContext, MembersContext, useClientContext } from "./contexts";
 import { ChatState, FriendsState, MembersState } from "./models";
 import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig } from "@simplechat/shared";
 import { Chat } from "@simplechat/shared/models";
+import { SimpleChatClient } from "simplechatjs"
+import { useRequest } from "./request";
 
-const axiosInstance =  axios.create({
-	headers: { 
-		'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Credentials': 'true',
-		'Content-Type': 'application/x-www-form-urlencoded',
-	},
-	withCredentials: true,
-	baseURL: "/api" });
-
-const useRequest = (props: { fn: () => Promise<AxiosResponse<any, any>> }) =>{
-    const [ state, setState ] = useState<{ data?: AxiosResponse<any, any>, error?: any, loading: boolean, isError: boolean }>({ loading: true, isError: false });
-
-    const init = useCallback(()=>{
-        props.fn().then((value)=>{
-            setState(init => { return { ...init, data: value } });
-        }).catch((error)=>{
-            setState(init => { return { ...init, error: error, isError: true } });
-        }).finally(()=>{
-            setState(init => { return { ...init, loading: false } });
-        });
-    }, [props.fn]);
-
-    useEffect(()=> init(), [init, props.fn]);
-
-    return state;
-}
-
-const useRequestCallBack = (props: { fn: () => Promise<AxiosResponse<any, any>>,  started?: () => void, success?: (data: AxiosResponse<any, any>) => void, failed?: (error: any) => void }) =>{
-    const [ state, setState ] = useState<{ data?: AxiosResponse<any, any>, error?: any, loading: boolean, isError: boolean }>({ loading: false, isError: false });
-
-    const init = useCallback(()=>{
-        setState(init => { return { ...init, loading: true } });
-        props.started && props.started();
-        props.fn().then((value)=>{
-            setState(init => { return { ...init, data: value } });
-            props.success && props.success(value);
-        }).catch((error)=>{
-            setState(init => { return { ...init, error: error, isError: true } });
-            props.failed && props.failed(error);
-        }).finally(()=>{
-            setState(init => { return { ...init, loading: false } });
-        });
-    }, [props.fn]);
-
-    const run = () => init();
-
-    return { ...state, run };
-}
-
-const UserProvider: React.FC<React.PropsWithChildren & { clientConfig?: SimpleChatClientConfig, developerConfig?: SimpleChatDeveloperConfig }> = ({ children, clientConfig, developerConfig }) => {
+const ClientProvider: React.FC<React.PropsWithChildren & { clientConfig?: SimpleChatClientConfig, developerConfig?: SimpleChatDeveloperConfig }> = ({ children, clientConfig, developerConfig }) => {
     const { data, error, loading, isError } = useRequest({
         fn: () => {
             if(developerConfig){
-                axiosInstance.interceptors.request.use((init)=>{
-                    init.headers.Cookie = `token=${developerConfig.accessToken}`;
-
-                    return init;
-                })
+                return SimpleChatClient.init(developerConfig);
             }
-            if(clientConfig){
-                return axiosInstance.post(`/connect?key=${clientConfig.accessKey}`, clientConfig);
-            }
-            return axiosInstance.get(`/?key=${developerConfig?.accessKey}`)
+            return SimpleChatClient.connect(clientConfig!);
         }
     });
-
-    const socket = React.useMemo(() => {
-        if(data?.data){
-            const init = io("/", { auth: { token: data.data?.token, access: "access-key",  key: config.accessKey } });
-            init.on("connected", ()=>{
-                console.log(init.connected);
-            });
-            return init;
-        }
-    }, [data?.data]);
     
     return (
-        <UserContext.Provider value={{ user: data?.data, isError, loading, message: error, socket, accessKey: config.accessKey }}>{ children }</UserContext.Provider>
+        <ClientContext.Provider value={{ client: data, isError, loading, message: error }}>{ children }</ClientContext.Provider>
     );
 }
 
 
 const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { user, socket, accessKey } = useUserContext();
+    const { client } = useClientContext();
     const [friendsState, setFriendsState] = useState<FriendsState>({ loading: false, isError: false, friends: user?.friends!  });
 
     const initCallback = useCallback(()=>{
@@ -347,11 +279,11 @@ const SimpleChatProver: React.FC<PropsWithChildren & { clientConfig?: SimpleChat
         throw Error("Simple Chat provider requires a client or developer Configuration, but neither was provided");
     }
     return (
-        <UserProvider clientConfig={clientConfig} developerConfig={developerConfig}>
+        <ClientProvider clientConfig={clientConfig} developerConfig={developerConfig}>
             <MultiProvider providers={[ FriendsProvider, MembersProvider, ChatProvider ]}>
                 {children}
             </MultiProvider>
-        </UserProvider>
+        </ClientProvider>
     );
 }
 

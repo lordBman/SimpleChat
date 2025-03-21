@@ -55,7 +55,7 @@ class SimpleChatClient{
             }*/
         });
 
-        this.socket.on("request", (response: Friend) =>{
+        this.socket.on("friends/request", (response: Friend) =>{
             this.state = { ...this.state, friends: [response, ...this.state.friends] }
 
             if(this.onFriendChange){
@@ -63,7 +63,7 @@ class SimpleChatClient{
             }
         });
     
-        this.socket.on("accept", (response: Friend) =>{
+        this.socket.on("friends/accept", (response: Friend) =>{
             console.log(JSON.stringify(`just recieved: ${response}`));
             
             const index = this.state.friends.findIndex((value)=> response.id === value.id);
@@ -77,7 +77,7 @@ class SimpleChatClient{
             }
         });
     
-        this.socket.on("cancel", (response: Friend) =>{
+        this.socket.on("friends/cancel", (response: Friend) =>{
             const index = this.state.friends.findIndex((value)=> response.id === value.id);
             const init = [...this.state.friends];
             init.splice(index, 1);
@@ -86,6 +86,41 @@ class SimpleChatClient{
 
             if(this.onFriendChange){
                 this.onFriendChange(this.state.friends);
+            }
+        });
+
+        socket.on("friends/error", (error: any) =>{});
+
+        socket.on("groups/request", (response: Member) =>{
+            const init = [response, ...state.members]
+            this.state = {...state, members: init };
+
+            if(this.onMemberChange){
+                this.onMemberChange(this.state.members);
+            }
+        });
+    
+        socket.on("groups/accept", (response: Member) =>{
+            console.log(JSON.stringify(`just recieved: ${response}`));
+            
+            const index = state.members.findIndex((value)=> response.credentialID === value.credentialID);
+            const init = [...state.members];
+            init.splice(index, 1, response);
+    
+            this.state = {...state, members: init };
+            if(this.onMemberChange){
+                this.onMemberChange(this.state.members);
+            }
+        });
+    
+        socket.on("groups/cancel", (response: Friend) =>{
+            const index = state.members.findIndex((value)=> response.id === value.credentialID);
+            const init = [...state.members];
+            init.splice(index, 1);
+    
+            this.state = {...state, members: init };
+            if(this.onMemberChange){
+                this.onMemberChange(this.state.members);
             }
         });
     }

@@ -2,9 +2,9 @@ import { PropsWithChildren, useCallback, useEffect, useState } from "react";
 import { ChatContext, ClientContext, FriendsContext, MembersContext, useClientContext } from "./contexts";
 import { ChatState, FriendsState, MembersState } from "./models";
 import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig } from "@simplechat/shared";
-import { Chat } from "@simplechat/shared/models";
 import { SimpleChatClient } from "simplechatjs"
-import { useRequest } from "./request";
+import { useRequest, useRequestCallBack } from "./request";
+import React from "react";
 
 const ClientProvider: React.FC<React.PropsWithChildren & { clientConfig?: SimpleChatClientConfig, developerConfig?: SimpleChatDeveloperConfig }> = ({ children, clientConfig, developerConfig }) => {
     const { data, error, loading, isError } = useRequest({
@@ -24,61 +24,20 @@ const ClientProvider: React.FC<React.PropsWithChildren & { clientConfig?: Simple
 
 const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const { client } = useClientContext();
-    const [friendsState, setFriendsState] = useState<FriendsState>({ loading: false, isError: false, friends: user?.friends!  });
+    const [friendsState, setFriendsState] = useState<FriendsState>({ loading: false, isError: false, friends: client?.state.friends ?? [] });
 
-    const initCallback = useCallback(()=>{
-        if(socket){
-            socket.on("friends/request", (response: Friend) =>{
-                const init = [response, ...friendsState.friends]
-                setFriendsState(state => ({...state, friends: init }));
-            });
-        
-            socket.on("friends/accept", (response: Friend) =>{
-                console.log(JSON.stringify(`just recieved: ${response}`));
-                
-                const index = friendsState.friends.findIndex((value)=> response.id === value.id);
-                const init = [...friendsState.friends];
-                init.splice(index, 1, response);
-        
-                setFriendsState(state => ({...state, friends: init }));
-            });
-        
-            socket.on("friends/cancel", (response: Friend) =>{
-                const index = friendsState.friends.findIndex((value)=> response.id === value.id);
-                const init = [...friendsState.friends];
-                init.splice(index, 1);
-        
-                setFriendsState(state => ({...state, friends: init }));
-            });
-
-            socket.on("friends/error", (error: any) =>{
-                
-            });
-        }
-    }, [socket]);
-
-    useEffect(()=> initCallback(), [ initCallback, socket ]);
-
-    const request = (userID: string) =>{
-        if(socket)
-            socket.emit("friends/request", { userID });
-    }
-
-    const accept = (friendID: string) =>{
-        if(socket)
-            socket.emit("friends/accept", { friendID }, friendID);
-    }
-
-    const cancel = (friendID: string) =>{
-        if(socket)
-            socket.emit("friends/cancel", { friendID }, friendID);
+    const request = (userID: string) => client?.sendFriendRequest(userID);
+    const accept = (friendID: string) =>client?.acceptFriendRequest(friendID);
+    const cancel = (friendID: string) =>client?.cancelFriendRequest(friendID);
+    if(client){
+        client.onFriendChange = (friends: Friend[]) => setFriendsState(init => { return { ...init, friends: friends }});
     }
 
     const refreshFriendsMutation = useRequestCallBack({
-        fn: () => axiosInstance.get(`/friends?key=${accessKey}`),
+        fn: () => client?.refreshFriends()!,
         started:()=> setFriendsState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
-        success(data) {
-            setFriendsState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});
+        success(_) {
+            setFriendsState(init => { return { ...init, loading: false, isError: false, message: "", friends: client?.state.friends! }});
         },
         failed(error) {
             setFriendsState(init => { return { ...init, isError: true, loading: false, message: error}});
@@ -88,79 +47,37 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const refreshFriends = () => refreshFriendsMutation.run();
 
     return (
-        <FriendsContext.Provider value={{ ...friendsState, refreshFriends, accept, cancel, request }}>{ children }</FriendsContext.Provider>
+        <FriendsContext.Provider value={{ ...friendsState, friends: client?.state.friends!, refreshFriends, accept, cancel, request }}>{ children }</FriendsContext.Provider>
     );
 }
 
 const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { user, accessKey, socket } = useUserContext();
-    const [membersState, setMembersState] = useState<MembersState>({ loading: false, isError: false, members: user?.members!  });
+    const { client } = useClientContext();
+    const [membersState, setMembersState] = useState<MembersState>({ loading: false, isError: false, members: client?.state?.members ?? []  });
 
-    const initCallback = useCallback(()=>{
-        if(socket){
-            socket.on("groups/request", (response: Member) =>{
-                const init = [response, ...membersState.members]
-                setMembersState(state => ({...state, members: init }));
-            });
-        
-            socket.on("groups/accept", (response: Member) =>{
-                console.log(JSON.stringify(`just recieved: ${response}`));
-                
-                const index = membersState.members.findIndex((value)=> response.credentialID === value.credentialID);
-                const init = [...membersState.members];
-                init.splice(index, 1, response);
-        
-                setMembersState(state => ({...state, members: init }));
-            });
-        
-            socket.on("cancel", (response: Friend) =>{
-                const index = membersState.members.findIndex((value)=> response.id === value.credentialID);
-                const init = [...membersState.members];
-                init.splice(index, 1);
-        
-                setMembersState(state => ({...state, members: init }));
-            });
-        }
-    }, [socket]);
+    const refreshMembers = () => refreshMembersMutation.run();
 
-    useEffect(()=> initCallback(), [ initCallback, socket ]);
+    const create = (name: string) => {}
+    const accept = (userID: string, groupID: string) => {}
+    const decline = (userID: string, groupID: string) => {}
+    const assign = (userID: string, groupID: string, role: "Member" | "Admin") => {}
+    const remove = (groupID: string) => {}
+    const leave = (groupID: string)  => {}
+
+    if(client){
+        client.onMemberChange = (members) => setMembersState(init => { return { ...init, members}});
+    }
 
     const refreshMembersMutation = useRequestCallBack({
-        fn: () => axiosInstance.get(`/groups?key=${accessKey}`),
+        fn: () => client?.refreshMembers()!,
         started:()=> setMembersState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
-        success(data) {
-            setMembersState(init => { return { ...init, loading: false, isError: false, message: "", friends: data.data }});
+        success(_) {
+            setMembersState(init => { return { ...init, loading: false, isError: false, message: "", members: client?.state?.members ?? [] }});
         },
         failed(error) {
             setMembersState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
-
-    const refreshMembers = () => refreshMembersMutation.run();
-
-    const create = (name: string) => {
-
-    }
-
-    const accept = (userID: string, groupID: string) => {
-
-    }
-
-    const decline = (userID: string, groupID: string) => {
-
-    }
-
-    const assign = (userID: string, groupID: string, role: "Member" | "Admin") => {
-
-    }
-
-    const remove = (groupID: string) => {
-
-    }
-
-    const leave = (groupID: string)  => {
-
-    }
 
     return (
         <MembersContext.Provider value={{ ...membersState, refreshMembers, create, accept, decline, assign, leave, remove }}>{ children }</MembersContext.Provider>
@@ -168,49 +85,20 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 }
 
 const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const { user, socket, accessKey } = useUserContext();
+    const { client } = useClientContext();
     const [status, setStatus] = useState<{ room?:string, message?: string }>({});
-    const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: user?.chats! });
+    const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: client?.state.chats! });
 
-    const initCallback = useCallback(()=>{
-        if(socket){
-            socket.on("chat", (data: any, room: any)=>{
-                let reponse: Chat[] = [data];
-        
-                console.log(JSON.stringify(data));
-        
-                if(state.chats[room]){
-                    reponse = state.chats[room].concat();
-                    reponse.push(data);
-                }
-                let chats = {...state.chats};
-                chats[room] = reponse;
-        
-                setState((init)=> { return {...init, chats: chats } });
-        
-                console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data)}`);
-            });
-        
-            socket.on("typing", (message: string, room: string)=>{
-                /*if(room === status.room){
-                    if(status.message !== message){
-                        setStatus({ message, room });
-                    }                
-                }else if(room === current?.id){
-                    setStatus({ message, room });
-                }*/
-            });
-        }
-    }, [socket]);
-
-    useEffect(()=> initCallback(), [ initCallback, socket ]);
+    if(client){
+        client.onChatsChange = (chats) => setState(init => { return { ...init, chats: chats } });
+    }
 
     const refreshChatsMutation = useRequestCallBack({
-        fn: () => axiosInstance.get(`/chats?key=${accessKey}`),
+        fn: () => client?.refreshChats()!,
         started:()=> setState(init => { return { ...init, loading: true, isError: false, messages: "refreshing chats list"}}),
-        success(response) {
+        success(_) {
             setState(init => {
-                return { ...init, loading: false, isError: false, message: "", chats: response.data }
+                return { ...init, loading: false, isError: false, message: "", chats: client?.state.chats! }
             });
         },
         failed(error) {
@@ -231,33 +119,8 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
         }).map((init)=> init[0]);
     }, [state.chats]);
 
-    const send = (message: string, targert: Friend | Member) =>{
-        if("acceptorID" in targert){
-            const friend = targert as Friend;
-            if(socket && friend.accepted){
-                socket.emit("chat", { message, friendID: friend.id }, friend.id);
-            }
-        }else{
-            const member = targert as Member;
-            if(socket && member.accepted){
-                socket.emit("chat", { message, groupID: member.group.id }, member.group.id);
-            }
-        }
-    }
-
-    const typing = (targert: Friend | Member) => {
-        if("acceptorID" in targert){
-            const friend = targert as Friend;
-            if(socket && friend.accepted){
-                socket.emit("typing", { status: true }, friend.id);
-            }
-        }else{
-            const member = targert as Member;
-            if(socket && member.accepted){
-                socket.emit("typing", { status: true }, member.group.id);
-            }
-        }
-    }
+    const send = (message: string, targert: Friend | Member) => client?.send(message, targert);
+    const typing = (targert: Friend | Member) => client?.typing(targert);
 
     const refreshChats = () => refreshChatsMutation.run();
 

@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { HttpStatusCode } from "axios";
 import { Err } from "../config";
 import AccessKeyModel from "../models/access-keys";
@@ -6,7 +6,7 @@ import jetLogger from "jet-logger";
 
 const accessKeyRouter = express.Router();
 
-accessKeyRouter.post("/", async(req, res) =>{
+accessKeyRouter.post("/", async(req: Request, res: Response) =>{
     if(req.body.name && req.body.projectID){
         try{
             const model = new AccessKeyModel();

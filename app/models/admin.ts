@@ -1,10 +1,10 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Organization, Project, Credential } from "@prisma/client";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
 import DeveloperModel from "./developer";
+import { Project, Credential, Organization, UserState } from "@simplechat/shared";
 
 class AdminModel{
     database: Database;
@@ -22,7 +22,7 @@ class AdminModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Partial<Credential> & { projects: Partial<Project>[], developers: Partial<Credential>[] }>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<UserState>{
         try{
             const client = await new ClientModel().get(data);
             const developers = await new DeveloperModel().all({ admin: data.credential });

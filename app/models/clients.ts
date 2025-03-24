@@ -1,9 +1,11 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Chat, Friend, Member, Organization, Project, Credential, Client, Group, Roles } from "@prisma/client";
 import { uuid } from "../utils";
 import FriendModel from "./friends";
+import { Project, Organization, Credential, SimpleChatState } from "@simplechat/shared";
+import { Roles,  Client, Chat } from "@simplechat/shared/models";
+import GroupModel from "./groups";
 
 class ClientModel{
     database: Database = DBManager.instance();
@@ -12,7 +14,7 @@ class ClientModel{
         try{
             const id = data.id ?? uuid();
             const credential = await this.database.client.credential.create({
-                data: { adminID: data.project.ownerID, id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
+                data: { adminID: data.project.owner.id, id: id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: data.password, role: data.role ?? "Client" },
                 select: { id: true, name: true, surname: true, email: true, username: true, adminID: true, role: true }
             });
 
@@ -26,15 +28,15 @@ class ClientModel{
         }
     }
 
-    async connect(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string }): Promise<Client & { credential: Partial<Credential> }>{
+    async connect(data: { project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string }): Promise<Client & { credential: Credential }>{
         try{
             let credential = await this.database.client.credential.findFirst({ 
-                where: {  adminID: data.project.ownerID, name: data.name, surname: data.surname, email: data.email, username: data.username },
+                where: {  adminID: data.project.owner.id, name: data.name, surname: data.surname, email: data.email, username: data.username },
                 select: { id: true, name: true, surname: true, email: true, username: true, adminID: true, role: true }
             });
             if(credential === null){
                 credential = await this.database.client.credential.create({
-                    data: { adminID: data.project.ownerID, name: data.name, surname: data.surname, email: data.email, username: data.username, password: uuid(), role: "Client" },
+                    data: { adminID: data.project.owner.id, name: data.name, surname: data.surname, email: data.email, username: data.username, password: uuid(), role: "Client" },
                     select: { id: true, name: true, surname: true, email: true, username: true, adminID: true, role: true }
                 });
             }
@@ -50,7 +52,7 @@ class ClientModel{
         }
     }
 
-    async signin(data: {  project: Project, organization?: Organization, email?: string, username?: string, password: string }): Promise<Client & { credential: Partial<Credential> }>{
+    async signin(data: {  project: Project, organization?: Organization, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
         try{
             const credentials = await this.database.client.credential.findMany({ where: { OR: [ { email: data.email} , { username: data.username } ] } });
             if(credentials.length > 0){
@@ -60,7 +62,7 @@ class ClientModel{
                         console.log(JSON.stringify(data.password));
                         const client = await this.database.client.client.findUniqueOrThrow({ where: { credentialID: credential.id } });
                         
-                        return { ...client, credential: { ...credential, password: undefined } };
+                        return { ...client, credential: credential };
                     }
                 }
                 throw new Err(HttpStatusCode.Unauthorized, ``, "incorrect password, check and try again");
@@ -96,29 +98,23 @@ class ClientModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential}): Promise<Partial<Credential> & { chats: { [key: string]: Chat[] } } & { friends: Partial<Friend>[] } & { members: Member[] } | undefined>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential}): Promise<Omit<SimpleChatState, "token">>{
         try{
             const friends = await new FriendModel().all({ ...data });
-
-            let members = await this.database.client.member.findMany({
-                where: { credentialID: data.credential.id },
-                include: {
-                    group: { include: { 
-                        creator: { include: { credential: {
-                            select: { id: true, name: true, surname: true, email: true, username: true }
-                        }} } 
-                    } }
-                }
-            });
+            const members = await new GroupModel().all({ ...data });
 
             const actives = [...friends?.filter((friend)=> friend.accepted)!, ...members.filter((member)=> member.accepted ).map((member)=> member.group )];
+
             let chats: { [key: string]: Chat[] } = {};
+
             for(let i = 0; i < actives.length; i++){
-                const chat = await this.database.client.chat.findMany({ 
+                const chat = (await this.database.client.chat.findMany({ 
                     where: { ownerID: actives[i].id }, 
                     orderBy: { created: "asc" }, 
                     include: { sender: {
                         include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } } }
+                })).map((init)=>{
+                    return { ...init, sender: init.sender.credential };
                 });
                 chats[actives[i].id] = chat;
             }

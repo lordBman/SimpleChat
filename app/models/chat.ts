@@ -1,7 +1,7 @@
 import { HttpStatusCode } from "axios";
-import { Chat, Notification, Credential } from "@prisma/client";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
+import { Chat, Notification, Credential } from "@simplechat/shared/models";
 
 class ChatModel {
     database: Database;
@@ -14,7 +14,7 @@ class ChatModel {
             const chat = await this.database.client.chat.create({ 
                 data: { senderID: data.credential.id, message: data.message, ownerID: (data.groupID || data.friendID)!, type: (data.groupID ? "Group" : "Friends") },
                 include: {
-                    sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } }
+                    sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } },
                 }
             });
 
@@ -31,7 +31,7 @@ class ChatModel {
                     }
                 });
             }
-            return chat;
+            return { ...chat, sender: chat.sender.credential };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when processing chat");
         }
@@ -68,7 +68,11 @@ class ChatModel {
                 }
             });
 
-            return [chat, notification];
+            const reference = chat.reference ? { ...chat.reference, sender: chat.reference.sender.credential } : undefined
+
+            const init: Chat = { ...chat, sender: chat.sender.credential, reference };
+
+            return [ init, notification];
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when replying to chat");
         }
@@ -109,7 +113,9 @@ class ChatModel {
                     }
                 });
             }
-            return chat;
+
+            const reference = chat.reference ? { ...chat.reference, sender: chat.reference.sender.credential } : undefined
+            return { ...chat, sender: chat.sender.credential, reference };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when updating chat");
         }
@@ -126,7 +132,8 @@ class ChatModel {
                     reference: { include: { sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } } } }
                 }
             });
-            return chat;
+            const reference = chat.reference ? { ...chat.reference, sender: chat.reference.sender.credential } : undefined
+            return { ...chat, sender: chat.sender.credential, reference };;
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, `${error}`, "error encountered when updating chat");
         }

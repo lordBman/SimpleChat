@@ -2,10 +2,9 @@ import ReactDOMServer from "react-dom/server";
 import express, { NextFunction, Response, Request } from "express";
 import jwt from "jsonwebtoken";
 import jetLogger from "jet-logger";
-import Signin from "./signin";
-import Homepage from "./homepage";
-import Docs from "./docs";
-import { Roles, Credential } from "@prisma/client";
+import { Credential } from "@simplechat/shared";
+import { Signin, Docs, Homepage, ErrorPage, DashBoard } from "simplechat-pages";
+
 
 const signinRenderer = (res: Response) =>{
     const root = ReactDOMServer.renderToString(<Signin />);
@@ -110,7 +109,7 @@ pages.get("/signin", async(req, res) =>{
 });
 
 pages.use("/dashboard", secureRoute, async(req, res) =>{
-    //const root = ReactDOMServer.renderToStaticMarkup(<DashBoard />);
+    const root = ReactDOMServer.renderToStaticMarkup(<DashBoard />);
 
     const html = `
         <html lang="en">
@@ -121,7 +120,7 @@ pages.use("/dashboard", secureRoute, async(req, res) =>{
                 <link rel="stylesheet" href="/assets/dist/dashboard.css" />
             </head>
             <body>
-                <main id="root"></main>
+                <main id="root">${root}</main>
                 <script src="/assets/dist/dashboard.js"></script>
             </body>
         </html>

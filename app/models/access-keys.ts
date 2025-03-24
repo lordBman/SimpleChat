@@ -1,13 +1,13 @@
-import { AccessKey, Project } from "@prisma/client";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
+import { AccessKey } from "@simplechat/shared";
 
 class AccessKeyModel{
     database: Database = DBManager.instance();
 
-    async get(key: string){
+    async get(key: string): Promise<AccessKey>{
         try{
             const accessKey = await this.database.client.accessKey.findUniqueOrThrow({
                 where: { key }, include: { project: { include: { 

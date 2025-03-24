@@ -1,6 +1,6 @@
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Group, Member, Organization, Project, Credential, MemberRole, ResourceType } from "@prisma/client";
+import { Group, Member, Organization, Project, Credential } from "@simplechat/shared";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { joinChatRoom } from "../sockets/chats";
@@ -28,7 +28,7 @@ class GroupModel{
                     data: {  groupID: init.id, credentialID: init.creatorID, role: "Admin" }
                 });
 
-                return member;
+                return { ...member, group: { ... init, creator: data.credential }};
             }
         }catch(error){
             if(error instanceof Err){
@@ -40,13 +40,16 @@ class GroupModel{
     
     async all(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Member[]>{
         try{
-            const members = (await this.database.client.member.findMany({ 
+            const members: Member[] = (await this.database.client.member.findMany({ 
                 where: { credentialID: data.credential.id },
                 include: {
-                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, password: false } } } } } } 
+                    client: { include: { credential: true } },
+                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, surname: true } } } } } } 
                 }
             })).filter((member)=> {
                 return member.group.projectID == data.project.id && member.group.organizationID == data.organization?.id;
+            }).map((member)=>{
+                return { ...member, credential: member.client.credential,  group: { ...member.group, creator: member.group.creator.credential } }
             });
 
             members.forEach((member)=> joinChatRoom(member));
@@ -62,12 +65,14 @@ class GroupModel{
             const member = await this.database.client.member.create({ 
                 data: { credentialID: data.credential.id, groupID: data.groupID },
                 include: {
-                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, password: false, isDeleted: false } } } } } } 
+                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, surname: true } } } } } } 
                 }
             });
-            joinChatRoom(member);
+            const init = { ...member, group: { ...member.group, creator: member.group.creator.credential } }
 
-            return member;
+            joinChatRoom(init);
+
+            return init;
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while sending membership request");
         }
@@ -78,16 +83,18 @@ class GroupModel{
             const member = await this.database.client.member.delete({ 
                 where: { credentialID: data.credential.id, groupID: data.groupID },
                 include: {
-                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, password: false } } } } } } 
+                    group: { include: { creator: { include: { credential: { select: { id: true, email:  true, name: true, surname: true } } } } } } 
                 }
             });
-            return member;
+            const init = { ...member, group: { ...member.group, creator: member.group.creator.credential } }
+
+            return init;
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while canceling membership request");
         }
     }
 
-    async rename(data: { project: Project, organization?: Organization, credential: Credential, groupID: string, name: string }): Promise<Group>{
+    async rename(data: { project: Project, organization?: Organization, credential: Credential, groupID: string, name: string }): Promise<Member>{
         try{
             const member = await this.database.client.member.findUniqueOrThrow({ where: { groupID: data.groupID, credentialID: data.credential.id } });
             if(member.role != "Admin"){
@@ -97,7 +104,8 @@ class GroupModel{
             const group = await this.database.client.group.findUniqueOrThrow({ 
                 where: { id: data.groupID },
                 include: {
-                    members: true
+                    members: true,
+                    creator: { include: { credential: { select: { id: true, email:  true, name: true, surname: true } } } }
                 }
             });
 
@@ -116,7 +124,7 @@ class GroupModel{
                 }
             });
             
-            return groupUpdate;
+            return { ...member, group: { ...groupUpdate, creator:  group.creator.credential } };
         }catch(error){
             if(error instanceof Err){
                 throw error;
@@ -158,7 +166,7 @@ class GroupModel{
                             });
                         }
                     });
-                    return init;
+                    return { ...init, group: { ...init.group, creator: init.group.creator.credential } };
 
                 }else{
                     throw new Err(HttpStatusCode.Unauthorized, ``, "only admins are allowed to accept users to a group");    
@@ -185,7 +193,7 @@ class GroupModel{
                 if(admin.role === "Admin"){
                     const init = await this.database.client.member.delete({
                         where: { credentialID_groupID: {groupID: data.groupID, credentialID: data.userID} },
-                        include: { client: { include: { credential: { select: { id: true, email:  true, name: true, password: false } } } } }
+                        include: { client: { include: { credential: { select: { id: true, email:  true, name: true, surname: true  } } } } }
                     });
 
                     await this.database.client.notification.create({

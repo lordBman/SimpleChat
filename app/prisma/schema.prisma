@@ -201,7 +201,7 @@ model Member {
     group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
     groupID           String
 
-    joined            DateTime?
+    joined            DateTime          @default(now())
     role              MemberRole        @default(Member)
 
     accepted          Boolean           @default(false)

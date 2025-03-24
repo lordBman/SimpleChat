@@ -3,11 +3,11 @@ import { sassPlugin } from "esbuild-sass-plugin";
 
 let ctx = await esbuild.context({
     entryPoints: [
-        "./pages/client-entries/dashboard.tsx",
-        "./pages/client-entries/signin.tsx",
-        "./pages/client-entries/docs.tsx",
-        "./pages/client-entries/homepage.tsx",
-        "./pages/client-entries/error.tsx"
+        "./pages/client/dashboard.tsx",
+        "./pages/client/signin.tsx",
+        "./pages/client/docs.tsx",
+        "./pages/client/homepage.tsx",
+        "./pages/client/error.tsx"
     ],
     bundle: true,
     outdir: "./assets/dist",

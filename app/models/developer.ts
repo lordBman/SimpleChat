@@ -1,7 +1,8 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err, SeedResult } from "../config";
 import Database from "../config/database";
-import { Organization, Project, Client, Credential } from "@prisma/client";
+import { Organization, Project, Credential, UserState } from "@simplechat/shared";
+import {  Client } from "@simplechat/shared/models";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
 import { uuid } from "../utils";
@@ -12,7 +13,7 @@ class DeveloperModel{
         this.database = DBManager.instance();
     }
 
-    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Partial<Credential> }>{
+    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
         try{
             const client = await new ClientModel().create({ ...data, role: "Developer" });
 
@@ -32,13 +33,12 @@ class DeveloperModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Partial<Credential> & { projects: Partial<Project> [] }>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<UserState>{
         try{
             const client = await new ClientModel().get(data);
-            
             const projects = await new ProjectModel().all({ credential: data.credential });
 
-            const init: Array<Partial<Project> & { userCount: number }> = [];
+            const init: Array<Project & { userCount: number }> = [];
             for(let index = 0; index < projects?.length!; index++){
                 const project = projects![index];
 
@@ -55,16 +55,22 @@ class DeveloperModel{
         }
     }
 
-    async all(data: { admin: Credential }): Promise<Partial<Credential>[]>{
+    async all(data: { admin: Credential }): Promise<Array<Credential & { projects: Project[] }>>{
         try{
-            const developers = (await this.database.client.credential.findMany({
+            const developers = await this.database.client.credential.findMany({
                 where: { adminID: data.admin.id }, 
-                include: { 
-                    projects: { select: { id: true, name: true } }
-                }
-            })).map((developer) => { return { ...developer, password: "" }; });
+                select: { id: true, name: true, surname: true, email: true, username: true }
+            });
+
+            const init: Array<Credential & { projects: Project[] }> = [];
+
+            for(let i = 0; i < developers.length; i++){
+                const projects = await new ProjectModel().all({ credential: data.admin });
+
+                init.push({ ...developers[i], projects });
+            }
             
-            return developers;
+            return init;
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when getting developers");
         }

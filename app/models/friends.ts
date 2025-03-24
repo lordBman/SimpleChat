@@ -1,15 +1,8 @@
+import { FriendSearchResult } from "@simplechat/shared/models";
 import { DBManager, Err } from "../config";
 import Database from "../config/database";
-import { Friend, Organization, Project, Credential } from "@prisma/client";
+import { Friend, Organization, Project, Credential } from "@simplechat/shared";
 import { HttpStatusCode } from "axios";
-import { uuid } from "../utils";
-import { joinChatRoom } from "../sockets/chats";
-
-type CredentialResponse = Omit<Credential, 'password' |'isDeleted' | 'role' | 'adminID'>
-type FriendResponse = Omit<Friend, 'isDeleted'> & { acceptor: CredentialResponse,  requester: CredentialResponse };
-type AllFriendsResponse = Array<FriendResponse>;
-type FriendSearchResult = { user: CredentialResponse, friend?: FriendResponse }
-type FriendSearchResponse = Array<FriendSearchResult>
 
 class FriendModel{
     database: Database;
@@ -17,12 +10,12 @@ class FriendModel{
         this.database = DBManager.instance();
     }
     
-    async all(data: { project: Project, organization?: Organization, credential: Credential  }): Promise<AllFriendsResponse>{
+    async all(data: { project: Project, organization?: Organization, credential: Credential  }): Promise<Friend[]>{
         try{
             return await this.database.client.friend.findMany({ 
                 where: { project: data.project, organizationID: data.organization?.id,  OR: [ { requesterID: data.credential.id }, { acceptorID: data.credential.id } ] },
             }).then(async (results)=>{
-                const friends: AllFriendsResponse = [];
+                const friends: Friend[] = [];
                 for(const result of results){
                     const acceptor = await this.database.client.credential.findUnique({ 
                         where: { id: result.acceptorID }, 
@@ -43,7 +36,7 @@ class FriendModel{
         }
     }
 
-    async request(data: { project: Project, organization?: Organization, credential: Credential, userID: string }): Promise<FriendResponse>{
+    async request(data: { project: Project, organization?: Organization, credential: Credential, userID: string }): Promise<Friend>{
         try{
             const response = await this.database.client.friend.create({ 
                 data: { projectID: data.project.id, organizationID: data.organization?.id, requesterID: data.credential.id, acceptorID: data.userID },
@@ -72,7 +65,7 @@ class FriendModel{
         }
     }
 
-    async accept(data: { credential: Credential, id: string }): Promise<FriendResponse>{
+    async accept(data: { credential: Credential, id: string }): Promise<Friend>{
         try{
             const response = await this.database.client.friend.update({
                 where: { id: data.id }, data: { accepted: true }
@@ -125,7 +118,7 @@ class FriendModel{
         }
     }
 
-    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<FriendSearchResponse>{
+    async find(data: { project: Project, organization?: Organization, credential: Credential, query: string }): Promise<FriendSearchResult[]>{
         try{
             const credentials = await this.database.client.client.findMany({
                 where: { projectID: data.project.id, organizationID: data.organization?.id, NOT: { credentialID: data.credential.id } },
@@ -136,7 +129,7 @@ class FriendModel{
                 });
             });
             
-            const results: FriendSearchResponse = [];
+            const results: FriendSearchResult[] = [];
             for(const client of credentials){
                 const init = await this.database.client.friend.findFirst({ 
                     where: {

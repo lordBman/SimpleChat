@@ -2,7 +2,7 @@ import { HttpStatusCode } from "axios";
 import { DBManager, Err, SeedResult } from "../config";
 import Database from "../config/database";
 import { Organization, Project, Credential, UserState } from "@simplechat/shared";
-import {  Client } from "@simplechat/shared/models";
+import {  AccessKey, Client } from "@simplechat/shared/models";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
 import { uuid } from "../utils";
@@ -33,17 +33,19 @@ class DeveloperModel{
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<UserState>{
+    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Omit<UserState, "token">>{
         try{
             const client = await new ClientModel().get(data);
             const projects = await new ProjectModel().all({ credential: data.credential });
 
-            const init: Array<Project & { userCount: number }> = [];
+            const init: Array<Project & { keys: AccessKey[], userCount: number }> = [];
             for(let index = 0; index < projects?.length!; index++){
                 const project = projects![index];
 
                 const userCount = await this.database.client.client.count({ where: { projectID: project.id! }});
-                init.push({ ...project, userCount: userCount! });
+                const keys = await this.database.client.accessKey.findMany({ where: { projectID: project.id } });
+
+                init.push({ ...project, keys, userCount: userCount! });
             }
 
             return { ...data.credential, ...client, projects: init };

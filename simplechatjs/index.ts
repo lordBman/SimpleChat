@@ -13,8 +13,7 @@ const axiosInstance =  axios.create({
 	withCredentials: true,
 	baseURL: "/api" });
 
-
-class SimpleChatClient{
+export class SimpleChatClient{
     private accessKey: string;
     private socket: Socket;
 
@@ -275,5 +274,5 @@ class SimpleChatClient{
     }
 }
 
-export { SimpleChatClient };
+export default SimpleChatClient;
 

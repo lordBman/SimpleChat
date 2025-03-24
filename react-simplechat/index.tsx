@@ -1,10 +1,11 @@
-import { PropsWithChildren, useCallback, useEffect, useState } from "react";
+import { PropsWithChildren, useState } from "react";
 import { ChatContext, ClientContext, FriendsContext, MembersContext, useClientContext } from "./contexts";
 import { ChatState, FriendsState, MembersState } from "./models";
 import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig } from "@simplechat/shared";
 import { SimpleChatClient } from "simplechatjs"
 import { useRequest, useRequestCallBack } from "./request";
 import React from "react";
+import { Chats } from "@simplechat/shared/models";
 
 const ClientProvider: React.FC<React.PropsWithChildren & { clientConfig?: SimpleChatClientConfig, developerConfig?: SimpleChatDeveloperConfig }> = ({ children, clientConfig, developerConfig }) => {
     const { data, error, loading, isError } = useRequest({
@@ -65,7 +66,7 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const leave = (groupID: string)  => {}
 
     if(client){
-        client.onMemberChange = (members) => setMembersState(init => { return { ...init, members}});
+        client.onMemberChange = (members: Member[]) => setMembersState(init => { return { ...init, members}});
     }
 
     const refreshMembersMutation = useRequestCallBack({
@@ -90,7 +91,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const [state, setState] = useState<ChatState>({ loading: false, isError: false, chats: client?.state.chats! });
 
     if(client){
-        client.onChatsChange = (chats) => setState(init => { return { ...init, chats: chats } });
+        client.onChatsChange = (chats: Chats) => setState(init => { return { ...init, chats: chats } });
     }
 
     const refreshChatsMutation = useRequestCallBack({
@@ -137,7 +138,12 @@ const MultiProvider: React.FC<MultiProviderProps> = ({ providers, children }) =>
     return providers.reduceRight((child, Provider) => <Provider>{child}</Provider>, children);
 };
 
-const SimpleChatProver: React.FC<PropsWithChildren & { clientConfig?: SimpleChatClientConfig, developerConfig?: SimpleChatDeveloperConfig }> = ({ children, clientConfig, developerConfig }) =>{
+interface SimpleChatProviderProps extends PropsWithChildren{ 
+    clientConfig?: SimpleChatClientConfig, 
+    developerConfig?: SimpleChatDeveloperConfig 
+}
+
+export const SimpleChatProvider: React.FC<SimpleChatProviderProps> = ({ children, clientConfig, developerConfig }) =>{
     if(!clientConfig  && !developerConfig){
         throw Error("Simple Chat provider requires a client or developer Configuration, but neither was provided");
     }
@@ -150,4 +156,4 @@ const SimpleChatProver: React.FC<PropsWithChildren & { clientConfig?: SimpleChat
     );
 }
 
-export default SimpleChatProver;
+export default SimpleChatProvider;

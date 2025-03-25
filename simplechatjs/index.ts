@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import axios, { AxiosError } from "axios";
-import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig, UserState } from "@simplechat/shared";
+import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig, SimpleChatState } from "@simplechat/shared";
 import { Chat, Chats } from "@simplechat/shared/models";
 
 const axiosInstance =  axios.create({
@@ -18,7 +18,7 @@ class SimpleChatClient{
     private accessKey: string;
     private socket: Socket;
 
-    state: UserState;
+    state: SimpleChatState;
     messages: string[];
 
     onChatsChange?: (chats: Chats) => void;
@@ -26,7 +26,7 @@ class SimpleChatClient{
     onFriendChange?: (friend: Friend[]) => void;
     onMemberChange?: (member: Member[]) => void;
 
-    private constructor(accessKey: string, socket: Socket, state: UserState){
+    private constructor(accessKey: string, socket: Socket, state: SimpleChatState){
         this.accessKey = accessKey;
         this.socket = socket;
         this.state = state;
@@ -103,7 +103,7 @@ class SimpleChatClient{
         socket.on("groups/accept", (response: Member) =>{
             console.log(JSON.stringify(`just recieved: ${response}`));
             
-            const index = state.members.findIndex((value)=> response.credentialID === value.credentialID);
+            const index = state.members.findIndex((value)=> response.credential.id === value.credential.id);
             const init = [...state.members];
             init.splice(index, 1, response);
     
@@ -114,7 +114,7 @@ class SimpleChatClient{
         });
     
         socket.on("groups/cancel", (response: Friend) =>{
-            const index = state.members.findIndex((value)=> response.id === value.credentialID);
+            const index = state.members.findIndex((value)=> response.id === value.credential.id);
             const init = [...state.members];
             init.splice(index, 1);
     

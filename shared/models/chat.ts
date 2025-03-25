@@ -1,14 +1,15 @@
 import Credential from "./credentials";
 
 type Chat = {
-    id: number;
+    id: string;
     message: string;
     created: Date;
     delivered: boolean;
     senderID: string;
     ownerID: string;
     type: "Group" | "Friends";
-    referenceID: number | null;
+    reference?: Chat | null;
+
     sender: Credential;
 }
 

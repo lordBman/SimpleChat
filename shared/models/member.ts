@@ -1,8 +1,12 @@
+import Credential from "./credentials";
 import Group from "./groups";
 
+export type MemberRoles = "Member" | "Admin";
+
 type Member = {
-    role: "Member" | "Admin";
-    credentialID: string;
+    credential: Credential,
+    
+    role: MemberRoles;
     joined: Date;
     accepted: boolean;
     group: Group;

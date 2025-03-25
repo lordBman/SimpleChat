@@ -1,10 +1,13 @@
+export type Roles = "Admin" | "Client" | "Developer"; 
+
 type Credential = {
-    name: string;
     id: string;
-    username: string | null;
-    email: string | null;
+    name: string;
     surname: string;
-    adminID: string | null;
+    username?: string | null;
+    email?: string | null;
+    adminID?: string | null;
+    role?: Roles
 }
 
 export default Credential;

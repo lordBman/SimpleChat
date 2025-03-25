@@ -1,7 +1,11 @@
+import Credential from "./credentials";
+
 type Project = {
-    name: string;
     id: string;
-    ownerID: string;
+    name: string;
+    token: string;
+    
+    owner: Credential;
 }
 
 export default Project;

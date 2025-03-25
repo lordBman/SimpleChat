@@ -1,0 +1,9 @@
+.back-btn{
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .back-btn{
+        display: inline;
+    }
+}

@@ -1,0 +1,88 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard{
+    display: flex;
+    width: 100dvw;
+    height: 100dvh;
+    padding-left: 70px;
+    overflow: hidden;
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.tool-bar{
+    background-color: #7269EF;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    padding: 20px;
+    justify-content: space-between;
+}
+
+.tool-bar-item-container{
+    flex-direction: row;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.tool-bar-item{
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    color: #F5F7FB; 
+    cursor: pointer; 
+}
+
+.content-container{
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    height: 100%;
+    overflow-y:hidden;
+}
+
+.content{
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.sections{
+    background-color: #F5F7FB;
+    width: 360px;
+    padding: 20px;
+    height: 100%;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    html{
+        font-size: 60%;
+    }
+    
+    .dashboard{
+        flex-direction: column;
+        padding-left: 0px;
+    }
+
+    .sections{
+        width: 100dvw;
+        height:0%;
+        padding: 0px;
+        flex: 1;
+    }
+
+    .sections > *{
+        padding: 0.8rem;
+        overflow-y: auto;
+    }
+
+    .section-title{
+        display: none;
+    }
+}

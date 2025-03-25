@@ -2,7 +2,7 @@ import Credential from "./credentials";
 
 type Friend = {
     id: string;
-    organizationID: number | null;
+    organizationID?: string | null;
     projectID: string;
     accepted: boolean;
     requester: Credential;

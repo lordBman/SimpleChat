@@ -1,0 +1,44 @@
+@mixin horizontal-padding($padding){
+    padding-left: $padding;
+    padding-right: $padding;
+}
+
+@mixin vertical-padding($padding){
+    padding-top: $padding;
+    padding-bottom: $padding;
+}
+
+.mobile-header{
+    display: none;
+    width: 100%;
+    background-color: white;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    @include horizontal-padding(25px);
+    @include vertical-padding(18px);
+    box-shadow: 3px 0px 4px rgba(15, 34, 58, 0.192);
+}
+
+.mobile-header > span{
+    font-size: 36px;
+    color: #7269EF;
+}
+
+.mobile-header-options{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 15px;
+}
+
+.mobile-header-options{
+    color: grey;
+    font-size: 24px;
+}
+
+@media (max-width: 768px) {
+    .mobile-header{
+        display: flex;
+    }
+}

@@ -2,7 +2,8 @@
     "workspaces": [
         "app",
         "shared",
+        "pages",
         "simplechatjs",
-        "react-simplechat"
+        "simplechat_provider"
     ]
 }

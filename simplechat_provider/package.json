@@ -1,0 +1,26 @@
+{
+  "name": "simplechat_provider",
+  "version": "1.0.0",
+  "description": "A Global State Provider for Simple Chat API",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "test",
+    "build": "tsc"
+  },
+  "author": "Nobel Okelekele",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.13.11",
+    "@types/react": "^19.0.12",
+    "esbuild": "^0.25.1",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@simplechat/shared": "file:../shared",
+    "simplechatjs": "file:../simplechatjs",
+    "@tanstack/react-query": "^5.69.0",
+    "react": "^19.0.0"
+  }
+}

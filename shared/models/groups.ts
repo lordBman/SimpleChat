@@ -4,8 +4,8 @@ type Group = {
     name: string;
     id: string;
     last: Date;
-    attachment: string | null;
-    organizationID: number | null;
+    attachment?: string | null;
+    organizationID?: string | null;
     projectID: string;
     creator: Credential;
 }

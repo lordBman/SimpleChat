@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface DashBoardSectionProps extends React.PropsWithChildren{
     hide?: boolean
 }

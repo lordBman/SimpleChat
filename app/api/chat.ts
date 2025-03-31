@@ -12,18 +12,19 @@ chatRouter.post("/", async(req, res) =>{
             const model = new ChatModel();
             const init = await model.create(req.body);
             
-            return res.status(HttpStatusCode.Created).send(init);
+            res.status(HttpStatusCode.Created).send(init);
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when processing message" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when processing message" });
         }
         
     }else{
-        return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
 });
 
@@ -33,17 +34,19 @@ chatRouter.put("/", async(req, res) =>{
             const model = new ChatModel();
             const init = await model.update(req.body);
             
-            return res.status(HttpStatusCode.Accepted).send(init);
+            res.status(HttpStatusCode.Accepted).send(init);
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when updating message" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when updating message" });
         }
     }else{
-        return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
 });
 

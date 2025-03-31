@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface DashboardContentProps extends React.PropsWithChildren{}
 
 const DashboardContent: React.FC<DashboardContentProps> = ({ children }) =>{

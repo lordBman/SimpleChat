@@ -1,6 +1,7 @@
 import { Route, Switch } from "react-router-dom";
 import AllProjects from "./all";
 import ProjectDetails from "./details";
+import React from "react";
 
 const Projects = () =>{
     return (

@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
-import { ChatResponse } from "../responses";
-import { AppContext, AppContextType } from "../providers/app-provider";
+import { AppContext, AppContextType, useAppContext } from "../providers/app-provider";
+import { Chat } from "@simplechat/shared/models";
 
 interface ChatProps{
-    chat: ChatResponse
+    chat: Chat
 }
 
 const RecievedChat: React.FC<ChatProps> = ({ chat }) =>{
@@ -22,7 +22,7 @@ const RecievedChat: React.FC<ChatProps> = ({ chat }) =>{
 }
 
 const MyChat: React.FC<ChatProps> = ({ chat }) =>{
-    const { data } = useContext(AppContext) as AppContextType;
+    const { user } = useAppContext();
     
     return (
         <div className="my-chat-container">
@@ -32,7 +32,7 @@ const MyChat: React.FC<ChatProps> = ({ chat }) =>{
                 <div className="my-chat-time">{new Date(chat.created.toString()).toLocaleTimeString()}</div>
             </div>
             <div className="messages-item-profile-container">
-                <div className="messages-item-profile">{ data?.name.charAt(0).toUpperCase()}</div>
+                <div className="messages-item-profile">{ user?.name.charAt(0).toUpperCase()}</div>
             </div>
         </div>
     );
@@ -40,9 +40,9 @@ const MyChat: React.FC<ChatProps> = ({ chat }) =>{
 
 
 const ChatView: React.FC<ChatProps> = ({ chat }) =>{
-    const { data } = useContext(AppContext) as AppContextType;
+    const { user } = useAppContext();
 
-    if(chat.senderID === data?.id){
+    if(chat.senderID === user?.id){
         return <MyChat chat={chat} />
     }
     return <RecievedChat chat={chat} />

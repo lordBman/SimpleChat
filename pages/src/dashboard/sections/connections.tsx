@@ -8,7 +8,7 @@ import { AppContext, AppContextType } from "../../providers/app-provider";
 import "../../css/chats/friends.scss";
 import { FriendsContext, MembersContext } from "simplechat_provider/src/contexts";
 import { FriendsContextType, MembersContextType } from "simplechat_provider/src/models";
-import { Friend, Group, Member } from "@simplechat/shared";
+import { Friend, Group, Member, Credential } from "@simplechat/shared";
 
 enum Filter{
     all, friends, groups
@@ -152,14 +152,10 @@ const Connections = () =>{
                 <span>Loading...</span>
             </div> }
             { query.length > 0 && <div id="friends-search-results">{results.map((result, index)=> {
-                if((result as any).user){
-                    const init = result as { user: Credential, friend?: Friend };
-
-                    return <FriendResultView result={init} key={index}/>
+                if("user" in result){
+                    return <FriendResultView result={{ user: result.user, friend: result.friend }} key={index}/>
                 }else{
-                    const init = result as { group: Group, member?: Member };
-
-                    return <MemberResultView member={init.member} group={init.group} key={index}/>
+                    return <MemberResultView member={result.member} group={result.group} key={index}/>
                 }
             })}</div> }
         </div>

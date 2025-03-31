@@ -1,24 +1,20 @@
 import { Credential, Project, AccessKey, ProjectDetails, Group } from "@simplechat/shared";
 import { DBManager, Err } from "../config";
-import Database from "../config/database";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { ResourceType } from "@prisma/client";
 
 class ProjectModel{
-    database: Database;
-    constructor(){
-        this.database = DBManager.instance();
-    }
-
     async create(data: { credentials: Credential , name: string }): Promise<Project & { keys: AccessKey[] }>{
         try{
-            let project = await this.database.client.project.create({ 
+            const database = await DBManager.instance();
+
+            const project = await database.project.create({ 
                 data: { name: data.name, ownerID: data.credentials.id, },
                 select: { id: true, name: true, token: true }
             });
         
-            const key = await this.database.client.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
+            const key = await database.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
 
             return { ...project, owner: data.credentials, keys: [key] };
         }catch(error){
@@ -28,7 +24,9 @@ class ProjectModel{
 
     async get(data: { credential: Credential, projectID: string }): Promise<ProjectDetails>{
         try{
-            const project = await this.database.client.project.findUniqueOrThrow({ 
+            const database = await DBManager.instance();
+
+            const project = await database.project.findUniqueOrThrow({ 
                 where: { id: data.projectID, ownerID: data.credential.id },
                 include: { 
                     keys: true,
@@ -70,7 +68,9 @@ class ProjectModel{
 
     async all(data: { credential: Credential }): Promise<Project[]>{
         try{
-            const projects = await this.database.client.project.findMany({ 
+            const database = await DBManager.instance();
+
+            const projects = await database.project.findMany({ 
                 where: { ownerID: data.credential.id, isDeleted: false },
                 include: { 
                     keys: { select: { id: true, name: true, enabled: true } },
@@ -84,15 +84,17 @@ class ProjectModel{
         }
     }
 
-    async delete(data: { credential: Credential, projectID: string }): Promise<{message: string}>{
+    async delete(data: { credential: Credential, projectID: string }): Promise<{projectID: string, message: string}>{
         try{
-            const project = await this.database.client.project.findUniqueOrThrow({ 
+            const database = await DBManager.instance();
+            
+            const project = await database.project.findUniqueOrThrow({ 
                 where: { id: data.projectID, ownerID: data.credential.id },
             });
 
-            await this.database.client.deleted.create({ data: { resourceID: project.id, type: ResourceType.Project } });
+            await database.deleted.create({ data: { resourceID: project.id, type: ResourceType.Project } });
 
-            return { message: "Project deletion successfull" };
+            return { projectID: project.id, message: "Project deletion successfull" };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while loading project list");
         }

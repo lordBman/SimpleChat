@@ -1,23 +1,18 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err, SeedResult } from "../config";
-import Database from "../config/database";
 import { Organization, Project, Credential, UserState } from "@simplechat/shared";
 import {  AccessKey, Client } from "@simplechat/shared/models";
 import ProjectModel from "./projects";
 import ClientModel from "./clients";
-import { uuid } from "../utils";
 
 class DeveloperModel{
-    database: Database;
-    constructor(){
-        this.database = DBManager.instance();
-    }
-
     async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
         try{
+            const database = await DBManager.instance();
+
             const client = await new ClientModel().create({ ...data, role: "Developer" });
 
-            await this.database.client.notification.create({
+            await database.notification.create({
                 data: { 
                     recieverID: data.admin.id,
                     alert: `New developer named ${data.name}, say hi to him/her`
@@ -35,6 +30,8 @@ class DeveloperModel{
 
     async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Omit<UserState, "token">>{
         try{
+            const database = await DBManager.instance();
+
             const client = await new ClientModel().get(data);
             const projects = await new ProjectModel().all({ credential: data.credential });
 
@@ -42,8 +39,8 @@ class DeveloperModel{
             for(let index = 0; index < projects?.length!; index++){
                 const project = projects![index];
 
-                const userCount = await this.database.client.client.count({ where: { projectID: project.id! }});
-                const keys = await this.database.client.accessKey.findMany({ where: { projectID: project.id } });
+                const userCount = await database.client.count({ where: { projectID: project.id! }});
+                const keys = await database.accessKey.findMany({ where: { projectID: project.id } });
 
                 init.push({ ...project, keys, userCount: userCount! });
             }
@@ -59,7 +56,9 @@ class DeveloperModel{
 
     async all(data: { admin: Credential }): Promise<Array<Credential & { projects: Project[] }>>{
         try{
-            const developers = await this.database.client.credential.findMany({
+            const database = await DBManager.instance();
+
+            const developers = await database.credential.findMany({
                 where: { adminID: data.admin.id }, 
                 select: { id: true, name: true, surname: true, email: true, username: true }
             });

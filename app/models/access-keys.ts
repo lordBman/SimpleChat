@@ -1,15 +1,14 @@
 import { DBManager, Err } from "../config";
-import Database from "../config/database";
 import { HttpStatusCode } from "axios";
 import { uuid } from "../utils";
 import { AccessKey } from "@simplechat/shared";
 
 class AccessKeyModel{
-    database: Database = DBManager.instance();
-
     async get(key: string): Promise<AccessKey>{
         try{
-            const accessKey = await this.database.client.accessKey.findUniqueOrThrow({
+            const database = await DBManager.instance();
+
+            const accessKey = await database.accessKey.findUniqueOrThrow({
                 where: { key }, include: { project: { include: { 
                     owner: { select: { id: true, name: true, surname: true, username: true, email: true } }
                 } } }
@@ -23,7 +22,9 @@ class AccessKeyModel{
 
     async all(projectID: string): Promise<AccessKey[]>{
         try{
-            const accessKey = await this.database.client.accessKey.findMany({
+            const database = await DBManager.instance();
+
+            const accessKey = await database.accessKey.findMany({
                 where: { projectID: projectID }
             });
 
@@ -35,7 +36,9 @@ class AccessKeyModel{
 
     async add(data: { name: string, projectID: string }): Promise<AccessKey>{
         try{
-            const accessKey = await this.database.client.accessKey.create({
+            const database = await DBManager.instance();
+
+            const accessKey = await database.accessKey.create({
                 data: { id: uuid(), key: uuid(), name: data.name,  projectID: data.projectID }
             });
 
@@ -47,7 +50,9 @@ class AccessKeyModel{
 
     async rename(data: { accessID: string, name: string }): Promise<string>{
         try{
-            await this.database.client.accessKey.update({
+            const database = await DBManager.instance();
+
+            await database.accessKey.update({
                 where : { id: data.accessID }, data: { name: data.name }
             });
 
@@ -59,7 +64,9 @@ class AccessKeyModel{
 
     async activate(data: { accessID: string }): Promise<string>{
         try{
-            await this.database.client.accessKey.update({
+            const database = await DBManager.instance();
+
+            await database.accessKey.update({
                 where : { id: data.accessID }, data: { enabled: true }
             });
 
@@ -71,7 +78,9 @@ class AccessKeyModel{
 
     async deactivate(data: { accessID: string }): Promise<string>{
         try{
-            await this.database.client.accessKey.update({
+            const database = await DBManager.instance();
+
+            await database.accessKey.update({
                 where : { id: data.accessID }, data: { enabled: false }
             });
 
@@ -83,7 +92,9 @@ class AccessKeyModel{
 
     async delete(data: { accessID: string }): Promise<string>{
         try{
-            await this.database.client.accessKey.delete({
+            const database = await DBManager.instance();
+            
+            await database.accessKey.delete({
                 where : { id: data.accessID }
             });
 

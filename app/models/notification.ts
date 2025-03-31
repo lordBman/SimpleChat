@@ -1,17 +1,13 @@
 import { DBManager, Err } from "../config";
-import Database from "../config/database";
-import { Notification, Credential } from "@prisma/client";
+import { Notification, Credential } from "@simplechat/shared";
 import { HttpStatusCode } from "axios";
 
 class NotificationModel{
-    database: Database;
-    constructor(){
-        this.database = DBManager.instance();
-    }
-
     async seen(data: { credentail: Credential, notificationID: number }): Promise<Notification>{
         try{
-            const notification = await this.database.client.notification.update({ 
+            const database = await DBManager.instance();
+
+            const notification = await database.notification.update({ 
                 where: {id: data.notificationID,  recieverID: data.credentail.id },
                 data: { received: true },
             });

@@ -4,10 +4,12 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { BottomNavigation, DashBoard as DashBoardView, ErrorPage, Loading, MobileHeader } from "../conponents";
 import Options from "../conponents/dashboard/menu/options";
 import { useMemo, useContext } from "react";
-import { BrowserRouter, useHistory, useLocation } from "react-router-dom";
+import { useHistory, useLocation } from "react-router";
+import { BrowserRouter } from "react-router-dom";
 import { ToolBarItem } from "../conponents/dashboard/tool-bar";
 import { SimpleChatProvider } from "simplechat_provider";
 import AppProviderWraper, { AppContext, AppContextType } from "../providers/app-provider";
+import React from "react";
 
 
 const App = () =>{

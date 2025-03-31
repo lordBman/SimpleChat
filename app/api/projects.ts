@@ -12,15 +12,18 @@ projectRouter.post("/", async(req, res) =>{
             const model = new ProjectModel();
             const response = await model.create(req.body);
                 
-            return res.status(HttpStatusCode.Created).send({ ...response, token: req.cookies.token });
+            res.status(HttpStatusCode.Created).send({ ...response, token: req.cookies.token });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating project" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating project" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
 });
 
@@ -29,14 +32,16 @@ projectRouter.get("/", async(req, res) =>{
         const model = new ProjectModel();
         const response = await model.all(req.body);
             
-        return res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
+        res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
     }catch(error){
         jetLogger.err(error);
         if(error instanceof Err){
             const err = error as Err;
-            return res.status(err.code).send({ message: err.message });
+            
+            res.status(err.code).send({ message: err.message });
+        }else{
+            res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when getting all projects" });
         }
-        return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when getting all projects" });
     }
 });
 
@@ -46,17 +51,20 @@ projectRouter.get("/:id", async(req, res) =>{
             const model = new ProjectModel();
             const response = await model.get({ ...req.body.credential, projectID: req.body.id ?? req.query.id });
                 
-            return res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
+            res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when getting project details" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when getting project details" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 export default projectRouter;

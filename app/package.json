@@ -18,6 +18,7 @@
     "bun-types": "latest",
     "esbuild": "^0.25.1",
     "esbuild-sass-plugin": "^3.3.1",
+    "@types/react-router-dom": "^5.3.3",
     "prisma": "^6.5.0"
   },
   "peerDependencies": {
@@ -38,6 +39,7 @@
     "pg": "^8.14.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "react-router-dom": "^5.0.0",
     "ts-loader": "^9.5.2"
   }
 }

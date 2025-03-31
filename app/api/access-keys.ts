@@ -6,23 +6,25 @@ import jetLogger from "jet-logger";
 
 const accessKeyRouter = express.Router();
 
-accessKeyRouter.post("/", async(req: Request, res: Response) =>{
+accessKeyRouter.post("/", async(req , res) =>{
     if(req.body.name && req.body.projectID){
         try{
             const model = new AccessKeyModel();
             const response = await model.add(req.body);
             
-            return res.status(HttpStatusCode.Created).send(response);
+            res.status(HttpStatusCode.Created).send(response);
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating access key" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating access key" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send("invalid request to server");
     }
-    return res.status(HttpStatusCode.BadRequest).send("invalid request to server");
 });
 
 accessKeyRouter.patch("/", async(req, res) =>{
@@ -31,17 +33,19 @@ accessKeyRouter.patch("/", async(req, res) =>{
             const model = new AccessKeyModel();
             const response = await model.rename(req.body);
 
-            return res.status(HttpStatusCode.Accepted).send({ message: response });
+            res.status(HttpStatusCode.Accepted).send({ message: response });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when renaming access key" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when renaming access key" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send("invalid request to server");
     }
-    return res.status(HttpStatusCode.BadRequest).send("invalid request to server");
 });
 
 accessKeyRouter.patch("/enable", async(req, res) =>{
@@ -50,17 +54,19 @@ accessKeyRouter.patch("/enable", async(req, res) =>{
             const model = new AccessKeyModel();
             const response = await model.activate(req.body);
             
-            return res.status(HttpStatusCode.Accepted).send({ message: response });
+            res.status(HttpStatusCode.Accepted).send({ message: response });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when enabling access key" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when enabling access key" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send("invalid request to server");
     }
-    return res.status(HttpStatusCode.BadRequest).send("invalid request to server");
 });
 
 accessKeyRouter.patch("/disable", async(req, res) =>{
@@ -69,17 +75,19 @@ accessKeyRouter.patch("/disable", async(req, res) =>{
             const model = new AccessKeyModel();
             const response = await model.deactivate(req.body);
 
-            return res.status(HttpStatusCode.Accepted).send({ message: response });
+            res.status(HttpStatusCode.Accepted).send({ message: response });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when disabling access key" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when disabling access key" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send("invalid request to server");
     }
-    return res.status(HttpStatusCode.BadRequest).send("invalid request to server");
 });
 
 accessKeyRouter.delete("/", async(req, res) =>{
@@ -88,17 +96,19 @@ accessKeyRouter.delete("/", async(req, res) =>{
             const model = new AccessKeyModel();
             const response = await model.delete(req.body);
             
-            return res.status(HttpStatusCode.Ok).send({ message: response });
+            res.status(HttpStatusCode.Ok).send({ message: response });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when deleting access key" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when deleting access key" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send("invalid request to server");
     }
-    return res.status(HttpStatusCode.BadRequest).send("invalid request to server");
 });
 
 export default accessKeyRouter;

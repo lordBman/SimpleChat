@@ -1,6 +1,7 @@
 import { Route, Switch } from "react-router-dom";
 import AllDevelpoers from "./all";
 import DeveloperDetails from "./details";
+import React from "react";
 
 const Developers = () =>{
     return (

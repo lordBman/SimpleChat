@@ -12,7 +12,7 @@
     "strict": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx",
+    "jsx": "react",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
@@ -26,5 +26,4 @@
     "removeComments": true,
     "preserveValueImports": false
   },
-  "include": [ "./pages" ]
 }

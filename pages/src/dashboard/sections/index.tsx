@@ -4,6 +4,7 @@ import Groups from "./connections";
 import Info from "./info";
 import Settings from "./settings";
 import Connections from "./connections";
+import React from "react";
 
 const Sections = () =>{
     return (

@@ -1,3 +1,4 @@
+import React from "react";
 import Header from "./header";
 import About from "./about";
 import Features from "./features";
@@ -13,7 +14,7 @@ const Homepage  = () =>{
         <QueryClientProvider client={queryClient}>
             <Header />
             <div id="content-container">
-                <section id="about">
+                <section id="about" style={{ backgroundImage: "url('/assets/images/igor-miske-JVSgcV8_vb4-unsplash.jpg')" }}>
                     <About/>
                 </section>
                 <section id="features">

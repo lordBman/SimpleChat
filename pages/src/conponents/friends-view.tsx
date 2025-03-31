@@ -1,21 +1,18 @@
 import React, { useContext, useState } from "react";
 import { CircleLoading } from ".";
-import { Friend, Credential } from "@prisma/client";
+import { Friend, Credential } from "@simplechat/shared";
 import { AppContext, AppContextType } from "../providers/app-provider";
-import { FriendsContext, FriendsContextType } from "../providers/friends-provider";
-import { ChatContext, ChatContextType } from "../providers/chats-provider";
 import { useMutation } from "react-query";
 import { ProjectKey, axiosInstance } from "../utils";
-import { FriendResponse } from "../responses";
+import { useFriendsContext } from "simplechat_provider/src/contexts";
 
 interface FriendResultViewProps{
     result: { user: Credential, friend?: Friend }
 }
 
 const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
-    const {user} = useContext(AppContext) as AppContextType;
-    const { refreshFriends } = useContext(FriendsContext) as FriendsContextType;
-    const { makeCurrent } = useContext(ChatContext) as ChatContextType;
+    const {user, makeCurrent } = useContext(AppContext) as AppContextType;
+    const { refreshFriends } = useFriendsContext();
 
     const [ state, setState ] = useState(result);
 
@@ -55,10 +52,14 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
     let accepted = state.friend && state.friend.accepted;
 
     let loading = requestMutation.isLoading || acceptMutation.isLoading || cancelMutation.isLoading;
-    let requesting = !accepted && state.friend && state.friend.acceptorID === user?.id;
-    let requested = !accepted && state.friend && state.friend.requesterID === user?.id;
+    let requesting = !accepted && state.friend && state.friend.acceptor.id === user?.id;
+    let requested = !accepted && state.friend && state.friend.requester.id === user?.id;
 
-    const message = () => accepted && makeCurrent(state.friend);
+    const message = () => {
+        if(accepted && state.friend){
+            makeCurrent(state.friend)
+        }
+    }
 
     return (
         <div onClick={message} className="friends-search-result-item-container">
@@ -84,22 +85,21 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 }
 
 interface FriendViewProps{
-    friend: FriendResponse,
+    friend: Friend,
 } 
 
 const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{
-    const { user} = useContext(AppContext) as AppContextType;
-    const { cancel, accept } = useContext(FriendsContext) as FriendsContextType;
-    const { makeCurrent } = useContext(ChatContext) as ChatContextType;
+    const { user, makeCurrent} = useContext(AppContext) as AppContextType;
+    const { cancel, accept } = useFriendsContext();
 
     const acceptRequest = () => accept(friend.id);
     const cancelRequest = () => cancel(friend.id);
 
     let loading = false;
-    let requesting = !friend.accepted && friend.acceptorID === user?.id;
-    let requested = !friend.accepted && friend.requesterID === user?.id;
+    let requesting = !friend.accepted && friend.acceptor.id === user?.id;
+    let requested = !friend.accepted && friend.requester.id === user?.id;
 
-    const init = (friend.requesterID === user?.id ? friend.acceptor : friend.requester)!;
+    const init = (friend.requester.id === user?.id ? friend.acceptor : friend.requester)!;
 
     const message = () => friend.accepted && makeCurrent(friend);
 

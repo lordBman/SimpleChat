@@ -1,17 +1,13 @@
 import { HttpStatusCode } from "axios";
 import { DBManager, Err } from "../config";
-import Database from "../config/database";
 import { Chat, Notification, Credential } from "@simplechat/shared/models";
 
 class ChatModel {
-    database: Database;
-    constructor(){
-        this.database = DBManager.instance();
-    }
-
     async create(data: { credential: Credential, message: string, friendID?: string, groupID?:string }): Promise<Chat>{
         try{
-            const chat = await this.database.client.chat.create({ 
+            const database = await DBManager.instance();
+
+            const chat = await database.chat.create({ 
                 data: { senderID: data.credential.id, message: data.message, ownerID: (data.groupID || data.friendID)!, type: (data.groupID ? "Group" : "Friends") },
                 include: {
                     sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } },
@@ -19,10 +15,10 @@ class ChatModel {
             });
 
             if(data.groupID){
-                const members = await this.database.client.member.findMany({ where:{ groupID: data.groupID }, include: { group: true } });
+                const members = await database.member.findMany({ where:{ groupID: data.groupID }, include: { group: true } });
                 members.forEach(async  (member)=>{
                     if(data.credential.id !== member.credentialID){
-                        await this.database.client.notification.create({
+                        await database.notification.create({
                             data: { 
                                 groupID: data.groupID, recieverID: member.credentialID,
                                 alert: `${data.credential.name} drop a messge in the ${member.group.name} group`, message: data.message
@@ -39,7 +35,9 @@ class ChatModel {
 
     async reply(data: { credential: Credential, message: string, chatID: string, friendID?: string, groupID?: string }): Promise<[Chat, Notification]>{
         try{
-            const chat = await this.database.client.chat.create({
+            const database = await DBManager.instance();
+
+            const chat = await database.chat.create({
                 data: { message: data.message, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!, type: (data.groupID ? "Group" : "Friends"), referenceID: data.chatID },
                 include: {
                     sender: { include: { credential: { select: { id: true, name: true, surname: true, email: true, username: true } } } },
@@ -49,10 +47,10 @@ class ChatModel {
             });
 
             if(data.groupID){
-                const members = await this.database.client.member.findMany({ where:{ groupID: data.groupID }, include: { group: true } });
+                const members = await database.member.findMany({ where:{ groupID: data.groupID }, include: { group: true } });
                 members.forEach(async  (member)=>{
                     if(data.credential.id !== member.credentialID){
-                        await this.database.client.notification.create({
+                        await database.notification.create({
                             data: { groupID: data.groupID, recieverID: member.credentialID,
                                 alert: `${data.credential.name} replied to ${chat.reference?.sender.credential.name} message in the ${member.group.name} group`,
                                 message: data.message
@@ -62,7 +60,7 @@ class ChatModel {
                 });
             }
 
-            const notification = await this.database.client.notification.create({
+            const notification = await database.notification.create({
                 data: { 
                     recieverID: chat.reference?.sender.credentialID!, alert: `${data.credential.name} replied to your message`, message: data.message
                 }
@@ -80,7 +78,9 @@ class ChatModel {
 
     async update(data: { credential: Credential, message: string, chatID: string, friendID?: string, groupID?: string }): Promise<Chat>{
         try{
-            const chat = await this.database.client.chat.update({
+            const database = await DBManager.instance();
+
+            const chat = await database.chat.update({
                 where: { id: data.chatID, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)! },
                 data: { message: data.message },
                 include: {
@@ -90,7 +90,7 @@ class ChatModel {
                 }
             });
             if(data.friendID){
-                await this.database.client.notification.create({
+                await database.notification.create({
                     data: { 
                         recieverID: chat.reference?.sender.credentialID!,
                         alert: `${data.credential.name} edited a message`,
@@ -100,10 +100,10 @@ class ChatModel {
             }
 
             if(data.groupID){
-                const members = await this.database.client.member.findMany({ where:{ groupID: data.groupID }, include: { group: true } });
+                const members = await database.member.findMany({ where:{ groupID: data.groupID }, include: { group: true } });
                 members.forEach(async  (member)=>{
                     if(data.credential.id !== member.credentialID){
-                        await this.database.client.notification.create({
+                        await database.notification.create({
                             data: { 
                                 groupID: data.groupID, recieverID: member.credentialID,
                                 alert: `${data.credential.name} updated a message in the ${member.group.name} group`,
@@ -123,7 +123,9 @@ class ChatModel {
 
     async seen(data: { credential: Credential, chatID: string, friendID?: string, groupID?: string }): Promise<Chat>{
         try{
-            const chat = await this.database.client.chat.update({
+            const database = await DBManager.instance();
+
+            const chat = await database.chat.update({
                 where: { id: data.chatID, senderID: data.credential.id, ownerID: (data.groupID || data.friendID)!  },
                 data: { delivered: true },
                 include: {
@@ -141,7 +143,9 @@ class ChatModel {
 
     async delete(data: { credential: Credential, chatID: string }): Promise<string>{
         try{
-            await this.database.client.chat.delete({
+            const database = await DBManager.instance();
+            
+            await database.chat.delete({
                 where: { id: data.chatID, senderID: data.credential.id, },
             });
             return "chat deleting sucessful";

@@ -1,15 +1,15 @@
-import React, { useContext } from "react";
-import { ChatContext, ChatContextType } from "../providers/chats-provider";
-import { MembersContext, MembersContextType } from "../providers/members-provider";
-import { GroupResponse, MemberResponse } from "../responses";
+import { Group, Member } from "@simplechat/shared";
+import React from "react";
+import { useMembersContext } from "simplechat_provider/src/contexts";
+import { useAppContext } from "../providers/app-provider";
 
 export interface MemberViewProps{
-    member: MemberResponse
+    member: Member
 }
 
 const MemberView: React.FC<MemberViewProps> = ({ member }) =>{
-    const { refreshMembers } = useContext(MembersContext) as MembersContextType;
-    const { makeCurrent } = useContext(ChatContext) as ChatContextType;
+    const { refreshMembers } = useMembersContext();
+    const { makeCurrent } = useAppContext();
 
     return (
         <div>{member.group.name}</div>
@@ -17,11 +17,11 @@ const MemberView: React.FC<MemberViewProps> = ({ member }) =>{
 }
 
 export interface MemberResultViewProps{ 
-    group: GroupResponse, member?: MemberResponse 
+    group: Group, member?: Member 
 }
 const MemberResultView: React.FC<MemberResultViewProps> = ({ group, member }) =>{
-    const { refreshMembers } = useContext(MembersContext) as MembersContextType;
-    const { makeCurrent } = useContext(ChatContext) as ChatContextType;
+    const { refreshMembers } = useMembersContext();
+    const { makeCurrent } = useAppContext();
 
     return (
         <div>{group.name}</div>

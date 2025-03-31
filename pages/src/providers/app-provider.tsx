@@ -50,7 +50,7 @@ interface ProviderWraperProps extends React.PropsWithChildren{
     Error: React.FC<React.PropsWithChildren>
 }
 
-const AppProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading, Error }) =>{
+const ProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading, Error }) =>{
     const app = React.useContext(AppContext) as AppContextType;
     return (
         <>
@@ -58,6 +58,14 @@ const AppProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading, Er
             { !app.loading && app.isError && <Error /> }
             { !app.loading && !app.isError && <AppProvider>{children}</AppProvider> }
         </>
+    );
+}
+
+const AppProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading, Error }) =>{
+    return (
+        <AppProvider>
+            <ProviderWraper children={children} Loading={Loading} Error={Error} />
+        </AppProvider>
     );
 }
 

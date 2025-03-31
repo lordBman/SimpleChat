@@ -14,17 +14,20 @@ friendRouter.get("/search:query", async(req, res)=>{
             const model = new FriendModel();
             const response = await model.find({ ...req.body, query });
             
-            return res.status(HttpStatusCode.Ok).send(response);
+            res.status(HttpStatusCode.Ok).send(response);
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while searching for users" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while searching for users" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 friendRouter.post("/cancel", async(req, res)=>{
@@ -33,17 +36,20 @@ friendRouter.post("/cancel", async(req, res)=>{
             const model = new FriendModel();
             const response = await model.reject(req.body);
             
-            return res.status(HttpStatusCode.Ok).send({ message: response });
+            res.status(HttpStatusCode.Ok).send({ message: response });
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while canceling friend request" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while canceling friend request" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 friendRouter.patch("/accept", async(req, res)=>{
@@ -52,17 +58,20 @@ friendRouter.patch("/accept", async(req, res)=>{
             const model = new FriendModel();
             const response = await model.accept({ ...req.body, id: req.body.id ?? req.query.id });
             
-            return res.status(HttpStatusCode.Ok).send(response );
+            res.status(HttpStatusCode.Ok).send(response );
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while accepting friend request" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while accepting friend request" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 friendRouter.patch("/reject", async(req, res)=>{
@@ -71,17 +80,20 @@ friendRouter.patch("/reject", async(req, res)=>{
             const model = new FriendModel();
             const response = await model.reject({ ...req.body, id: req.body.id ?? req.query.id });
             
-            return res.status(HttpStatusCode.Ok).send(response );
+            res.status(HttpStatusCode.Ok).send(response );
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while rejecting friend request" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while rejecting friend request" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 friendRouter.post("/", async(req, res)=>{
@@ -90,17 +102,20 @@ friendRouter.post("/", async(req, res)=>{
             const model = new FriendModel();
             const response = await model.request(req.body);
 
-            return res.status(HttpStatusCode.Created).send(response);
+            res.status(HttpStatusCode.Created).send(response);
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while sending friend request" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while sending friend request" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 friendRouter.get("/", async(req, res)=>{
@@ -108,14 +123,16 @@ friendRouter.get("/", async(req, res)=>{
         const model = new FriendModel();
         const response = await model.all(req.body);
 
-        return res.status(HttpStatusCode.Ok).send(response);
+        res.status(HttpStatusCode.Ok).send(response);
     }catch(error){
         jetLogger.err(error);
         if(error instanceof Err){
             const err = error as Err;
-            return res.status(err.code).send({ message: err.message });
+            
+            res.status(err.code).send({ message: err.message });
+        }else{
+            res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while getting list of friends" });
         }
-        return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while getting list of friends" });
     }
 });
 

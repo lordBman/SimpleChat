@@ -108,6 +108,9 @@ model Organization {
    friends          Friend[]
    groups           Group[]
 
+   isDeleted         Boolean               @default(false)
+   deleted           Deleted?
+
    @@unique([name, projectID])
 }
 
@@ -232,6 +235,7 @@ enum ResourceType{
     Group
     Chat
     Friend
+    Organization
 }
 
 model Deleted{
@@ -242,6 +246,7 @@ model Deleted{
     friend              Friend?       @relation(fields: [resourceID], references: [id], map: "friend_fk", onDelete: Cascade)
     group               Group?        @relation(fields: [resourceID], references: [id], map: "group_fk", onDelete: Cascade)
     chat                Chat?         @relation(fields: [resourceID], references: [id], map: "chat_fk", onDelete: Cascade)
-    project             Project?   @relation(fields: [resourceID], references: [id], map: "project_fk", onDelete: Cascade)
+    project             Project?      @relation(fields: [resourceID], references: [id], map: "project_fk", onDelete: Cascade)
+    organization        Organization? @relation(fields: [resourceID], references: [id], map: "organization_fk", onDelete: Cascade)
     type                ResourceType
 }

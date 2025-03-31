@@ -1,8 +1,9 @@
 import Chat from "./chat";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import Home from "./home";
 import Projects from "./projects";
 import Developers from "./developers";
+import React from "react";
 
 const Main = () =>{
     const location = useLocation();

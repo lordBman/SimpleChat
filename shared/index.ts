@@ -26,7 +26,7 @@ export type SimpleChatState = Credential & {
 
 export interface UserState extends Credential { 
     token: string, 
-    projects : Array<Project & { keys: AccessKey[], userCount: number }>,
+    projects : Array<Project & { keys?: AccessKey[], userCount: number }>,
     developers?: Credential[] 
 }
 

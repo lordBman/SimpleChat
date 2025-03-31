@@ -9,7 +9,7 @@ import authRouter, { cookieResponse } from "./auth";
 import accessKeyRouter from "./access-keys";
 import { AdminModel, OrganizationModel } from "../models";
 import { Err, SeedResult } from "../config";
-import { Credential, Friend, Group, Member, Project } from "@prisma/client";
+import { Credential, Friend, Group, Member, Project } from "@simplechat/shared";
 import ClientModel from "../models/clients";
 import DeveloperModel from "../models/developer";
 import projectRouter from "./projects";
@@ -24,26 +24,28 @@ export const KeyAuthenication = async (req: Request, res: Response, next: NextFu
             console.log(`${req.body.key ?? req.query.key} - ${JSON.stringify(accessKey)}`);
             if(accessKey.enabled){            
                 req.body.project = accessKey.project;
-                req.body.owner = accessKey.project.owner;
+                req.body.owner = accessKey.project?.owner!;
                 if(req.body.organization || req.query.organization){
                     const organizationName = req.body.organization ?? req.query.organization;
-                    req.body.organization = await new OrganizationModel().get({ project: accessKey.project, name: organizationName });
+                    req.body.organization = await new OrganizationModel().get({ project: accessKey.project!, name: organizationName });
                 }
-                return next()
+                next()
             }else{
-                return res.status(HttpStatusCode.Unauthorized).send({message: "API Access key found but has been deactivated" });
+                res.status(HttpStatusCode.Unauthorized).send({message: "API Access key found but has been deactivated" });
             }
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const init = error as Err;
-                return res.send(init.code).send({ message: init.message });
+                
+                res.send(init.code).send({ message: init.message });
             }else{
-                return res.status(HttpStatusCode.InternalServerError).send({message: "error encountered when authenticating acess key"});
+                res.status(HttpStatusCode.InternalServerError).send({message: "error encountered when authenticating acess key"});
             }
         }
+    }else{
+        res.status(HttpStatusCode.Unauthorized).send({message: "access key not found expired"});
     }
-    return res.status(HttpStatusCode.Unauthorized).send({message: "access key not found expired"});
 };
 
 export const APIAuthenication = async (req: Request, res: Response, next: NextFunction) => {
@@ -51,17 +53,18 @@ export const APIAuthenication = async (req: Request, res: Response, next: NextFu
         try{
             req.body.credential = (jwt.verify(req.cookies.token, process.env.SECRET || "test" ) as any).credential;
     
-            return next()
+            next()
         }catch(error){
             jetLogger.err(error);
             if(error instanceof jwt.TokenExpiredError){
-                return res.status(HttpStatusCode.Unauthorized).send({message: "access token expired, try refreshing or login again"});
+                res.status(HttpStatusCode.Unauthorized).send({message: "access token expired, try refreshing or login again"});
             }else{
-                return res.status(HttpStatusCode.InternalServerError).send({message: "error encountered when authenticating user"});
+                res.status(HttpStatusCode.InternalServerError).send({message: "error encountered when authenticating user"});
             }
         }
+    }else{
+        res.status(HttpStatusCode.Unauthorized).send({message: "access token expired, try refreshing or login again"});
     }
-    return res.status(HttpStatusCode.Unauthorized).send({message: "access token expired, try refreshing or login again"});
 };
 
 export const AdminFilter = async (req: Request, res: Response, next: NextFunction) => {
@@ -71,13 +74,14 @@ export const AdminFilter = async (req: Request, res: Response, next: NextFunctio
 
         const seedResult = SeedResult.instance();
 
-        if(seedResult.projectID === project.id && project.ownerID === credential.id){
-            return next()
+        if(seedResult.projectID === project.id && project.owner.id === credential.id){
+            next()
         }else{
-            return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have addministrative access" });
+            res.status(HttpStatusCode.Unauthorized).send({message: "You don't have addministrative access" });
         }
+    }else{
+        res.status(HttpStatusCode.Unauthorized).send({message: "You don't have permission to access this route" });
     }
-    return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have permission to access this route" });
 };
 
 export const DeveloperFilter = async (req: Request, res: Response, next: NextFunction) => {
@@ -86,12 +90,13 @@ export const DeveloperFilter = async (req: Request, res: Response, next: NextFun
 
         const seedResult = SeedResult.instance();
         if(seedResult.projectID === project.id){
-            return next()
+            next()
         }else{
-            return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have developer access" });
+            res.status(HttpStatusCode.Unauthorized).send({message: "You don't have developer access" });
         }
+    }else{
+        res.status(HttpStatusCode.Unauthorized).send({message: "You don't have permission to access this route" });
     }
-    return res.status(HttpStatusCode.Unauthorized).send({message: "You don't have permission to access this route" });
 };
 
 const api = express.Router();
@@ -117,19 +122,22 @@ api.post("/connect", KeyAuthenication, async(req, res) =>{
                 
                 const init = await model.connect(req.body);
     
-                return cookieResponse(res, init);
+                cookieResponse(res, init);
             }catch(error){
                 jetLogger.err(error);
                 if(error instanceof Err){
                     const err = error as Err;
-                    return res.status(err.code).send({ message: err.message });
+                    res.status(err.code).send({ message: err.message });
+                }else{
+                    res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
                 }
-                return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
             }
+        }else{
+            res.status(HttpStatusCode.BadRequest).send({message: "project token mismatch"});
         }
-        return res.status(HttpStatusCode.BadRequest).send({message: "project token mismatch"});
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
@@ -145,14 +153,15 @@ api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
         }
         const init = await model.get(req.body);
 
-        return res.status(HttpStatusCode.Ok).send({ ...init, token: req.cookies.token });
+        res.status(HttpStatusCode.Ok).send({ ...init, token: req.cookies.token });
     }catch(error){
         jetLogger.err(error);
         if(error instanceof Err){
             const err = error as Err;
-            return res.status(err.code).send({ message: err.message });
+            res.status(err.code).send({ message: err.message });
+        }else{
+            res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
         }
-        return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
     }
 });
 
@@ -164,7 +173,7 @@ api.get("/search:query", KeyAuthenication, APIAuthenication, async(req, res)=>{
             const friendsResponse = await new FriendModel().find({ ...req.body, query });
             const groupResponse = await new GroupModel().find({ ...req.body, query });
 
-            const getName = (result: { user: Partial<Credential>, friend?: Partial<Friend> } | { group: Group, member?: Member }):string =>{
+            const getName = (result: { user: Credential, friend?: Friend } | { group: Group, member?: Member }):string =>{
                 if('user' in result){
                     const init = result as { user: Credential, friend?: Friend };
 
@@ -183,17 +192,20 @@ api.get("/search:query", KeyAuthenication, APIAuthenication, async(req, res)=>{
                 return aName.localeCompare(bName);
             });
             
-            return res.status(HttpStatusCode.Ok).send(response);
+            res.status(HttpStatusCode.Ok).send(response);
         }catch(error){
             jetLogger.err(error);
             if(error instanceof Err){
                 const err = error as Err;
-                return res.status(err.code).send({ message: err.message });
+                
+                res.status(err.code).send({ message: err.message });
+            }else{
+                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while searching for users" });
             }
-            return res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred while searching for users" });
         }
+    }else{
+        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
-    return res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
 });
 
 export default api;

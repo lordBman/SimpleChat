@@ -1,17 +1,14 @@
-import { Organization, Project } from "@prisma/client";
+import { Organization, Project } from "@simplechat/shared";
 import { DBManager, Err } from "../config";
-import Database from "../config/database";
 import { HttpStatusCode } from "axios";
+import { ResourceType } from "@prisma/client";
 
 class OrganizationModel{
-    database: Database;
-    constructor(){
-        this.database = DBManager.instance();
-    }
-
     async create(data: { project: Project, name: string }): Promise<Organization>{
+        const database = await DBManager.instance();
+        
         try{
-            const organization = await this.database.client.organization.create({ 
+            const organization = await database.organization.create({ 
                 data: { projectID: data.project.id, name: data.name }
             });
 
@@ -23,7 +20,9 @@ class OrganizationModel{
 
     async get(data: { project: Project, name: string }): Promise<Organization>{
         try{
-            const organization = await this.database.client.organization.findUniqueOrThrow({ 
+            const database = await DBManager.instance();
+
+            const organization = await database.organization.findUniqueOrThrow({ 
                 where: { name_projectID: { projectID: data.project.id, name: data.name } }
             });
 
@@ -35,7 +34,9 @@ class OrganizationModel{
 
     async all(data: { project: Project }): Promise<Organization[]>{
         try{
-            const organizations = await this.database.client.organization.findMany({ 
+            const database = await DBManager.instance();
+
+            const organizations = await database.organization.findMany({ 
                 where: { projectID: data.project.id }
             });
 
@@ -45,13 +46,18 @@ class OrganizationModel{
         }
     }
 
-    async delete(data: { project: Project, groupID: string }): Promise<string>{
+    async delete(data: { project: Project, groupID: string }): Promise<{organizationID: string, message: string}>{
         try{
-            const organizations = await this.database.client.organization.delete({ 
-                where: { projectID: data.project.id, id: data.groupID }
+            const database = await DBManager.instance();
+
+            const organization = await database.organization.update({ 
+                where: { projectID: data.project.id, id: data.groupID },
+                data: {  }
             });
 
-            return "organization deletion successful";
+            await database.deleted.create({ data: { resourceID: organization.id, type: ResourceType.Organization } });
+
+            return { organizationID: organization.id, message: "organization deletion successful" };
         }catch(error){
             throw new Err(HttpStatusCode.InternalServerError, error, "error encountered while delteting Organization");
         }

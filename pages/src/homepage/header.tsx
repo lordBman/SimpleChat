@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { axiosInstance, ProjectKey } from "../utils";
+import React from "react";
 
 const Header = (props:{active?: string}) =>{
     const [active, setActive] = useState(props.active || "about");

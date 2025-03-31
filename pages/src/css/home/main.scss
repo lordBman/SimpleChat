@@ -30,6 +30,7 @@ header{
 .title{
     display: flex;
     align-items: center;
+    flex-direction: row;
     gap: 10px;
     font-weight: 700;
     font-size: 30px;
@@ -37,12 +38,15 @@ header{
 }
 
 .title > span{
-    font-size: 46px;
+    font-size: 50px;
 }
 
 .options{
     display: flex;
+    flex: 1;
     align-items: stretch;
+    flex-direction: row;
+    padding-left: 20px;
 }
 
 .options > a, header > a{
@@ -79,6 +83,10 @@ header{
     border-color: var(--dark);
 }
 
+.options-icon{
+    justify-content: end;
+}
+
 .options-icon > a{
     width: 60px;
     gap: 10px;
@@ -94,7 +102,7 @@ section{
 }
 
 #about, #signin{
-    background-image: url("../../../assets/images/igor-miske-JVSgcV8_vb4-unsplash.jpg");
+    //background-image: url("../../../assets/images/igor-miske-JVSgcV8_vb4-unsplash.jpg");
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment:fixed;

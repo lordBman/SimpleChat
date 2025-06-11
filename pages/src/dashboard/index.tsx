@@ -39,7 +39,7 @@ const App = () =>{
     }, [location.pathname]);
     
     return (
-        <SimpleChatProvider developerConfig={{ accessToken: user?.token!, accessKey: "" }}>
+        <SimpleChatProvider developerConfig={{ token: user?.token!, accessKey: "" }}>
             <DashBoardView>
                 <DashBoardView.Menu initial={current} choose={chosen}>
                     <Options>

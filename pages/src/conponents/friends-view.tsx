@@ -3,7 +3,7 @@ import { CircleLoading } from ".";
 import { Friend, Credential } from "@simplechat/shared";
 import { AppContext, AppContextType } from "../providers/app-provider";
 import { useMutation } from "react-query";
-import { ProjectKey, axiosInstance } from "../utils";
+import { AccessKey, axiosInstance } from "../utils";
 import { useFriendsContext } from "simplechat_provider/src/contexts";
 
 interface FriendResultViewProps{
@@ -18,7 +18,7 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 
     const requestMutation = useMutation({
         mutationKey : ["friend_request"],
-        mutationFn: () => axiosInstance.post(`/friends`, { userID: state.user.id,  key: ProjectKey }),
+        mutationFn: () => axiosInstance.post(`/friends`, { userID: state.user.id,  key: AccessKey }),
         onSuccess: (data) => {
             refreshFriends();
             setState(init => { return {...init, friend: data.data } });
@@ -29,7 +29,7 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 
     const acceptMutation = useMutation({
         mutationKey: ["accept_request"],
-        mutationFn: () => axiosInstance.post(`/friends/accept`, { id: state.friend?.id, key: ProjectKey }),
+        mutationFn: () => axiosInstance.post(`/friends/accept`, { id: state.friend?.id, key: AccessKey }),
         onSuccess: (data) =>{
             refreshFriends();
             setState(init => { return {...init, friend: data.data } });
@@ -40,7 +40,7 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
     
     const cancelMutation = useMutation({
         mutationKey: ["cancel_request"],
-        mutationFn: () => axiosInstance.post(`/friends/cancel`, { id: state.friend?.id, key: ProjectKey }),
+        mutationFn: () => axiosInstance.post(`/friends/cancel`, { id: state.friend?.id, key: AccessKey }),
         onSuccess: (data) => {
             refreshFriends();
             setState(init => { return {...init, friend: undefined } });

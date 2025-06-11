@@ -10,13 +10,13 @@ export type SimpleChatClientConfig = {
     name: string,
     surname: string,
     accessKey: string,
-    token: string,
+    projectToken: string,
     organization?: string | null
 };
 
 export type SimpleChatDeveloperConfig = {
     accessKey: string,
-    accessToken: string
+    token: string
 };
 
 export type SimpleChatState = Credential & { 

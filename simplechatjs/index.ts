@@ -234,8 +234,8 @@ class SimpleChatClient{
     static async connect(config: SimpleChatClientConfig): Promise<SimpleChatClient>{
         try{
             const user = await axiosInstance.post(`/connect?key=${config.accessKey}`, config);
-            const response = await axiosInstance.get(`/?key=${config.accessKey}`);
-            const socket = io("/", { auth: { token: user.data?.token, access: "access-key",  key: config.accessKey } });
+            const response = await axiosInstance.get(`/client?key=${config.accessKey}`);
+            const socket = io("/", { auth: { token: user.data?.token, key: config.accessKey } });
             socket.on("connected", ()=>{
                 console.log(socket.connected);
             });
@@ -253,13 +253,13 @@ class SimpleChatClient{
     static async init(config: SimpleChatDeveloperConfig): Promise<SimpleChatClient>{
         try{
             axiosInstance.interceptors.request.use((init)=>{
-                init.headers.Cookie = `token=${config.accessToken}`;
+                init.headers.Cookie = `token=${config.token}`;
 
                 return init;
             })
             const user = await axiosInstance.get(`/?key=${config.accessKey}`);
             const response = await axiosInstance.get(`/?key=${config.accessKey}`);
-            const socket = io("/", { auth: { token: user.data?.token, access: "access-key",  key: config.accessKey } });
+            const socket = io("/", { auth: { token: user.data?.token, key: config.accessKey } });
             socket.on("connected", ()=>{
                 console.log(socket.connected);
             });

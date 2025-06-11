@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "react-query";
-import { axiosInstance, ProjectKey } from "../utils";
+import { axiosInstance, AccessKey } from "../utils";
 import React from "react";
 
 const Header = (props:{active?: string}) =>{
@@ -18,12 +18,12 @@ const Header = (props:{active?: string}) =>{
 
     const initQuery = useQuery({
         queryKey: ['user'],
-        queryFn: () => axiosInstance.get(`/?key=${ProjectKey}`),
+        queryFn: () => axiosInstance.get(`/?key=${AccessKey}`),
     });
 
     const logoutMutation = useMutation({
         mutationKey: ['user'],
-        mutationFn: () => axiosInstance.get(`/auth/logout?key=${ProjectKey}`),
+        mutationFn: () => axiosInstance.get(`/auth/logout?key=${AccessKey}`),
         onSuccess: () => {
             window.location.reload();
         },

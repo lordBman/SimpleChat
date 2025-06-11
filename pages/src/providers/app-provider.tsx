@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { Friend, Member, UserState } from '@simplechat/shared';
-import { ProjectKey, axiosInstance } from '../utils';
+import { AccessKey, axiosInstance } from '../utils';
 
 export type AppContextType = {
     user?: UserState
@@ -29,7 +29,7 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const initQuery = useQuery({
         queryKey:  ["data"],
-        queryFn: () => axiosInstance.get(`/?key=${ProjectKey}`),
+        queryFn: () => axiosInstance.get(`/?key=${AccessKey}`),
         onSuccess: (data) => {
             setState({ user: data.data, message: ""});  
         },

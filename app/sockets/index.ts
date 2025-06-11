@@ -11,37 +11,39 @@ import { Err } from "../config";
 
 const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | undefined)=>void)=>{
     try{
-        if(!socket.handshake.auth.token){
-            next(Error("access token not found, try sigining in agian"));
-        }
-        socket.handshake.auth.credential = (jwt.verify(socket.handshake.auth.token, process.env.SECRET || "test" ) as any).credential;
-
-        if(!socket.handshake.auth.key){
-            next(Error("API Access key not found"));
-        }
-
-        const accessKey = await new AccessKeyModel().get(socket.handshake.auth.key);
-        if(accessKey.enabled){
-            const token = socket.handshake.auth.token;
-            jetLogger.info(JSON.stringify(token));
-        
-            socket.handshake.auth.project = accessKey.project;
-            if(socket.handshake.auth.organization){
-                const organizationName = socket.handshake.auth.organization;
-                const organization = await new OrganizationModel().get({ project: accessKey.project, name: organizationName });
-                if(organization){
-                    socket.handshake.auth.organization = organization;
-                    return next();
-                }
-                return next(Error("Organization specified not found"));
+        if(!socket.handshake.auth.token && !socket.handshake.auth.key){
+            if(!socket.handshake.auth.token){
+                next(Error("access token not found, try sigining in agian"));
+            }else{
+                next(Error("API Access key not found"));
             }
-
-            next();
         }else{
-            next(Error("API Access key found but has been deactivated"));
+            socket.handshake.auth.credential = (jwt.verify(socket.handshake.auth.token, process.env.SECRET || "test" ) as any).credential;
+
+            const accessKey = await new AccessKeyModel().get(socket.handshake.auth.key);
+            if(accessKey.enabled){
+                const token = socket.handshake.auth.token;
+                jetLogger.info(JSON.stringify(token));
+            
+                socket.handshake.auth.project = accessKey.project;
+                if(socket.handshake.auth.organization){
+                    const organizationName = socket.handshake.auth.organization;
+                    const organization = await new OrganizationModel().get({ project: accessKey.project!, name: organizationName });
+                    if(organization){
+                        socket.handshake.auth.organization = organization;
+                        return next();
+                    }
+                    return next(Error("Organization specified not found"));
+                }
+
+                next();
+            }else{
+                next(Error("API Access key found but has been deactivated"));
+            }
         }
     }catch(error){
-        next(Error(error));
+        jetLogger.err(error);
+        next(Error("server error encountered when authenticating user"));
     }
 }
 

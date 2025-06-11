@@ -115,8 +115,8 @@ api.use("/friends", KeyAuthenication, APIAuthenication, friendRouter);
 
 api.use("/auth", KeyAuthenication, authRouter);
 api.post("/connect", KeyAuthenication, async(req, res) =>{
-    if(req.body.name && req.body.surname && (req.body.email || req.body.username) && req.body.password && req.body.token){
-        if(req.body.project.token === req.body.token){
+    if(req.body.name && req.body.surname && (req.body.email || req.body.username) && req.body.password && req.body.projectToken){
+        if(req.body.project.token === req.body.projectToken){
             try{
                 let model: ClientModel =  new ClientModel();
                 
@@ -142,15 +142,32 @@ api.post("/connect", KeyAuthenication, async(req, res) =>{
 
 api.get("/", KeyAuthenication, APIAuthenication, async(req, res) =>{
     try{
-        let model: ClientModel | DeveloperModel | AdminModel =  new ClientModel();
-        switch((req.body.credential as Credential).role){
-            case "Admin":
-                model = new AdminModel();
-                break;
-            case "Developer":
-                model = new DeveloperModel();
-                break;
+        let role = (req.body.credential as Credential).role;
+
+        if(!role || role === "Client"){
+            res.status(HttpStatusCode.Unauthorized).send({ message: "only developers and clients are authorized" });
+        }else{
+            let model: DeveloperModel | AdminModel = role === "Admin" ? new AdminModel() : new DeveloperModel();
+            
+            const init = await model.get(req.body);
+
+            res.status(HttpStatusCode.Ok).send({ ...init, token: req.cookies.token });
         }
+    }catch(error){
+        jetLogger.err(error);
+        if(error instanceof Err){
+            const err = error as Err;
+            res.status(err.code).send({ message: err.message });
+        }else{
+            res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
+        }
+    }
+});
+
+api.get("/client", KeyAuthenication, APIAuthenication, async(req, res) =>{
+    try{
+        let model: ClientModel =  new ClientModel();
+
         const init = await model.get(req.body);
 
         res.status(HttpStatusCode.Ok).send({ ...init, token: req.cookies.token });

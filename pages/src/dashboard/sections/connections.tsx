@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from "react";
 import { MemberResultView, MemberView } from "../../conponents/members-view";
 import { useMutation } from "react-query";
-import { ProjectKey, axiosInstance, getName } from "../../utils";
+import { AccessKey, axiosInstance, getName } from "../../utils";
 import { FriendResultView, FriendView } from "../../conponents";
 import { AppContext, AppContextType } from "../../providers/app-provider";
 
@@ -26,7 +26,7 @@ const Connections = () =>{
     
     const searchMutation = useMutation({
         mutationKey:  ["connections"],
-        mutationFn: (variables: string)=> axiosInstance.get(`/search?query=${variables}&key=${ProjectKey}`),
+        mutationFn: (variables: string)=> axiosInstance.get(`/search?query=${variables}&key=${AccessKey}`),
         onSuccess: (data) =>{
             setResults(data.data);
         },
@@ -42,7 +42,7 @@ const Connections = () =>{
 
     const createMutation = useMutation({
         mutationKey:  ["connections"],
-        mutationFn: (name: string)=> axiosInstance.post(`/groups/create`, { name, key: ProjectKey }),
+        mutationFn: (name: string)=> axiosInstance.post(`/groups/create`, { name, key: AccessKey }),
         onSuccess: (data) =>{
             setResults(data.data);
             close();

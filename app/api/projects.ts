@@ -1,70 +1,44 @@
-import express from "express";
-import { HttpStatusCode } from "axios";
+import Elysia, { t } from "elysia";
 import { Err } from "../config";
 import ProjectModel from "../models/projects";
 import jetLogger from "jet-logger";
+import { APIAuthenicationPlugin } from "./plugins";
 
-const projectRouter = express.Router();
+const projectRouter = new Elysia({ prefix: "/projects" }).decorate({ "projectModel": new ProjectModel() });
 
-projectRouter.post("/", async(req, res) =>{
-    if(req.body.name){
-        try{
-            const model = new ProjectModel();
-            const response = await model.create(req.body);
-                
-            res.status(HttpStatusCode.Created).send({ ...response, token: req.cookies.token });
-        }catch(error){
-            jetLogger.err(error);
-            if(error instanceof Err){
-                const err = error as Err;
-                res.status(err.code).send({ message: err.message });
-            }else{
-                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating project" });
-            }
-        }
-    }else{
-        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
-    }
-});
-
-projectRouter.get("/", async(req, res) =>{
+projectRouter.use(APIAuthenicationPlugin)
+.post("/", async({ body, projectModel, user, status }) =>{
     try{
-        const model = new ProjectModel();
-        const response = await model.all(req.body);
-            
-        res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
+        const response = await projectModel.create({ ...body, user: user! });
+        return status(201, response);
     }catch(error){
         jetLogger.err(error);
         if(error instanceof Err){
             const err = error as Err;
-            
-            res.status(err.code).send({ message: err.message });
+            return status(err.code, { message: err.message });
         }else{
-            res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when getting all projects" });
+            return status(503, { message: "an internal server error occurred when creating project" });
         }
     }
-});
+}, { body: t.Object({ name: t.String(), description: t.Optional(t.String()) }) })
 
-projectRouter.get("/:id", async(req, res) =>{
-    if(req.body.id ?? req.query.id){
-        try{
-            const model = new ProjectModel();
-            const response = await model.get({ ...req.body.credential, projectID: req.body.id ?? req.query.id });
-                
-            res.status(HttpStatusCode.Ok).send({ ...response, token: req.cookies.token });
-        }catch(error){
-            jetLogger.err(error);
-            if(error instanceof Err){
-                const err = error as Err;
-                
-                res.status(err.code).send({ message: err.message });
-            }else{
-                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when getting project details" });
-            }
+.get("/:id?", async({ body, params, user, projectModel, status }) =>{
+    try{
+        if(body.id ?? params.id){
+            const response = await projectModel.get({ user: user!, projectID: body.id ?? params.id! });
+            return status(200, response);
         }
-    }else{
-        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
+        const response = await projectModel.all({ user: user! }); 
+        return status(200, response);
+    }catch(error){
+        jetLogger.err(error);
+        if(error instanceof Err){
+            const err = error as Err;
+            return status(err.code, { message: err.message });
+        }else{
+            return status(503, { message: "an internal server error occurred when getting all projects" });
+        }
     }
-});
+}, { params: t.Object({ id: t.Optional(t.String()) }), body: t.Object({ id: t.Optional(t.String()) }) });
 
 export default projectRouter;

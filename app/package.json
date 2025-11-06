@@ -2,44 +2,36 @@
   "name": "simplechat",
   "module": "index.ts",
   "scripts": {
-    "dev": "bun compile & bun start",
+    "dev": "concurrently \"bun run compile\" \"bun run dbstudio\" \"bun run start\"",
     "compile": "bun ./esbuild.js",
     "start": "bun --watch run ./index.ts",
-    "migrate": "bun x prisma migrate dev --name init"
+    "migrate": "bun x prisma migrate dev --name init",
+    "dbstudio": "bun x prisma studio",
+    "generate": "bun x prisma generate"
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.8",
-    "@types/express": "^5.0.1",
-    "@types/jsonwebtoken": "8.5.1",
-    "@types/morgan": "^1.9.9",
-    "@types/node": "^22.13.11",
-    "@types/pg": "^8.11.11",
-    "@types/socket.io": "^3.0.2",
+    "@types/react-router-dom": "^5.3.3",
     "bun-types": "latest",
+    "concurrently": "^9.2.1",
     "esbuild": "^0.25.1",
     "esbuild-sass-plugin": "^3.3.1",
-    "@types/react-router-dom": "^5.3.3",
     "prisma": "^6.5.0"
   },
   "peerDependencies": {
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@simplechat/shared": "file:../shared",
-    "simplechat_provider": "file:../simplechat_provider",
-    "simplechat-pages": "file:../pages",
+    "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/jwt": "^1.4.0",
+    "@elysiajs/static": "^1.4.4",
+    "@elysiajs/stream": "^1.1.0",
     "@prisma/adapter-pg": "^6.5.0",
     "@prisma/client": "^6.5.0",
-    "axios": "^1.8.4",
-    "chokidar": "^4.0.3",
-    "cookie-parser": "^1.4.7",
-    "express": "^4.21.2",
+    "@simplechat/shared": "file:../shared",
+    "elysia": "^1.4.13",
     "jet-logger": "^2.0.1",
-    "jsonwebtoken": "^9.0.2",
-    "pg": "^8.14.1",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
     "react-router-dom": "^5.0.0",
+    "simplechat-pages": "file:../pages",
     "ts-loader": "^9.5.2"
   }
 }

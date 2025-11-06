@@ -1,11 +1,8 @@
 import ReactDOMServer from "react-dom/server";
-import express, { NextFunction, Response, Request } from "express";
-import jwt from "jsonwebtoken";
 import jetLogger from "jet-logger";
 import { Credential } from "@simplechat/shared";
 import { Signin, Docs, Homepage, DashBoard } from "simplechat-pages";
 import React from "react";
-
 
 const signinRenderer = (res: Response) =>{
     const root = ReactDOMServer.renderToString(<Signin />);

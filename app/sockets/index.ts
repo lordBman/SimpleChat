@@ -1,13 +1,18 @@
 import jetLogger from "jet-logger";
-import { ExtendedError, Namespace, Server, Socket } from "socket.io";
 import { ConnectedSockets } from "./utils";
-import FriendModel from "../models/friends";
-import jwt from "jsonwebtoken";
+import FriendModel from "../models/friends";;
 import chatsSocketPort from "./chats";
 import friendsSocketPort from "./friends";
 import AccessKeyModel from "../models/access-keys";
 import { OrganizationModel } from "../models";
 import { Err } from "../config";
+import Elysia from "elysia";
+import { APIAuthenicationPlugin, keyAuthenicationPlugin } from "../api/plugins";
+
+const sockets = new Elysia().use(keyAuthenicationPlugin).use(APIAuthenicationPlugin);
+sockets.ws("/ws",{
+    
+});
 
 const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | undefined)=>void)=>{
     try{
@@ -47,7 +52,7 @@ const socketMiddleware = async (socket: Socket, next: (err?: ExtendedError | und
     }
 }
 
-export default (io: Server) => {
+default (io: Server) => {
     const namespace: Namespace = io.of('/');
 
     namespace.use(socketMiddleware);

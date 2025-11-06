@@ -1,79 +1,99 @@
-import { HttpStatusCode } from "axios";
 import { DBManager, Err, SeedResult } from "../config";
-import { Organization, Project, Credential, UserState } from "@simplechat/shared";
-import {  AccessKey, Client } from "@simplechat/shared/models";
+import { Developer, Project, User, UserState } from "@simplechat/shared";
+import {  AccessKey, UserRoles } from "@simplechat/shared/models";
 import ProjectModel from "./projects";
-import ClientModel from "./clients";
 
 class DeveloperModel{
-    async create(data: { admin: Credential, project: Project, organization?: Organization, name: string, surname: string, email?: string, username?: string, password: string }): Promise<Client & { credential: Credential }>{
+    database = DBManager.instance();
+
+    async create(data: { name: string, surname: string, email?: string, username?: string, password: string }): Promise<User>{
         try{
-            const database = await DBManager.instance();
-
-            const client = await new ClientModel().create({ ...data, role: "Developer" });
-
-            await database.notification.create({
+            const details = await this.database.details.create({ data });
+            await this.database.credential.create({ data: { id: details.id, ...data } });
+            const user = await this.database.user.create({ data: { id: details.id } });
+            await this.database.notification.create({
                 data: { 
-                    recieverID: data.admin.id,
+                    recieverID: SeedResult.instance().adminID, nType: "User",
                     alert: `New developer named ${data.name}, say hi to him/her`
                 }
             });
-
-            return client;
+            return { ...user, details };
         }catch(error){
             if(error instanceof Err){
                 throw error;
             }
-            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when creating user");
+            throw new Err(503, error, "error encountered when creating user");
         }
     }
 
-    async get(data: { project: Project, organization?: Organization, credential: Credential }): Promise<Omit<UserState, "token">>{
+    async get(data: { user: User }): Promise<Omit<UserState, "token">>{
         try{
-            const database = await DBManager.instance();
-
-            const client = await new ClientModel().get(data);
-            const projects = await new ProjectModel().all({ credential: data.credential });
+            const projects = await new ProjectModel().all({ user: data.user });
 
             const init: Array<Project & { keys: AccessKey[], userCount: number }> = [];
             for(let index = 0; index < projects?.length!; index++){
                 const project = projects![index];
 
-                const userCount = await database.client.count({ where: { projectID: project.id! }});
-                const keys = await database.accessKey.findMany({ where: { projectID: project.id } });
+                const userCount = await this.database.client.count({ where: { projectID: project.id! }});
+                const keys = await this.database.accessKey.findMany({ where: { projectID: project.id } });
 
                 init.push({ ...project, keys, userCount: userCount! });
             }
 
-            return { ...data.credential, ...client, projects: init };
+            return { projects: init };
         }catch(error){
             if(error instanceof Err){
                 throw error;
             }
-            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when initialing user");
+            throw new Err(503, error, "error encountered when initialing user");
         }
     }
 
-    async all(data: { admin: Credential }): Promise<Array<Credential & { projects: Project[] }>>{
+    async all(data: { admin: User }): Promise<Developer[]>{
+        if(data.admin.role !== "Admin"){
+            throw new Err(403, "forbidden", "only admins can get developer lists");
+        }
+
         try{
-            const database = await DBManager.instance();
-
-            const developers = await database.credential.findMany({
+            const developers = await this.database.user.findMany({
                 where: { adminID: data.admin.id }, 
-                select: { id: true, name: true, surname: true, email: true, username: true }
+                include: { details: true }
+            }).then(async(users)=>{
+                const init: Developer[] = [];
+                for(let i = 0; i < users.length; i++){
+                    const user = users[i];
+                    const projects = await new ProjectModel().all({ user });
+
+                    init.push({ ...user, projects });
+                }
+                return init;
             });
-
-            const init: Array<Credential & { projects: Project[] }> = [];
-
-            for(let i = 0; i < developers.length; i++){
-                const projects = await new ProjectModel().all({ credential: data.admin });
-
-                init.push({ ...developers[i], projects });
-            }
-            
-            return init;
+            return developers;
         }catch(error){
-            throw new Err(HttpStatusCode.InternalServerError, error, "error encountered when getting developers");
+            throw new Err(503, error, "error encountered when getting developers");
+        }
+    }
+
+    async signin(data: { email?: string, username?: string, password: string }): Promise<User>{
+        try{
+            const credentials = await this.database.credential.findMany({ where: { OR: [ { email: data.email} , { username: data.username } ] } });
+            if(credentials.length > 0){
+                for(var i = 0; i < credentials.length; i++){
+                    const credential = credentials[i];
+                    if(data.password === credential.password){
+                        console.log(JSON.stringify(data.password));
+                        const user = await this.database.user.findUniqueOrThrow({ 
+                            where: { id: credential.id },
+                            include: { details: true }
+                        });
+                        return user;
+                    }
+                }
+                throw new Err(401, ``, "incorrect password, check and try again");
+            }
+            throw new Err(401, ``, "account does not exists, try signing up");
+        }catch(error){
+            throw new Err(503, error, "error encountered when getting user");
         }
     }
 }

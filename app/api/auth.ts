@@ -1,76 +1,76 @@
-import { HttpStatusCode } from "axios";
-import express, { Response } from "express";
-import { Err, SeedResult } from "../config";
+import { Err } from "../config";
 import DeveloperModel from "../models/developer";
-import jwt from "jsonwebtoken";
-import ClientModel from "../models/clients";
 import jetLogger from "jet-logger";
+import Elysia, { t } from "elysia";
+import jwt from "@elysiajs/jwt";
+import { keyAuthenicationPlugin } from "./plugins";
+import { ClienitModel } from "../models";
 
-export const cookieResponse = (res: Response<any>, result: any & { credential: Credential }) =>{
-    const token = jwt.sign({ credential: result.credential }, process.env.SECRET || "test", { expiresIn: "7 days" } );
+const authRouter = new Elysia({ prefix: "/auth" }).use(jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() });
+
+authRouter.post("/", async({ jwt, status, body, developerModel, cookie: { token } }) =>{
+    try{
+        const user = await developerModel.create({ ...body });
+        const value = await jwt.sign({ user });
+        token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
+
+        return status(201, { message: "Registration successful", ...user });
+    }catch(error){
+        jetLogger.err(error);
+        if(error instanceof Err){
+            const err = error as Err;
+            return status(err.code, { message: err.message });
+        }else{
+            return status(503, { message: "an internal server error occurred when creating user" });
+        }
+    }
+}, { body: t.Object({ name: t.String(), surname: t.String(), email: t.String(), username: t.String(), password: t.String() }) })
+
+authRouter.use(keyAuthenicationPlugin).post("/connect", async({ jwt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
+    if(body.email || body.username){
+        try{
+            const client = await clientModel.connect({ ...body, project: project!, organization });
+            const value = await jwt.sign({ client });
+            client_token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
+
+            return status(200, { message: "client connetion success", ...client });
+        }catch(error){
+            jetLogger.err(error);
+            if(error instanceof Err){
+                const err = error as Err;
+                return status(err.code, { message: err.message });
+            }else{
+                return status(503, { message: "an internal server error occurred when creating user" });
+            }
+        }
+    }else{
+        return status(400, {message: "invalid req to server"});
+    }
+}, { body: t.Object({ id: t.String(), name: t.String(), surname: t.String(), email: t.Optional(t.String()), username: t.Optional(t.String()) }) })
+
+authRouter.post("/login", async ({ jwt, body, status, developerModel, cookie: { token } }) =>{
+    try{
+        const user = await developerModel.signin({ ...body });
+        const value = await jwt.sign({ user });
+        token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
+
+        return status(200, { message: "Login successful", ...user });
+    }catch(error){
+        jetLogger.err(error);
+        if(error instanceof Err){
+            const err = error as Err;
             
-    res.cookie(`token`, token, { httpOnly: true });
-    return res.status(HttpStatusCode.Accepted).send(result);
-}
-
-const authRouter = express.Router();
-
-authRouter.post("/", async(req, res) =>{
-    if(req.body.name && req.body.surname && (req.body.email || req.body.username) && req.body.password){
-        try{
-            const seed = SeedResult.instance();
-
-            let model: ClientModel | DeveloperModel = new ClientModel();
-            if(req.body.admin && req.body.organization && req.body.organization.id === seed.organizationID && req.body.project && req.body.project.id === seed.projectID){
-                model = new DeveloperModel();
-            }
-            const client = await model.create(req.body);
-
-            cookieResponse(res, client);
-        }catch(error){
-            jetLogger.err(error);
-            if(error instanceof Err){
-                const err = error as Err;
-                res.status(err.code).send({ message: err.message });
-            }else{
-                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when creating user" });
-            }
+            return status(err.code, { message: err.message });
+        }else{
+            return status(503, { message: "an internal server error occurred when signing in user" });
         }
-    }else{
-        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
     }
+}, { body: t.Object({ email: t.String(), password: t.String() }) })
+
+authRouter.get("/logout", async({ status, cookie: { token } }) =>{
+    token?.set({ value: '', maxAge: 0, httpOnly: true });
+    
+    return status(200, { message: "Logout successful" });
 });
-
-authRouter.post("/login", async(req, res) =>{
-    if((req.body.email || req.body.username) && req.body.password){
-        try{
-            const model = new ClientModel();
-            const client = await model.signin(req.body);
-
-            cookieResponse(res, client);
-        }catch(error){
-            jetLogger.err(error);
-            if(error instanceof Err){
-                const err = error as Err;
-                
-                res.status(err.code).send({ message: err.message });
-            }else{
-                res.status(HttpStatusCode.InternalServerError).send({ message: "an internal server error occurred when signing in user" });
-            }
-        }
-    }else{
-        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
-    }
-});
-
-authRouter.get("/logout", async(req, res) =>{
-    if(req.cookies.token){
-        res.cookie(`token`, '');
-        res.status(HttpStatusCode.Accepted).send({ message: "you have logged out successfully" });
-    }else{
-        res.status(HttpStatusCode.BadRequest).send({message: "invalid req to server"});
-    }
-});
-
 
 export default authRouter;

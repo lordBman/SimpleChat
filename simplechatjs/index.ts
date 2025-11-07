@@ -1,16 +1,6 @@
-import { Friend, Member, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
+import { AccessHeaderKeys, APIClient, Friend, Member, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
 import { Chat, Chats } from "@simplechat/shared/models";
-
-const axiosInstance =  axios.create({
-	headers: { 
-		'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Credentials': 'true',
-		'Content-Type': 'application/x-www-form-urlencoded' 
-	},
-	withCredentials: true,
-	baseURL: "/api" });
-
+import { Socket } from "net";
 
 class SimpleChatClient{
     private accessKey: string;
@@ -228,9 +218,17 @@ class SimpleChatClient{
     }
 
     static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
+        const headers: HeadersInit = {};
+        headers[AccessHeaderKeys.AccessKey] = config.accessKey;
+        headers[AccessHeaderKeys.ProjectToken] = config.projectToken;
+        if(config.organization){
+            headers[AccessHeaderKeys.Organization] = config.organization;
+        }
+
+        const apiClientInstance =  new APIClient("/api", { headers });
         try{
-            const user = await axiosInstance.post(`/connect?key=${config.accessKey}`, config);
-            const response = await axiosInstance.get(`/client?key=${config.accessKey}`);
+            const user = await apiClientInstance.post("/connect", { data: {...config} });
+            const response = await apiClientInstance.get("/client");
             const socket = io("/", { auth: { token: user.data?.token, key: config.accessKey } });
             socket.on("connected", ()=>{
                 console.log(socket.connected);

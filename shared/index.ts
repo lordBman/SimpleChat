@@ -4,13 +4,16 @@ import Group from "./models/groups";
 import Member, { MemberRoles } from "./models/member";
 import Organization from "./models/organization";
 import Notification from "./models/notifications";
+import APIClient from "./api_client";
 
 export type SimpleChatConfig = {
     name: string,
     surname: string,
+    username?: string,
+    email?: string,
     accessKey: string,
     projectToken: string,
-    organization?: string | null
+    organization?: string
 };
 
 export type SimpleChatState = Client & { 
@@ -66,4 +69,4 @@ export enum AccessHeaderKeys{
     ProjectToken = "X-SimpleChat-Project-Token"
 }
 
-export{ AccessKey, Details, User, Group, Member, MemberRoles, Project, Friend, Chats, Organization, Notification }
+export{ AccessKey, Details, User, Group, Member, MemberRoles, Project, Friend, Chats, Organization, Notification, APIClient }

@@ -1,16 +1,18 @@
-import Credential from "./credentials";
+import Details from "./details";
+
+export type ChatType = "Group" | "Friends";
 
 type Chat = {
     id: string;
     message: string;
     created: Date;
     delivered: boolean;
-    senderID: string;
+    edited: boolean;
     ownerID: string;
-    type: "Group" | "Friends";
+    type: ChatType;
     reference?: Chat | null;
 
-    sender: Credential;
+    sender: Details;
 }
 
 export default Chat;

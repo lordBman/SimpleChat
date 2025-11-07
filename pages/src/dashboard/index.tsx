@@ -4,23 +4,24 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { BottomNavigation, DashBoard as DashBoardView, ErrorPage, Loading, MobileHeader } from "../conponents";
 import Options from "../conponents/dashboard/menu/options";
 import { useMemo, useContext } from "react";
-import { useHistory, useLocation } from "react-router";
+import { useHistory } from "react-router";
 import { BrowserRouter } from "react-router-dom";
 import { ToolBarItem } from "../conponents/dashboard/tool-bar";
-import { SimpleChatProvider } from "simplechat_provider";
+import SimpleChatProvider from "simplechat_provider";
 import AppProviderWraper, { AppContext, AppContextType } from "../providers/app-provider";
 import React from "react";
+import { AccessKey } from "../utils";
 
 
 const App = () =>{
     const { user } = useContext(AppContext) as AppContextType;
-    const location = useLocation();
+    //const location = useLocation();
     const history = useHistory();
 
     const chosen = (id: string)=> history.push(`/dashboard/${id}`);
 
     const [current, hideSection]  = useMemo(()=>{
-        const paths =  location.pathname.split('/');
+        const paths =  document.location.pathname.split('/');
 
         let current = "home";
         if(paths[2] && paths[2] !== ""){
@@ -39,7 +40,7 @@ const App = () =>{
     }, [location.pathname]);
     
     return (
-        <SimpleChatProvider developerConfig={{ token: user?.token!, accessKey: "" }}>
+        <SimpleChatProvider developerConfig={{ token: user?.token!, accessKey: AccessKey }}>
             <DashBoardView>
                 <DashBoardView.Menu initial={current} choose={chosen}>
                     <Options>

@@ -54,13 +54,12 @@ export const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": 
 });
 
 export const APIAuthenicationPlugin = new Elysia().use( jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).derive({ as: "global" }, async ({ jwt, cookie: { token } })=>{
-    let user: User | undefined = undefined;
-
+    let user: User | undefined
     if(token.value){
         try{
             const payload: any = await jwt.verify(token?.value as string);
             if (payload){
-                user = payload.user;
+                user = JSON.parse(payload.user);
             }
         }catch(error){
             jetLogger.err(error);
@@ -80,7 +79,7 @@ export const ClientAuthenicationPlugin = new Elysia().use(keyAuthenicationPlugin
         try{
             const payload: any = await jwt.verify(client_token?.value as string);
             if (payload){
-                client = payload.client;
+                client = JSON.parse(payload.client);
             }
         }catch(error){
             jetLogger.err(error);

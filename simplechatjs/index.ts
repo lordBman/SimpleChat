@@ -1,6 +1,4 @@
-import { io, Socket } from "socket.io-client";
-import axios, { AxiosError } from "axios";
-import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig, SimpleChatState } from "@simplechat/shared";
+import { Friend, Member, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
 import { Chat, Chats } from "@simplechat/shared/models";
 
 const axiosInstance =  axios.create({
@@ -169,9 +167,7 @@ class SimpleChatClient{
     refreshChats = async () => {
         try{
             const response = await axiosInstance.get(`/chats?key=${this.accessKey}`);
-
             this.state = { ...this.state, chats: response.data };
-
             if(this.onChatsChange){
                 this.onChatsChange(this.state.chats);
             }
@@ -231,34 +227,10 @@ class SimpleChatClient{
         }
     }
 
-    static async connect(config: SimpleChatClientConfig): Promise<SimpleChatClient>{
+    static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
         try{
             const user = await axiosInstance.post(`/connect?key=${config.accessKey}`, config);
             const response = await axiosInstance.get(`/client?key=${config.accessKey}`);
-            const socket = io("/", { auth: { token: user.data?.token, key: config.accessKey } });
-            socket.on("connected", ()=>{
-                console.log(socket.connected);
-            });
-
-            return new SimpleChatClient(config.accessKey, socket, response.data);
-        }catch(error){
-            if(error instanceof AxiosError){
-                throw Error((error as AxiosError).message);
-            }else{
-                throw error;
-            }
-        }
-    }
-
-    static async init(config: SimpleChatDeveloperConfig): Promise<SimpleChatClient>{
-        try{
-            axiosInstance.interceptors.request.use((init)=>{
-                init.headers.Cookie = `token=${config.token}`;
-
-                return init;
-            })
-            const user = await axiosInstance.get(`/?key=${config.accessKey}`);
-            const response = await axiosInstance.get(`/?key=${config.accessKey}`);
             const socket = io("/", { auth: { token: user.data?.token, key: config.accessKey } });
             socket.on("connected", ()=>{
                 console.log(socket.connected);

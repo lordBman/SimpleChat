@@ -1,13 +1,18 @@
-import Credential from "./credentials";
+import Details from "./details";
+import Organization from "./organization";
 
 type Group = {
-    name: string;
     id: string;
+    name: string;
     last: Date;
     attachment?: string | null;
+    created: Date;
+
     organizationID?: string | null;
+    organization?: Organization | null;
+
     projectID: string;
-    creator: Credential;
+    creator: Details;
 }
 
 export default Group;

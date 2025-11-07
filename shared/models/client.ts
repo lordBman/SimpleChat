@@ -1,10 +1,14 @@
-import Credential from "./credentials";
+import Details from "./details";
 import Organization from "./organization";
 
 interface Client {
-    credential: Credential;
+    id: string,
+    details: Details,
+    organizationID?: string | null;
     organization?: Organization | null;
     projectID: string;
+
+    created: Date
 }
 
 export default Client;

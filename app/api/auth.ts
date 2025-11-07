@@ -11,7 +11,7 @@ const authRouter = new Elysia({ prefix: "/auth" }).use(jwt({ name: 'jwt', secret
 authRouter.post("/", async({ jwt, status, body, developerModel, cookie: { token } }) =>{
     try{
         const user = await developerModel.create({ ...body });
-        const value = await jwt.sign({ user });
+        const value = await jwt.sign({ user: JSON.stringify(user) });
         token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
         return status(201, { message: "Registration successful", ...user });
@@ -30,7 +30,7 @@ authRouter.use(keyAuthenicationPlugin).post("/connect", async({ jwt, body, statu
     if(body.email || body.username){
         try{
             const client = await clientModel.connect({ ...body, project: project!, organization });
-            const value = await jwt.sign({ client });
+            const value = await jwt.sign({ client: JSON.stringify(client) });
             client_token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
             return status(200, { message: "client connetion success", ...client });
@@ -51,7 +51,7 @@ authRouter.use(keyAuthenicationPlugin).post("/connect", async({ jwt, body, statu
 authRouter.post("/login", async ({ jwt, body, status, developerModel, cookie: { token } }) =>{
     try{
         const user = await developerModel.signin({ ...body });
-        const value = await jwt.sign({ user });
+        const value = await jwt.sign({ user: JSON.stringify(user) });
         token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
         return status(200, { message: "Login successful", ...user });

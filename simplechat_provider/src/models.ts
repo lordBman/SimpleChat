@@ -1,12 +1,7 @@
-import { Chats, Friend, Member } from "@simplechat/shared/models";
-import { SimpleChatClient } from "simplechatjs";
-
-export type ClientState = { 
-    client?: SimpleChatClient
-};
+import { Chats, Friend, Member, Credential } from "@simplechat/shared/models";
 
 export type ClientContextType = {
-    client?: SimpleChatClient
+    credential?: Credential
     loading: boolean;
     isError: boolean;
     message?: any;

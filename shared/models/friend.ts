@@ -1,12 +1,21 @@
-import Credential from "./credentials";
+import Details from "./details";
+import Organization from "./organization";
 
 type Friend = {
     id: string;
-    organizationID?: string | null;
-    projectID: string;
     accepted: boolean;
-    requester: Credential;
-    acceptor: Credential;
+    created: Date
+
+    organizationID?: string | null;
+    organization?: Organization | null;
+
+    requesterID: string;
+    requester: Details;
+
+    acceptorID: string;
+    acceptor: Details;
+
+    projectID: string;
 }
 
 export default Friend;

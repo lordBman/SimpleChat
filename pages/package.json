@@ -4,7 +4,6 @@
   "devDependencies": {
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
-    "@types/socket.io": "^3.0.2",
     "@types/react-router-dom": "^5.3.3",
     "bun-types": "latest"
   },
@@ -13,10 +12,8 @@
   },
   "dependencies": {
     "@simplechat/shared": "file:../shared",
-    "axios": "^1.8.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-query": "^3.39.3",
     "react-router-dom": "5.0.0",
     "react-spinners": "^0.15.0",
     "simplechat_provider": "file:../simplechat_provider"

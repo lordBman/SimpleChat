@@ -1,7 +1,7 @@
 import { Friend, Member, Credential } from "@simplechat/shared/models";
 import axios from "axios";
 
-export const AccessKey = "9acc42a8a65729431dab479af0d418113e3c";
+export const AccessKey = "a02c3f9f81c969467e99509a8edc940f4941";
 
 export interface LooseObject {
     [key: string]: any

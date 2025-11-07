@@ -1,20 +1,20 @@
 import React from "react";
 import { ChatContextType, FriendsContextType, MembersContextType, ClientContextType } from "./models";
 
-export const FriendsContext = React.createContext<FriendsContextType | null>(null);
-export const useFriendsContext = () => {
-    const init = React.useContext(FriendsContext);
-    if(init === null){
-        throw Error("Component has to be wrapped by SimpleChatProver in order to use FriendsContext");
-    }
-    return init;
-}
-
 export const ClientContext = React.createContext<ClientContextType>({ loading: false, isError: false });
 export const useClientContext = () => {
     const init = React.useContext(ClientContext);
     if(init === null){
         throw Error("Component has to be wrapped by SimpleChatProver in order to call ClientContext");
+    }
+    return init;
+}
+
+export const FriendsContext = React.createContext<FriendsContextType | null>(null);
+export const useFriendsContext = () => {
+    const init = React.useContext(FriendsContext);
+    if(init === null){
+        throw Error("Component has to be wrapped by SimpleChatProver in order to use FriendsContext");
     }
     return init;
 }

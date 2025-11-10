@@ -21,10 +21,10 @@ class GroupModel{
                 });
     
                 const member = await this.database.member.create({
-                    data: {  groupID: init.id, id: init.creatorID, role: "Admin" }
+                    data: {  groupID: init.id, userID: init.creatorID, role: "Admin" }
                 });
 
-                return { ...member, details: data.client.details, group: { ... init, creator: data.client }};
+                return { ...member, details: data.client.details, group: { ... init, creator: data.client.details }};
             }
         }catch(error){
             if(error instanceof Err){
@@ -37,7 +37,7 @@ class GroupModel{
     async all(data: { project: Project, organization?: Organization, client: Client }): Promise<Group[]>{
         try{
             const groups: Group[] = (await this.database.member.findMany({ 
-                where: { id: data.client.id },
+                where: { userID: data.client.id },
                 include: {
                     client: { include: { details: true } },
                     group: { include: { creator: { include: { details: true } } } } 
@@ -56,12 +56,14 @@ class GroupModel{
 
     async get(data: { groupID: string }): Promise<Group>{
         try{
-            return await this.database.group.findUniqueOrThrow({ 
+            const init = await this.database.group.findUniqueOrThrow({
                 where: { id: data.groupID },
                 include: { 
                     creator: { include: { details: true } },
                 }
             });
+
+            return { ...init, creator: init.creator.details };
         }catch(error){
             throw new Err(503, error, "error encountered while getting all members");
         }
@@ -87,7 +89,7 @@ class GroupModel{
             });
 
             group.members.forEach(async  (member)=>{
-                if(data.client.id !== member.id){
+                if(data.client.id !== member.userID){
                     await this.database.notification.create({
                         data: { 
                             recieverID: data.groupID, nType: "Group", 
@@ -145,16 +147,16 @@ class GroupModel{
                 include: { creator: { include: { details: true } } } 
             });
 
-            if(group?.creatorID === data.client.id){
-                const members = await this.database.member.findMany({ where:{ groupID: data.groupID } });
+            if (group?.creatorID === data.client.id) {
+                const members = await this.database.member.findMany({where: {groupID: data.groupID}});
 
-                await this.database.deleted.create({ data: { resourceID: group.id, type: ResourceType.Group } });
+                await this.database.deleted.create({data: {resourceID: group.id, type: ResourceType.Group}});
                 await this.database.group.update({
-                    where: { id: data.groupID }, data: { isDeleted: true }
+                    where: {id: data.groupID}, data: {isDeleted: true}
                 });
-                
-                members.forEach(async  (member)=>{
-                    if(data.client.id !== member.id){
+
+                members.forEach(async (member) => {
+                    if (data.client.id !== member.userID) {
                         await this.database.notification.create({
                             data: {
                                 recieverID: member.id, nType: "User",
@@ -163,10 +165,12 @@ class GroupModel{
                         });
                     }
                 });
-                return { message: `${group.name} group deletion successful`, group };
-            }else{
-                throw new Err(401, ``, "you are not a owner of this group");
+                return {
+                    message: `${group.name} group deletion successful`,
+                    group: {...group, creator: group.creator.details}
+                };
             }
+            throw new Err(401, ``, "you are not a owner of this group");
         }catch(error){
             if(error instanceof Err){
                 throw error;

@@ -1,57 +1,133 @@
-import { Namespace, Socket } from "socket.io";
+import {SocketPaths, WSChatOperation} from "@simplechat/shared";
+import { ElysiaWS } from "elysia/ws";
 import { ChatModel } from "../models";
-import { Friend, Member } from "@prisma/client";
-import { ConnectedSockets } from "./utils";
 import jetLogger from "jet-logger";
+import { Client } from "@simplechat/shared/models";
 import { Err } from "../config";
 
-export const joinChatRoom = (channel: Partial<Friend> | Partial<Member> ) => {
-    if("acceptorID" in channel){
-        const friend = channel as Friend;
-        if(ConnectedSockets.getInstance().isOnline(friend.requesterID)){
-            const socket = ConnectedSockets.getInstance().get(friend.requesterID)!;
-            if(!socket.rooms.has(friend.id)){
-                socket.join(friend.id);
+type ChatData = { friendID?: string, groupID?: string, message?: string, chatID?: string }
+
+const chatSocketHandler = (ws: ElysiaWS, client: Client, operation: string, data: ChatData) =>{
+    const chatModel = new ChatModel();
+
+    switch(operation){
+        case WSChatOperation.SendMessage:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to send message", status: 400 });
+                return;
+            }else{
+                chatModel.create({ ...data, message: data.message!, client}).then((chat)=>{
+                    ws.publish(data.friendID ?? data.groupID!, { path: SocketPaths.Chats, operation: operation, chat });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: "an internal server error occurred when processing message", status: 503 });
+                    }
+                });
             }
-        }
-    
-        if(ConnectedSockets.getInstance().isOnline(friend.acceptorID)){
-            const socket = ConnectedSockets.getInstance().get(friend.acceptorID)!;
-            if(!socket.rooms.has(friend.id)){
-                socket.join(friend.id);
+            break;
+        case WSChatOperation.ReplyMessage:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to reply message", status: 400 });
+            }else{
+                chatModel.reply({ ...data, message: data.message!, chatID: data.chatID!, client}).then((chat)=>{
+                    ws.publish(data.friendID ?? data.groupID!, { path: SocketPaths.Chats, operation: operation, chat });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: "an internal server error occurred when processing message", status: 503 });
+                    }
+                });
             }
-        }
-    }else{
-        const member = channel as Member;
-        if(ConnectedSockets.getInstance().isOnline(member.credentialID)){
-            const socket = ConnectedSockets.getInstance().get(member.credentialID)!;
-            if(!socket.rooms.has(member.groupID)){
-                socket.join(member.groupID);
+            break;
+        case WSChatOperation.EditMessage:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to edit message", status: 400 });
+                return;
+            }else{
+                chatModel.update({ ...data, message: data.message!, chatID: data.chatID!, client}).then((chat)=>{
+                    ws.publish(data.friendID ?? data.groupID!, { path: SocketPaths.Chats, operation: operation, chat });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: "an internal server error occurred when processing message", status: 503 });
+                    }
+                });
             }
-        }   
+            break;
+        case WSChatOperation.DeleteMessage:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to delete message", status: 400 });
+                return;
+            }else{
+                chatModel.delete({ ...data, chatID: data.chatID!, client}).then((chat)=>{
+                    ws.publish(data.friendID ?? data.groupID!, { path: SocketPaths.Chats, operation: operation, chat });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: err.message, status: err.code });
+                    }
+                    else{
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: "an internal server error occurred when processing message", status: 503 });
+                    }
+                });
+            }
+            break;
+        case WSChatOperation.Typing:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to send typing indicator", status: 400 });
+            }else{
+                ws.publish(data.friendID ?? data.groupID!, { path: SocketPaths.Chats, operation: operation, chatID: data.chatID, userID: client.id });
+            }
+            break;
+        case WSChatOperation.ReadReceipt:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to send read receipt", status: 400 });
+            }else{
+                chatModel.seen({ ...data, chatID: data.chatID!, client}).then(()=>{
+                    ws.publish(data.friendID ?? data.groupID!, { path: SocketPaths.Chats, operation: operation, chatID: data.chatID, userID: client.id });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Chats, operation: operation, message: "an internal server error occurred when processing read receipt", status: 503 });
+                    }
+                });
+            }
+            break;
+        case WSChatOperation.Subscribe:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to subscribe", status: 400 });
+                return;
+            }else{
+                ws.subscribe(data.friendID ?? data.groupID!);
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "subscribed successfully", status: 200 });
+            }
+            break;
+        case WSChatOperation.Unsubscribe:
+            if(data.friendID === undefined && data.groupID === undefined){
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "either friendID or groupID must be provided to unsubscribe", status: 400 });
+                return;
+            }else{
+                ws.unsubscribe(data.friendID ?? data.groupID!);
+                ws.send({ path: SocketPaths.Chats, operation: operation, message: "unsubscribed successfully", status: 200 });
+            }
+            break;
+        default:
+            ws.send({ path: SocketPaths.Chats, operation: operation, message: "invalid operation", status: 400 });
     }
 }
 
-export default (namespace: Namespace, socket: Socket) => {
-    socket.on("chat", (data: { message: string, friendID?: string, groupID?: string }, room) => {
-        const chatModel = new ChatModel();
-
-        console.log(`current room: ${room}`);
-        chatModel.create({ ...data, credential: socket.handshake.auth.credentail}).then((chat)=>{
-            console.log(JSON.stringify(chat));
-
-            namespace.to((data.friendID || data.groupID)!).emit("chat", chat, (data.friendID || data.groupID));
-        }).catch((error)=>{
-            const err = error as Err;
-            jetLogger.err(err.error);
-            socket.emit("error", err.message);
-        });
-    });
-
-    socket.on("typing", (data: { status: boolean }, room)=>{
-        console.log(data);
-        if(data.status){
-            socket.broadcast.to(room).emit("typing", {room, message:`${socket.handshake.auth.credentail.name} is typing...` });
-        }
-    });
-}
+export default chatSocketHandler;

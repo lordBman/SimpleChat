@@ -23,7 +23,7 @@ export type SimpleChatState = Client & {
 
 export interface UserState extends User{ 
     token: string, 
-    projects : Array<Project & { keys?: AccessKey[], userCount: number }>,
+    projects : Array<Project & { userCount: number }>,
     developers?: Details[] 
 }
 
@@ -59,6 +59,16 @@ export enum WSFriendOperation{
     Reject = "Reject Request"
 }
 
+export enum WSGroupOperation{
+    Create = "Create",
+    Cancel = "Cancel",
+    Accept = "Accept",
+    Reject = "Reject",
+    Request = "Request",
+    Assign = "Assign",
+    Delete = "Delete"
+}
+
 export interface Developer extends User{
     projects: Project[]
 }
@@ -67,6 +77,18 @@ export enum AccessHeaderKeys{
     AccessKey = "X-SimpleChat-Access-Key",
     Organization = "X-SimpleChat-Organization",
     ProjectToken = "X-SimpleChat-Project-Token"
+}
+
+export enum AccessQueryKeys{
+    AccessKey = "access-key",
+    Organization = "organization",
+    ProjectToken = "project-token"
+}
+
+export enum SocketPaths{
+    Chats = "chats",
+    Friends = "friends",
+    Groups = "groups"
 }
 
 export{ AccessKey, Details, User, Group, Member, MemberRoles, Project, Friend, Chats, Organization, Notification, APIClient }

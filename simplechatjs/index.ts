@@ -1,10 +1,11 @@
 import { AccessHeaderKeys, APIClient, Friend, Member, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
 import { Chat, Chats } from "@simplechat/shared/models";
-import { Socket } from "net";
 
 class SimpleChatClient{
-    private accessKey: string;
-    private socket: Socket;
+    private config: SimpleChatConfig;
+    private chatSocket: WebSocket;
+    private friendsSocket: WebSocket;
+    private groupSocket: WebSocket;
 
     state: SimpleChatState;
     messages: string[];
@@ -14,11 +15,12 @@ class SimpleChatClient{
     onFriendChange?: (friend: Friend[]) => void;
     onMemberChange?: (member: Member[]) => void;
 
-    private constructor(accessKey: string, socket: Socket, state: SimpleChatState){
-        this.accessKey = accessKey;
-        this.socket = socket;
+    private constructor(config: SimpleChatConfig, state: SimpleChatState){
+        this.config = config;
         this.state = state;
         this.messages = this.sort();
+
+        this.chatSocket = We
 
         this.socket.on("chat", (data: Chat, room: string)=>{
             const chats = { ...this.state.chats };
@@ -229,12 +231,8 @@ class SimpleChatClient{
         try{
             const user = await apiClientInstance.post("/connect", { data: {...config} });
             const response = await apiClientInstance.get("/client");
-            const socket = io("/", { auth: { token: user.data?.token, key: config.accessKey } });
-            socket.on("connected", ()=>{
-                console.log(socket.connected);
-            });
-
-            return new SimpleChatClient(config.accessKey, socket, response.data);
+            
+            return new SimpleChatClient(config, socket, response.data);
         }catch(error){
             if(error instanceof AxiosError){
                 throw Error((error as AxiosError).message);

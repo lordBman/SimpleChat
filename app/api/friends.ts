@@ -2,12 +2,11 @@ import FriendModel from "../models/friends";
 import { Err } from "../config";
 import jetLogger from "jet-logger";
 import Elysia, { t } from "elysia";
-import { ClientAuthenicationPlugin, connectedPlugin, keyAuthenicationPlugin } from "./plugins";
-import { WSFriendOperation } from "@simplechat/shared";
+import { ClientAuthenicationPlugin, keyAuthenicationPlugin } from "./plugins";
 
 const friendRouter = new Elysia({ prefix: "/friends" }).decorate({ "friendModel": new FriendModel() });
 
-friendRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).use(connectedPlugin)
+friendRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin)
 .get("/search", async({ status, query, client, friendModel, project, organization })=>{
     try{
         const response = await friendModel.find({ query: query.query, project: project!, organization, client: client! });
@@ -112,98 +111,6 @@ friendRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).use(conn
             return status(err.code, { message: err.message });
         }else{
             return status(503, { message: "an internal server error occurred while getting list of friends" });
-        }
-    }
-})
-
-.ws("/ws", {
-    body: t.Object({
-        operation: t.String(),
-        friendID: t.Optional(t.String()),
-        userID: t.Optional(t.String()),
-    }),
-    open: async (ws) =>{
-        console.log("socket connected on friends route");
-        ws.data.add(ws.data.client!.id, ws);
-    },
-    close: (ws) =>{
-        console.log("socket disconnected on friends route");
-        ws.data.remove(ws.data.client!.id);
-    },
-    message: (ws, message)=>{
-        switch(message.operation){
-            case WSFriendOperation.Request:
-                if(message.userID){
-                    ws.data.friendModel.request({ userID: message.userID!, project: ws.data.project!, organization: ws.data.organization, client: ws.data.client! }).then((friend)=>{
-                        ws.subscribe(friend.id);
-                        if(ws.data.isOnline(message.userID!)){
-                            ws.data.get(message.userID!).subscribe(friend.id);
-                        }
-                        ws.publish(friend.id, { operation: message.operation, friend });
-                    }).catch((error)=>{
-                        jetLogger.err(error);
-                        if(error instanceof Err){
-                            const err = error as Err;
-                            ws.send({ operation: message.operation, message: err.message, status: err.code });
-                        }else{
-                            ws.send({ operation: message.operation, message: "an internal server error occurred when create friend request", status: 503 });
-                        }
-                    });
-                }else{
-                    ws.send({ operation: message.operation, message: "invalid socket request", status: 400 });
-                }
-                break;
-            case WSFriendOperation.Cancel:
-                if(message.friendID){
-                    ws.data.friendModel.cancel({ id: message.friendID!, client: ws.data.client! }).then((friend)=>{
-                        ws.publish(friend.id, { operation: message.operation, friend });
-                    }).catch((error)=>{
-                        jetLogger.err(error);
-                        if(error instanceof Err){
-                            const err = error as Err;
-                            ws.send({ operation: message.operation, message: err.message, status: err.code });
-                        }else{
-                            ws.send({ operation: message.operation, message: "an internal server error occurred when canceling friend request", status: 503 });
-                        }
-                    });
-                }else{
-                    ws.send({ operation: message.operation, message: "invalid socket request", status: 400 });
-                }
-                break;
-            case WSFriendOperation.Approve:
-                if(message.friendID){
-                    ws.data.friendModel.accept({ id: message.friendID!, client: ws.data.client! }).then((friend)=>{
-                        ws.publish(friend.id, { operation: message.operation, friend });
-                    }).catch((error)=>{
-                        jetLogger.err(error);
-                        if(error instanceof Err){
-                            const err = error as Err;
-                            ws.send({ operation: message.operation, message: err.message, status: err.code });
-                        }else{
-                            ws.send({ operation: message.operation, message: "an internal server error occurred when accepting friend request", status: 503 });
-                        }
-                    });
-                }else{
-                    ws.send({ operation: message.operation, message: "invalid socket request", status: 400 });
-                }
-                break;
-            case WSFriendOperation.Reject:
-                if(message.friendID){
-                    ws.data.friendModel.cancel({ id: message.friendID!, client: ws.data.client! }).then((friend)=>{
-                        ws.publish(friend.id, { operation: message.operation, friend });
-                    }).catch((error)=>{
-                        jetLogger.err(error);
-                        if(error instanceof Err){
-                            const err = error as Err;
-                            ws.send({ operation: message.operation, message: err.message, status: err.code });
-                        }else{
-                            ws.send({ operation: message.operation, message: "an internal server error occurred when rejecting friend request", status: 503 });
-                        }
-                    });
-                }else{
-                    ws.send({ operation: message.operation, message: "invalid socket request", status: 400 });
-                }
-                break;
         }
     }
 });

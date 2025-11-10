@@ -1,24 +1,27 @@
-import { Client, FriendSearchResult } from "@simplechat/shared/models";
-import { DBManager, Err } from "../config";
-import { Friend, Organization, Project } from "@simplechat/shared";
+import {Client, FriendSearchResult} from "@simplechat/shared/models";
+import {DBManager, Err} from "../config";
+import {Friend, Organization, Project} from "@simplechat/shared";
 
 class FriendModel{
     database = DBManager.instance();
 
     async all(data: { project: Project, organization?: Organization, client: Client  }): Promise<Friend[]>{
         try{
-            const results = await this.database.friend.findMany({ 
-                where: { project: data.project, organizationID: data.organization?.id,  OR: [ { requesterID: data.client.id }, { acceptorID: data.client.id } ] },
-                include: { 
-                    requester: { include: { details: true } },
-                    acceptor: { include: { details: true } } 
+            return await this.database.friend.findMany({
+                where: {
+                    project: data.project,
+                    organizationID: data.organization?.id,
+                    OR: [{requesterID: data.client.id}, {acceptorID: data.client.id}]
+                },
+                include: {
+                    requester: {include: {details: true}},
+                    acceptor: {include: {details: true}}
                 }
-            }).then(async (friends)=>{
-                return friends.map((friend)=> {
-                    return { ...friend, requester: friend.requester.details, acceptor: friend.acceptor.details }
+            }).then(async (friends) => {
+                return friends.map((friend) => {
+                    return {...friend, requester: friend.requester.details, acceptor: friend.acceptor.details}
                 });
             });
-            return results;
         }catch(error){
             throw new Err(503, error, "error encountered while getting friend lists");
         }
@@ -42,7 +45,7 @@ class FriendModel{
                 }
             });
         
-            return { ...friend, acceptor, requester };
+            return { ...friend, acceptor: acceptor.details, requester: requester.details };
         }catch(error){
             throw new Err(503, error, "error encountered while sending friend request");
         }
@@ -76,17 +79,17 @@ class FriendModel{
     async cancel(data: { client: Client, id: string }): Promise<Friend>{
         try{
             const init = await this.database.friend.findFirst({ where: { id: data.id, requesterID: data.client.id } });
-            if(init){
-                const friend = await this.database.friend.delete({ 
-                    where: { id: data.id },
-                    include: { 
-                        requester: { include: { details: true } }, acceptor: { include: { details: true } } }
-                }); 
+            if (init) {
+                const friend = await this.database.friend.delete({
+                    where: {id: data.id},
+                    include: {
+                        requester: {include: {details: true}}, acceptor: {include: {details: true}}
+                    }
+                });
 
-                return { ...friend, requester: friend.requester.details, acceptor: friend.acceptor.details };
-            }else{
-                throw new Err(404, "", "friend request not found");   
+                return {...friend, requester: friend.requester.details, acceptor: friend.acceptor.details};
             }
+            throw new Err(404, "", "friend request not found");
         }catch(error){
             throw new Err(503, error, "internal server error");
         }

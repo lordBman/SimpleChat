@@ -1,60 +1,91 @@
-import { Namespace, Socket } from 'socket.io';
 import FriendModel from '../models/friends';
-import { joinChatRoom } from './chats';
-import { ConnectedSockets } from './utils';
 import { Err } from '../config';
 import jetLogger from 'jet-logger';
+import {Client} from "@simplechat/shared/models";
+import { ElysiaWS } from "elysia/ws";
+import {Organization, Project, SocketPaths, WSFriendOperation} from "@simplechat/shared";
 
-export default (namespace: Namespace, socket: Socket) => {
-    socket.on('friends/cancel', async(input: { friendID: string }, room: string) => {
-        const model = new FriendModel();
-        model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
-            ConnectedSockets.getInstance().send("friends/cancel", [ input.friendID, socket.handshake.auth.credentail.id ], response);
-        }).catch((error)=>{
-            const err = error as Err;
-            jetLogger.err(err.error);
-            socket.emit("friends/error", err.message);
-        });
-    });
+type FriendsData = { friendID?: string, userID?: string }
 
-    socket.on("friends/accept", (input: { friendID: string }, room: string)=>{
-        const model = new FriendModel();
-        
-        model.accept({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
-            console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
+const frinedsSocketHandler = (
+    ws: ElysiaWS, project: Project, client: Client, operation: string, data: FriendsData,
+    isOnline:(id: string)=> boolean, get: (id:string)=> ElysiaWS, organization?: Organization) =>{
+    const friendModel = new FriendModel();
 
-            joinChatRoom(response!);
-            namespace.to(response?.id!).emit('friends/accept', response);
-        }).catch((error)=>{
-            const err = error as Err;
-            jetLogger.err(err.error);
-            socket.emit("friends/error", err.message);
-        });
-    });
+    switch(operation){
+        case WSFriendOperation.Request:
+            if(data.userID){
+                friendModel.request({ userID: data.userID!, project, organization, client }).then((friend)=>{
+                    ws.subscribe(friend.id);
+                    if(isOnline(data.userID!)){
+                        get(data.userID!).subscribe(friend.id);
+                    }
+                    ws.publish(friend.id, { path: SocketPaths.Friends, operation, friend });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Friends, operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Friends, operation, message: "an internal server error occurred when create friend request", status: 503 });
+                    }
+                });
+            }else{
+                ws.send({ path: SocketPaths.Friends, operation, message: "invalid socket request", status: 400 });
+            }
+            break;
+        case WSFriendOperation.Cancel:
+            if(data.friendID){
+                friendModel.cancel({ id: data.friendID!, client }).then((friend)=>{
+                    ws.publish(friend.id, { path: SocketPaths.Friends, operation, friend });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Friends, operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Friends, operation, message: "an internal server error occurred when canceling friend request", status: 503 });
+                    }
+                });
+            }else{
+                ws.send({ path: SocketPaths.Friends, operation, message: "invalid socket request", status: 400 });
+            }
+            break;
+        case WSFriendOperation.Approve:
+            if(data.friendID){
+                friendModel.accept({ id: data.friendID!, client }).then((friend)=>{
+                    ws.publish(friend.id, { path: SocketPaths.Friends, operation, friend });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Friends, operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Friends, operation, message: "an internal server error occurred when accepting friend request", status: 503 });
+                    }
+                });
+            }else{
+                ws.send({ path: SocketPaths.Friends, operation, message: "invalid socket request", status: 400 });
+            }
+            break;
+        case WSFriendOperation.Reject:
+            if(data.friendID){
+                friendModel.cancel({ id: data.friendID!, client }).then((friend)=>{
+                    ws.publish(friend.id, { path: SocketPaths.Friends, operation, friend });
+                }).catch((error)=>{
+                    jetLogger.err(error);
+                    if(error instanceof Err){
+                        const err = error as Err;
+                        ws.send({ path: SocketPaths.Friends, operation, message: err.message, status: err.code });
+                    }else{
+                        ws.send({ path: SocketPaths.Friends, operation, message: "an internal server error occurred when rejecting friend request", status: 503 });
+                    }
+                });
+            }else{
+                ws.send({ path: SocketPaths.Friends, operation, message: "invalid socket request", status: 400 });
+            }
+            break;
+    }
+}
 
-    socket.on("friends/reject", (input: { friendID: string }, room: string)=>{
-        const model = new FriendModel();
-        model.reject({ credential: socket.handshake.auth.credentail, id: input.friendID }).then((response)=>{
-            console.log(`input ${JSON.stringify(input.friendID)}: ${JSON.stringify(response)}`);
-
-            namespace.to(room).emit('friends/reject', response);
-        }).catch((error)=>{
-            const err = error as Err;
-
-            jetLogger.err(err.error);
-            socket.emit("friends/error", err.message);
-        });
-    });
-    
-    socket.on("friends/request", (input: { userID: string })=>{
-        const model = new FriendModel();
-        model.request({ project: socket.handshake.auth.project, organization: socket.handshake.auth.organization, credential: socket.handshake.auth.credentail, userID: input.userID }).then((response)=>{
-            ConnectedSockets.getInstance().send("friends/request", [ response?.acceptorID!, response?.requesterID! ], response);
-        }).catch((error)=>{
-            const err = error as Err;
-
-            jetLogger.err(err.error);
-            socket.emit("friends/error", err.message);
-        });
-    });
-};
+export  default frinedsSocketHandler;

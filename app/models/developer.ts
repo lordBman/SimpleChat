@@ -1,23 +1,26 @@
-import { DBManager, Err, SeedResult } from "../config";
-import { Developer, Project, User, UserState } from "@simplechat/shared";
-import {  AccessKey, UserRoles } from "@simplechat/shared/models";
+import {DBManager, Err, SeedResult} from "../config";
+import {Project, User, UserState} from "@simplechat/shared";
 import ProjectModel from "./projects";
 
 class DeveloperModel{
     database = DBManager.instance();
 
-    async create(data: { name: string, surname: string, email?: string, username?: string, password: string }): Promise<User>{
+    async create(data: { name: string, surname: string, email: string, username: string, password: string }): Promise<User>{
         try{
-            const details = await this.database.details.create({ data });
-            await this.database.credential.create({ data: { id: details.id, ...data } });
-            const user = await this.database.user.create({ data: { id: details.id } });
-            await this.database.notification.create({
-                data: { 
-                    recieverID: SeedResult.instance().adminID, nType: "User",
-                    alert: `New developer named ${data.name}, say hi to him/her`
-                }
-            });
-            return { ...user, details };
+            const exists = await this.database.credential.count({ where: { email: data.email } });
+            if (exists <= 0) {
+                const credential = await this.database.credential.create({data: { ...data}});
+                const details = await this.database.details.create({  data: { id: credential.id, ...data } });
+                const user = await this.database.user.create({data: {id: details.id}});
+                await this.database.notification.create({
+                    data: {
+                        recieverID: SeedResult.instance().adminID, nType: "User",
+                        alert: `New developer named ${data.name}, say hi to him/her`
+                    }
+                });
+                return {...user, details};
+            }
+            throw new Err(403, "", "another user with the same email exists");
         }catch(error){
             if(error instanceof Err){
                 throw error;
@@ -30,17 +33,15 @@ class DeveloperModel{
         try{
             const projects = await new ProjectModel().all({ user: data.user });
 
-            const init: Array<Project & { keys: AccessKey[], userCount: number }> = [];
+            const init: Array<Project & { userCount: number }> = [];
             for(let index = 0; index < projects?.length!; index++){
                 const project = projects![index];
 
                 const userCount = await this.database.client.count({ where: { projectID: project.id! }});
-                const keys = await this.database.accessKey.findMany({ where: { projectID: project.id } });
-
-                init.push({ ...project, keys, userCount: userCount! });
+                init.push({ ...project, userCount: userCount! });
             }
 
-            return { projects: init };
+            return { ...data.user, projects: init };
         }catch(error){
             if(error instanceof Err){
                 throw error;
@@ -49,45 +50,16 @@ class DeveloperModel{
         }
     }
 
-    async all(data: { admin: User }): Promise<Developer[]>{
-        if(data.admin.role !== "Admin"){
-            throw new Err(403, "forbidden", "only admins can get developer lists");
-        }
-
+    async signin(data: { email: string, password: string }): Promise<User>{
         try{
-            const developers = await this.database.user.findMany({
-                where: { adminID: data.admin.id }, 
-                include: { details: true }
-            }).then(async(users)=>{
-                const init: Developer[] = [];
-                for(let i = 0; i < users.length; i++){
-                    const user = users[i];
-                    const projects = await new ProjectModel().all({ user });
-
-                    init.push({ ...user, projects });
-                }
-                return init;
-            });
-            return developers;
-        }catch(error){
-            throw new Err(503, error, "error encountered when getting developers");
-        }
-    }
-
-    async signin(data: { email?: string, username?: string, password: string }): Promise<User>{
-        try{
-            const credentials = await this.database.credential.findMany({ where: { OR: [ { email: data.email} , { username: data.username } ] } });
-            if(credentials.length > 0){
-                for(var i = 0; i < credentials.length; i++){
-                    const credential = credentials[i];
-                    if(data.password === credential.password){
-                        console.log(JSON.stringify(data.password));
-                        const user = await this.database.user.findUniqueOrThrow({ 
-                            where: { id: credential.id },
-                            include: { details: true }
-                        });
-                        return user;
-                    }
+            const credentials = await this.database.credential.findUnique({ where: { email: data.email } });
+            if(credentials){
+                if(data.password === credentials.password){
+                    console.log(JSON.stringify(data.password));
+                    return await this.database.user.findUniqueOrThrow({
+                        where: {id: credentials.id},
+                        include: {details: true}
+                    });
                 }
                 throw new Err(401, ``, "incorrect password, check and try again");
             }

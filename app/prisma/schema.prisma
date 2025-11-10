@@ -9,272 +9,276 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
-    url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
-model Credential{
-    id                      String            @id @unique @default(uuid())
-    email                   String            @unique
-    password                String
+model Credential {
+  id       String @id @unique @default(uuid())
+  email    String @unique
+  password String
 
-    user                    User?
-    details                 Details?
+  user    User?
+  details Details?
 }
 
-model Details{
-    id                      String            @id @unique
-    credential              Credential        @relation(fields: [id], references: [id])
+model Details {
+  id         String     @id @unique
+  credential Credential @relation(fields: [id], references: [id])
 
-    name                    String
-    surname                 String
+  name    String
+  surname String
 
-    username                String?
-    email                   String?
+  username String?
+  email    String?
 
-    user                    User?            
-    client                  Client?
+  user   User?
+  client Client?
 
-    notifications           Notification[]
+  notifications Notification[]
 }
 
-enum UserRoles{
-    Admin
-    Developer
-}
-model User{
-    id                      String              @id @unique @default(uuid())
-    credential              Credential          @relation(fields: [id], references: [id])
-    details                 Details             @relation(fields: [id], references: [id])
-
-    role                    UserRoles           @default(Developer)
-    
-    adminID                 String?
-    admin                   User?               @relation("developer", fields: [adminID], references: [id])
-    developers              User[]              @relation("developer")
-    
-    projects                Project[]
-
-    created                 DateTime            @default(now())
-    deleted                 Deleted?
-    isDeleted               Boolean             @default(false)
+enum UserRoles {
+  Admin
+  Developer
 }
 
-model Client{
-    id                      String              @id @unique
-    details                 Details             @relation(fields: [id], references: [id])
+model User {
+  id         String     @id @unique @default(uuid())
+  credential Credential @relation(fields: [id], references: [id])
+  details    Details    @relation(fields: [id], references: [id])
 
-    organizationID          String?
-    organization            Organization?       @relation(fields: [organizationID], references: [id], onDelete: SetNull)
-    
-    projectID               String         
-    project                 Project             @relation(fields: [projectID], references: [id], onDelete: Cascade)
+  role UserRoles @default(Developer)
 
-    requester               Friend[]            @relation("requester")
-    acceptor                Friend[]            @relation("acceptor")
+  adminID    String?
+  admin      User?   @relation("developer", fields: [adminID], references: [id])
+  developers User[]  @relation("developer")
 
-    sentChats               Chat[]
-    createdGroups           Group[]         
-    members                 Member[]
+  projects Project[]
 
-    created                 DateTime            @default(now())
-    deleted                 Deleted?
-    isDeleted               Boolean             @default(false)
-
-    @@unique([id, organizationID, projectID])
+  created   DateTime @default(now())
+  deleted   Deleted?
+  isDeleted Boolean  @default(false)
 }
 
-model Project{
-    id                      String              @id @default(uuid())
-    name                    String
+model Client {
+  id      String  @id @unique
+  details Details @relation(fields: [id], references: [id])
 
-    token                   String              @default(uuid()) @unique
+  organizationID String?
+  organization   Organization? @relation(fields: [organizationID], references: [id], onDelete: SetNull)
 
-    ownerID                 String
-    owner                   User       @relation(fields: [ownerID], references: [id], onDelete: Cascade)
+  projectID String
+  project   Project @relation(fields: [projectID], references: [id], onDelete: Cascade)
 
-    keys                    AccessKey[]
-    clients                 Client[]
-    groups                  Group[]
-    friends                 Friend[]
-    organizations           Organization[]
+  requester Friend[] @relation("requester")
+  acceptor  Friend[] @relation("acceptor")
 
-    created                 DateTime              @default(now())
-    isDeleted               Boolean               @default(false)
-    deleted                 Deleted?
+  sentChats     Chat[]
+  createdGroups Group[]
+  members       Member[]
 
-    @@unique([name, ownerID])
+  created   DateTime @default(now())
+  deleted   Deleted?
+  isDeleted Boolean  @default(false)
+
+  @@unique([id, organizationID, projectID])
 }
 
-model AccessKey{
-    id                String            @id @default(uuid())
-    key               String            @unique
-    name              String            @unique
-    enabled           Boolean           @default(false)
+model Project {
+  id   String @id @default(uuid())
+  name String
 
-    projectID         String
-    project           Project           @relation(fields: [projectID], references: [id], onDelete: Cascade)
+  token String @unique @default(uuid())
 
-    @@unique([projectID, name])
+  ownerID String
+  owner   User   @relation(fields: [ownerID], references: [id], onDelete: Cascade)
+
+  keys          AccessKey[]
+  clients       Client[]
+  groups        Group[]
+  friends       Friend[]
+  organizations Organization[]
+
+  created   DateTime @default(now())
+  isDeleted Boolean  @default(false)
+  deleted   Deleted?
+
+  @@unique([name, ownerID])
+}
+
+model AccessKey {
+  id      String  @id @default(uuid())
+  key     String  @unique
+  name    String  @unique
+  enabled Boolean @default(false)
+
+  projectID String
+  project   Project @relation(fields: [projectID], references: [id], onDelete: Cascade)
+
+  @@unique([projectID, name])
 }
 
 model Organization {
-   id               String           @id @default(uuid())
-   name             String
+  id   String @id @default(uuid())
+  name String
 
-   projectID        String
-   project          Project       @relation(fields: [projectID], references: [id])
+  projectID String
+  project   Project @relation(fields: [projectID], references: [id])
 
-   clients          Client[]
-   friends          Friend[]
-   groups           Group[]
+  clients Client[]
+  friends Friend[]
+  groups  Group[]
 
-   isDeleted         Boolean               @default(false)
-   deleted           Deleted?
+  isDeleted Boolean  @default(false)
+  deleted   Deleted?
 
-   @@unique([name, projectID])
+  @@unique([name, projectID])
 }
 
-enum ChatType{
-    Group
-    Friends
-}
-model Chat{
-    id              String           @id @default(uuid())
-    message         String
-    created         DateTime      @default(now())
-    deleted         Deleted?
-
-    delivered       Boolean       @default(false)
-    edited          Boolean       @default(false)
-
-    isDeleted         Boolean               @default(false)
-
-    senderID        String
-    sender          Client         @relation(fields: [senderID], references: [id], onDelete: NoAction)
-
-    ownerID         String
-    friend          Friend?       @relation(fields: [ownerID], references: [id], onDelete: Cascade)
-    group           Group?        @relation(fields: [ownerID], references: [id], onDelete: Cascade)
-    type            ChatType
-
-    reply           Chat[]        @relation("reference")
-    referenceID     String?
-    reference       Chat?         @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
-
-    @@unique([id, ownerID])
+enum ChatType {
+  Group
+  Friends
 }
 
-model Friend{
-    id              String        @id  @default(uuid())
-    created           DateTime              @default(now())
-    isDeleted         Boolean               @default(false)
-    deleted         Deleted?
+model Chat {
+  id      String   @id @default(uuid())
+  message String
+  created DateTime @default(now())
+  deleted Deleted?
 
-    requesterID     String
-    requester       Client          @relation("requester", fields: [requesterID], references: [id])
+  delivered Boolean @default(false)
+  edited    Boolean @default(false)
 
-    acceptorID      String
-    acceptor        Client          @relation("acceptor", fields: [acceptorID], references: [id])
+  isDeleted Boolean @default(false)
 
-    accepted        Boolean       @default(false)
+  senderID String
+  sender   Client @relation(fields: [senderID], references: [id], onDelete: NoAction)
 
-    organizationID  String?
-    organization    Organization?  @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+  ownerID String
+  friend  Friend?  @relation(fields: [ownerID], references: [id], onDelete: Cascade)
+  group   Group?   @relation(fields: [ownerID], references: [id], onDelete: Cascade)
+  type    ChatType
 
-    projectID       String
-    project         Project        @relation(fields: [projectID], references: [id])
+  reply       Chat[]  @relation("reference")
+  referenceID String?
+  reference   Chat?   @relation("reference", fields: [referenceID], references: [id], onDelete: SetNull)
 
-    chats           Chat[]
+  @@unique([id, ownerID])
+}
 
-    @@unique([requesterID, acceptorID, projectID])
+model Friend {
+  id        String   @id @default(uuid())
+  created   DateTime @default(now())
+  isDeleted Boolean  @default(false)
+  deleted   Deleted?
+
+  requesterID String
+  requester   Client @relation("requester", fields: [requesterID], references: [id])
+
+  acceptorID String
+  acceptor   Client @relation("acceptor", fields: [acceptorID], references: [id])
+
+  accepted Boolean @default(false)
+
+  organizationID String?
+  organization   Organization? @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+
+  projectID String
+  project   Project @relation(fields: [projectID], references: [id])
+
+  chats Chat[]
+
+  @@unique([requesterID, acceptorID, projectID])
 }
 
 model Group {
-    id              String              @id @unique @default(uuid())
-    name            String
-    last            DateTime            @default(now())
-    attachment      String?
+  id         String   @id @unique @default(uuid())
+  name       String
+  last       DateTime @default(now())
+  attachment String?
 
-    created           DateTime              @default(now())
-    isDeleted         Boolean               @default(false)
-    deleted         Deleted?
+  created   DateTime @default(now())
+  isDeleted Boolean  @default(false)
+  deleted   Deleted?
 
-    creatorID       String
-    creator         Client                @relation(fields: [creatorID], references: [id], onDelete: NoAction)
+  creatorID String
+  creator   Client @relation(fields: [creatorID], references: [id], onDelete: NoAction)
 
-    organizationID  String?
-    organization    Organization?        @relation(fields: [organizationID], references: [id], onDelete: Cascade)
+  organizationID String?
+  organization   Organization? @relation(fields: [organizationID], references: [id], onDelete: Cascade)
 
-    projectID       String
-    project         Project             @relation(fields: [projectID], references: [id])
+  projectID String
+  project   Project @relation(fields: [projectID], references: [id])
 
-    members         Member[]
-    notifications   Notification[]
-    chats           Chat[]
+  members       Member[]
+  notifications Notification[]
+  chats         Chat[]
 }
 
-enum MemberRole{
-    Member
-    Admin
+enum MemberRole {
+  Member
+  Admin
 }
 
 model Member {
-    id                  String
-    client              Client            @relation(fields: [id], references: [id])
+  id String @id @unique @default(uuid())
 
-    group             Group             @relation(fields: [groupID], references: [id], onDelete: Cascade)
-    groupID           String
+  userID String
+  client Client @relation(fields: [userID], references: [id])
 
-    joined            DateTime          @default(now())
-    role              MemberRole        @default(Member)
+  groupID String
+  group   Group  @relation(fields: [groupID], references: [id], onDelete: Cascade)
 
-    accepted          Boolean           @default(false)
+  joined DateTime   @default(now())
+  role   MemberRole @default(Member)
 
-    deleted           DateTime?
-    isDeleted         Boolean               @default(false)
+  accepted Boolean @default(false)
 
-    @@id([id, groupID])
+  deleted   DateTime?
+  isDeleted Boolean   @default(false)
+
+  @@unique([userID, groupID])
 }
 
-
-enum NotificationType{
-    Group
-    User
-}
-model Notification{
-    id                Int               @id @default(autoincrement())
-    message           String?
-    alert             String  
-    created           DateTime          @default(now())
-    received          Boolean           @default(false)
-
-    recieverID        String
-    reciecver         Details?          @relation(fields: [recieverID], references: [id], onDelete: Cascade)
-    group             Group?            @relation(fields: [recieverID], references: [id], onDelete: Cascade)
-    nType              NotificationType
+enum NotificationType {
+  Group
+  User
 }
 
-enum ResourceType{
-    Client
-    User
-    Project
-    Group
-    Chat
-    Friend
-    Organization
+model Notification {
+  id       Int      @id @default(autoincrement())
+  message  String?
+  alert    String
+  created  DateTime @default(now())
+  received Boolean  @default(false)
+
+  recieverID String
+  reciecver  Details?         @relation(fields: [recieverID], references: [id], onDelete: Cascade)
+  group      Group?           @relation(fields: [recieverID], references: [id], onDelete: Cascade)
+  nType      NotificationType
 }
 
-model Deleted{
-    resourceID          String          @unique
-    on                  DateTime        @default(now())
+enum ResourceType {
+  Client
+  User
+  Project
+  Group
+  Chat
+  Friend
+  Organization
+}
 
-    client              Client?         @relation(fields: [resourceID], references: [id], onDelete: Cascade)
-    user                User?           @relation(fields: [resourceID], references: [id], onDelete: Cascade)
-    friend              Friend?         @relation(fields: [resourceID], references: [id], onDelete: Cascade)
-    group               Group?          @relation(fields: [resourceID], references: [id], onDelete: Cascade)
-    chat                Chat?           @relation(fields: [resourceID], references: [id], onDelete: Cascade)
-    project             Project?        @relation(fields: [resourceID], references: [id], onDelete: Cascade)
-    organization        Organization?   @relation(fields: [resourceID], references: [id], onDelete: Cascade)
-    type                ResourceType
+model Deleted {
+  resourceID String   @unique
+  on         DateTime @default(now())
+
+  client       Client?       @relation(fields: [resourceID], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [resourceID], references: [id], onDelete: Cascade)
+  friend       Friend?       @relation(fields: [resourceID], references: [id], onDelete: Cascade)
+  group        Group?        @relation(fields: [resourceID], references: [id], onDelete: Cascade)
+  chat         Chat?         @relation(fields: [resourceID], references: [id], onDelete: Cascade)
+  project      Project?      @relation(fields: [resourceID], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [resourceID], references: [id], onDelete: Cascade)
+  type         ResourceType
 }

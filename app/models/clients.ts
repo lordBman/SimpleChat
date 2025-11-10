@@ -1,8 +1,7 @@
-import { DBManager, Err } from "../config";
+import {DBManager, Err} from "../config";
 import FriendModel from "./friends";
-import { Project, Organization, SimpleChatState } from "@simplechat/shared";
-import { Client, Chat } from "@simplechat/shared/models";
-import GroupModel from "./groups";
+import {Organization, Project, SimpleChatState} from "@simplechat/shared";
+import {Chat, Client} from "@simplechat/shared/models";
 import MemberModel from "./members";
 
 class ClientModel{
@@ -14,7 +13,9 @@ class ClientModel{
                 data: { id: data.id, projectID: data.project.id, organizationID: data.organization?.id },
             });
 
-            const details = await this.database.details.create({ data: { id: client.id, name: data.name, surname: data.surname, email: data.email, username: data.username } });
+            const details = await this.database.details.create({
+                data: { id: client.id, name: data.name, surname: data.surname, email: data.email, username: data.username }
+            });
 
             return { ...client, details };
         }catch(error){
@@ -44,9 +45,7 @@ class ClientModel{
 
     async count(data: { project: Project, organization?: Organization }): Promise<number | undefined>{
         try{
-            const database = await DBManager.instance();
-            
-            const init = await database.client.count({
+            const init = await this.database.client.count({
                 where: { projectID: data.project.id, organizationID: data.organization?.id }
             });
 
@@ -65,14 +64,13 @@ class ClientModel{
 
             let chats: { [key: string]: Chat[] } = {};
             for(let i = 0; i < actives.length; i++){
-                const chat = (await this.database.chat.findMany({ 
-                    where: { ownerID: actives[i].id }, 
-                    orderBy: { created: "asc" }, 
-                    include: { sender: { include: { details: true } } }
-                })).map((init)=>{
-                    return { ...init, sender: init.sender.details };
+                chats[actives[i].id] = (await this.database.chat.findMany({
+                    where: {ownerID: actives[i].id},
+                    orderBy: {created: "asc"},
+                    include: {sender: {include: {details: true}}}
+                })).map((init) => {
+                    return {...init, sender: init.sender.details};
                 });
-                chats[actives[i].id] = chat;
             }
 
             return { ...data.client, chats, friends: friends!, members };

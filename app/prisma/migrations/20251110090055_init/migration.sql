@@ -1,8 +1,7 @@
 -- CreateTable
 CREATE TABLE "Credential" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "username" TEXT,
-    "email" TEXT,
+    "email" TEXT NOT NULL,
     "password" TEXT NOT NULL
 );
 
@@ -122,16 +121,15 @@ CREATE TABLE "Group" (
 
 -- CreateTable
 CREATE TABLE "Member" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userID" TEXT NOT NULL,
     "groupID" TEXT NOT NULL,
     "joined" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "role" TEXT NOT NULL DEFAULT 'Member',
     "accepted" BOOLEAN NOT NULL DEFAULT false,
     "deleted" DATETIME,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
-
-    PRIMARY KEY ("id", "groupID"),
-    CONSTRAINT "Member_id_fkey" FOREIGN KEY ("id") REFERENCES "Client" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Member_userID_fkey" FOREIGN KEY ("userID") REFERENCES "Client" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Member_groupID_fkey" FOREIGN KEY ("groupID") REFERENCES "Group" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -142,10 +140,10 @@ CREATE TABLE "Notification" (
     "alert" TEXT NOT NULL,
     "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "received" BOOLEAN NOT NULL DEFAULT false,
-    "groupID" TEXT,
     "recieverID" TEXT NOT NULL,
-    CONSTRAINT "Notification_groupID_fkey" FOREIGN KEY ("groupID") REFERENCES "Group" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "Notification_recieverID_fkey" FOREIGN KEY ("recieverID") REFERENCES "Client" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "nType" TEXT NOT NULL,
+    CONSTRAINT "Notification_recieverID_fkey" FOREIGN KEY ("recieverID") REFERENCES "Details" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Notification_recieverID_fkey" FOREIGN KEY ("recieverID") REFERENCES "Group" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -166,7 +164,22 @@ CREATE TABLE "Deleted" (
 CREATE UNIQUE INDEX "Credential_id_key" ON "Credential"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Credential_email_key" ON "Credential"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Details_id_key" ON "Details"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Client_id_key" ON "Client"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Client_id_organizationID_projectID_key" ON "Client"("id", "organizationID", "projectID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Project_token_key" ON "Project"("token");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Project_name_ownerID_key" ON "Project"("name", "ownerID");
@@ -194,6 +207,9 @@ CREATE UNIQUE INDEX "Group_id_key" ON "Group"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Member_id_key" ON "Member"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Member_userID_groupID_key" ON "Member"("userID", "groupID");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Deleted_resourceID_key" ON "Deleted"("resourceID");

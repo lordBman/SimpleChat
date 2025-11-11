@@ -6,7 +6,7 @@ type User = {
     id: string
     details: Details,
     role: UserRoles,
-    admin?: User,
+    admin?: Details | null,
     created: Date
 }
 

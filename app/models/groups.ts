@@ -71,7 +71,7 @@ class GroupModel{
 
     async rename(data: { client: Client, groupID: string, name: string }): Promise<Group>{
         try{
-            const member = await this.database.member.findUniqueOrThrow({ where: { id_groupID: { id: data.client.id, groupID: data.groupID } } });
+            const member = await this.database.member.findUniqueOrThrow({ where: { userID_groupID: { userID: data.client.id, groupID: data.groupID } } });
             if(member.role != "Admin"){
                 throw new Err(401, '', "you do not have authorization to rename this group");
             }

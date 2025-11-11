@@ -27,10 +27,12 @@ class UserModel{
             const credential = await this.database.credential.findUnique({ where: { email: data.email } });
             if(credential){
                 if(data.password === credential.password){
-                    return await this.database.user.findUniqueOrThrow({ 
+                    const user = await this.database.user.findUniqueOrThrow({
                         where: { id: credential.id },
-                        include: { details: true, admin: true }
+                        include: { details: true, admin: { include: { details: true } } }
                     });
+
+                    return { ...user, admin: user.admin?.details }
                 }
                 throw new Err(401, ``, "incorrect password, check and try again");
             }

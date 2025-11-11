@@ -15,7 +15,7 @@ class ProjectModel{
         
             const key = await this.database.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
 
-            return { ...project, owner: data.user, keys: [key] };
+            return { ...project, owner: data.user.details, keys: [key] };
         }catch(error){
             throw new Err(503, error, "error encountered while loading project list");
         }

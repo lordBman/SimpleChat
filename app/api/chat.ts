@@ -3,8 +3,6 @@ import { Err } from "../config";
 import jetLogger from "jet-logger";
 import Elysia, { t } from "elysia";
 import { ClientAuthenicationPlugin, keyAuthenicationPlugin } from "./plugins";
-import FriendModel from "../models/friends";
-import { WSChatOperation } from "@simplechat/shared";
 
 const chatRouter = new Elysia({ prefix: "/chat" }).decorate({ "chatModel": new ChatModel() });
 
@@ -38,7 +36,7 @@ chatRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin)
         try{
             const init = await chatModel.create({ ...body, client: client! });
 
-            store.connectedSockets[client!.id]?.publish(init.ownerID, { operation: WSChatOperation.SendMessage, chat: init });
+            //store.connectedSockets[client!.id]?.publish(init.ownerID, { operation: WSChatOperation.SendMessage, chat: init });
             return status(201, init);
         }catch(error){
             jetLogger.err(error);
@@ -58,7 +56,7 @@ chatRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin)
     if(body.friendID || body.groupID){
         try{
             const init = await chatModel.update({ ...body, client: client! });
-            store.connectedSockets[client!.id]?.publish(init.ownerID, { operation: WSChatOperation.EditMessage, chat: init });
+            //store.connectedSockets[client!.id]?.publish(init.ownerID, { operation: WSChatOperation.EditMessage, chat: init });
             return status(201, init);
         }catch(error){
             jetLogger.err(error);

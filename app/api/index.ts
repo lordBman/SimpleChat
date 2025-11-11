@@ -4,7 +4,7 @@ import jetLogger from "jet-logger";
 import accessKeyRouter from "./access-keys";
 import { AdminModel, ClienitModel } from "../models";
 import { Err } from "../config";
-import { User, Friend, Group, Member, Details } from "@simplechat/shared";
+import { Friend, Group, Member, Details } from "@simplechat/shared";
 import DeveloperModel from "../models/developer";
 import projectRouter from "./projects";
 import FriendModel from "../models/friends";
@@ -34,7 +34,7 @@ api.use(APIAuthenicationPlugin).get("/", async({ user, developerModel, adminMode
             return status(503, { message: "an internal server error occurred when creating user" });
         }
     }
-})
+});
 
 api.use(ClientAuthenicationPlugin).get("/client", async({ project, clientModel, organization, client, status, cookie: { token } }) =>{
     try{

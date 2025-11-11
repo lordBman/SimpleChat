@@ -9,7 +9,7 @@
     "module": "dist/index.esm.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "test": "dev",
+        "dev": "bun run test/index.ts",
         "build": "bun build.js && tsc --emitDeclarationOnly --outDir dist"
     },
     "devDependencies": {
@@ -19,8 +19,11 @@
         "typescript": "^5.8.2"
     },
     "dependencies": {
+        "@elysiajs/static": "^1.4.6",
         "@simplechat/shared": "file:../shared",
         "axios": "^1.8.4",
+        "elysia": "^1.4.15",
+        "jet-logger": "^2.0.1",
         "socket.io-client": "^4.8.1"
     }
 }

@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SimpleChat - Template</title>
+    <style>
+        :root{
+            --bg:#f4f7fb;
+            --sidebar:#ffffff;
+            --accent:#2b90ff;
+            --muted:#9aa6b2;
+            --me:#daf1ff;
+            --them:#ffffff;
+            --radius:10px;
+            --shadow: 0 6px 18px rgba(34,44,60,0.08);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%;}
+        body{
+            margin:0;
+            background:var(--bg);
+            color:#24303a;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            padding:24px;
+        }
+
+        .app{
+            max-width:1100px;
+            height: calc(100vh - 48px);
+            margin:0 auto;
+            background:linear-gradient(180deg, #ffffff, #fcfdff);
+            display:flex;
+            border-radius:14px;
+            overflow:hidden;
+            box-shadow:var(--shadow);
+        }
+
+        /* Sidebar */
+        .sidebar{
+            width:320px;
+            background:var(--sidebar);
+            border-right:1px solid #eef3f7;
+            padding:16px;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+        .logo{
+            width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#6bd3ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;
+        }
+        .brand h1{font-size:16px;margin:0}
+        .search{
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        .search input{
+            flex:1;padding:10px 12px;border-radius:10px;border:1px solid #e6eef5;background:#f9fbfd;
+            outline:none;
+        }
+
+        .list-section{overflow:auto;padding-bottom:8px}
+        .list-title{font-size:12px;color:var(--muted);padding:6px 2px;margin-top:8px}
+        .person{
+            display:flex;
+            gap:12px;
+            padding:10px;
+            border-radius:10px;
+            align-items:center;
+            cursor:pointer;
+            transition:background .12s;
+        }
+        .person:hover{background:#f5fbff}
+        .person.active{background:#eef8ff;border-left:3px solid var(--accent);padding-left:9px}
+        .avatar{
+            width:44px;height:44px;border-radius:10px;background:#e7f2ff;color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;
+            position:relative;
+        }
+        .badge{
+            position:absolute;right:-6px;top:-6px;background:#ff5c7c;color:white;font-size:11px;padding:3px 6px;border-radius:999px;
+        }
+        .meta{flex:1}
+        .meta .name{font-weight:600}
+        .meta .preview{font-size:13px;color:var(--muted);margin-top:4px}
+
+        /* Main chat */
+        .chat{
+            flex:1;display:flex;flex-direction:column;background:linear-gradient(180deg,#fff,#fbfeff);
+        }
+        .chat-header{
+            padding:14px 18px;border-bottom:1px solid #eef3f7;display:flex;align-items:center;gap:12px;
+            background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
+        }
+        .chat-header .title{font-weight:700}
+        .chat-body{
+            padding:18px;
+            flex:1;
+            overflow:auto;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            background:linear-gradient(180deg,#fbfeff,#f7fbff);
+        }
+        .messages{display:flex;flex-direction:column;gap:10px;max-width:900px}
+        .msg{padding:10px 14px;border-radius:14px;max-width:70%;box-shadow:0 2px 6px rgba(30,40,50,0.03);font-size:14px}
+        .msg-them{background:var(--them);align-self:flex-start;border-radius:14px 14px 14px 6px}
+        .msg-me{background:var(--me);align-self:flex-end;border-radius:14px 14px 6px 14px}
+        .msg small{display:block;margin-top:6px;font-size:11px;color:var(--muted)}
+
+        .chat-input{
+            padding:12px 16px;border-top:1px solid #eef3f7;display:flex;gap:8px;align-items:center;background:transparent;
+        }
+        .chat-input textarea{
+            resize:none;flex:1;padding:10px 12px;border-radius:10px;border:1px solid #e6eef5;height:48px;outline:none;background:white;
+        }
+        .btn{
+            background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;
+        }
+
+        /* Responsive */
+        @media (max-width:800px){
+            .app{flex-direction:column;height:auto}
+            .sidebar{width:100%;display:flex;overflow:auto}
+            .chat{order:2}
+        }
+    </style>
+</head>
+<body>
+    <div class="app" role="application" aria-label="Simple chat application">
+        <aside class="sidebar" aria-label="Contacts and groups">
+            <div class="brand">
+                <div class="logo">SC</div>
+                <h1>SimpleChat</h1>
+            </div>
+
+            <div class="search" role="search">
+                <input id="search" placeholder="Search friends or groups..." aria-label="Search" />
+            </div>
+
+            <div class="list-section" id="friends-section" aria-label="Friends">
+                <div class="list-title">Friends</div>
+                <div id="friends-list">
+                    <div class="person" tabindex="0" data-id="alice" data-type="user">
+                        <div class="avatar">A</div>
+                        <div class="meta">
+                            <div class="name">Alice</div>
+                            <div class="preview">Hey! Are we still on for tonight?</div>
+                        </div>
+                        <div class="badge">2</div>
+                    </div>
+
+                    <div class="person" tabindex="0" data-id="bob" data-type="user">
+                        <div class="avatar">B</div>
+                        <div class="meta">
+                            <div class="name">Bob</div>
+                            <div class="preview">Sent a file • 11:04</div>
+                        </div>
+                    </div>
+
+                    <div class="person" tabindex="0" data-id="charlie" data-type="user">
+                        <div class="avatar">C</div>
+                        <div class="meta">
+                            <div class="name">Charlie</div>
+                            <div class="preview">On my way</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-section" id="groups-section" aria-label="Groups">
+                <div class="list-title">Groups</div>
+                <div id="groups-list">
+                    <div class="person" tabindex="0" data-id="family" data-type="group">
+                        <div class="avatar">F</div>
+                        <div class="meta">
+                            <div class="name">Family</div>
+                            <div class="preview">Mom: See you Sunday</div>
+                        </div>
+                    </div>
+
+                    <div class="person" tabindex="0" data-id="work" data-type="group">
+                        <div class="avatar">W</div>
+                        <div class="meta">
+                            <div class="name">Work</div>
+                            <div class="preview">Project deadline moved</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="chat" aria-live="polite">
+            <div class="chat-header" id="chat-header">
+                <div class="avatar" id="header-avatar">—</div>
+                <div>
+                    <div class="title" id="header-name">Select a conversation</div>
+                    <div class="subtitle" id="header-sub">Choose a friend or group on the left</div>
+                </div>
+            </div>
+
+            <div class="chat-body">
+                <div class="messages" id="messages" aria-label="Messages">
+                    <!-- messages inserted here -->
+                </div>
+            </div>
+
+            <div class="chat-input">
+                <textarea id="message-input" placeholder="Type a message..." aria-label="Message input"></textarea>
+                <button class="btn" id="send-btn" aria-label="Send message">Send</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simple demo data and behavior
+        const conversations = {
+            alice: [
+                {from:'them', text:'Hey! Are we still on for tonight?', time:'18:02'},
+                {from:'me', text:'Yes! Meet at 8?', time:'18:05'},
+            ],
+            bob: [
+                {from:'them', text:'I uploaded the report.', time:'11:00'},
+                {from:'me', text:'Thanks, I will review.', time:'11:12'},
+            ],
+            charlie: [
+                {from:'them', text:'On my way', time:'09:40'}
+            ],
+            family: [
+                {from:'them', text:'Dinner at 7?', time:'20:01'},
+                {from:'me', text:'Perfect!', time:'20:04'}
+            ],
+            work: [
+                {from:'them', text:'Reminder: stand-up at 10', time:'09:00'}
+            ]
+        };
+
+        const headerName = document.getElementById('header-name');
+        const headerAvatar = document.getElementById('header-avatar');
+        const headerSub = document.getElementById('header-sub');
+        const messagesEl = document.getElementById('messages');
+        const input = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const search = document.getElementById('search');
+
+        let activeId = null;
+
+        function formatTime(date = new Date()){
+            return date.getHours().toString().padStart(2,'0') + ':' + date.getMinutes().toString().padStart(2,'0');
+        }
+
+        function renderConversation(id){
+            activeId = id;
+            const activeEl = document.querySelector('.person.active');
+            if(activeEl) activeEl.classList.remove('active');
+            const newActive = document.querySelector(`.person[data-id="${id}"]`);
+            if(newActive) newActive.classList.add('active');
+
+            const name = newActive ? newActive.querySelector('.name').textContent : 'Conversation';
+            headerName.textContent = name;
+            headerAvatar.textContent = name.charAt(0).toUpperCase();
+            headerSub.textContent = newActive ? (newActive.dataset.type === 'group' ? 'Group chat' : 'Direct message') : '';
+
+            messagesEl.innerHTML = '';
+            const convo = conversations[id] || [];
+            convo.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'msg ' + (m.from === 'me' ? 'msg-me' : 'msg-them');
+                div.innerHTML = `<div>${escapeHtml(m.text)}</div><small>${m.time || ''}</small>`;
+                messagesEl.appendChild(div);
+            });
+            // scroll to bottom
+            setTimeout(()=> messagesEl.scrollTop = messagesEl.scrollHeight, 30);
+        }
+
+        function sendMessage(){
+            const text = input.value.trim();
+            if(!text || !activeId) return;
+            const time = formatTime();
+            const msg = {from:'me', text, time};
+            conversations[activeId] = conversations[activeId] || [];
+            conversations[activeId].push(msg);
+            const div = document.createElement('div');
+            div.className = 'msg msg-me';
+            div.innerHTML = `<div>${escapeHtml(text)}</div><small>${time}</small>`;
+            messagesEl.appendChild(div);
+            input.value = '';
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function escapeHtml(s){
+            return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        // attach click handlers for persons
+        document.querySelectorAll('.person').forEach(el => {
+            el.addEventListener('click', () => renderConversation(el.dataset.id));
+            el.addEventListener('keydown', (e) => { if(e.key === 'Enter') renderConversation(el.dataset.id); });
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+        });
+
+        // simple search filter
+        search.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            document.querySelectorAll('.person').forEach(p => {
+                const name = p.querySelector('.name').textContent.toLowerCase();
+                const preview = p.querySelector('.preview')?.textContent.toLowerCase() || '';
+                p.style.display = (name.includes(q) || preview.includes(q)) ? '' : 'none';
+            });
+        });
+
+        // initial selection
+        renderConversation('alice');
+    </script>
+</body>
+</html></div>

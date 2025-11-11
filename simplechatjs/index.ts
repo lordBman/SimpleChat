@@ -1,11 +1,9 @@
 import { AccessHeaderKeys, APIClient, Friend, Member, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
 import { Chat, Chats } from "@simplechat/shared/models";
 
-class SimpleChatClient{
+/*class SimpleChatClient{
     private config: SimpleChatConfig;
-    private chatSocket: WebSocket;
-    private friendsSocket: WebSocket;
-    private groupSocket: WebSocket;
+    private socket: WebSocket;
 
     state: SimpleChatState;
     messages: string[];
@@ -20,7 +18,7 @@ class SimpleChatClient{
         this.state = state;
         this.messages = this.sort();
 
-        this.chatSocket = We
+        this.chatSocket = new WebSocket("/ws")
 
         this.socket.on("chat", (data: Chat, room: string)=>{
             const chats = { ...this.state.chats };
@@ -36,13 +34,13 @@ class SimpleChatClient{
         });
     
         this.socket.on("typing", (message: string, room: string)=>{
-            /*if(room === status.room){
+            if(room === status.room){
                 if(status.message !== message){
                     setStatus({ message, room });
                 }                
             }else if(room === current?.id){
                 setStatus({ message, room });
-            }*/
+            }
         });
 
         this.socket.on("friends/request", (response: Friend) =>{
@@ -243,5 +241,5 @@ class SimpleChatClient{
     }
 }
 
-export { SimpleChatClient };
+export { SimpleChatClient };*/
 

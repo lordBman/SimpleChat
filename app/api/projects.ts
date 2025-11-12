@@ -2,7 +2,7 @@ import Elysia, { t } from "elysia";
 import { Err } from "../config";
 import ProjectModel from "../models/projects";
 import jetLogger from "jet-logger";
-import { APIAuthenicationPlugin } from "./plugins";
+import APIAuthenicationPlugin from "../plugins/api-authentication";
 
 const projectRouter = new Elysia({ prefix: "/projects" }).decorate({ "projectModel": new ProjectModel() });
 

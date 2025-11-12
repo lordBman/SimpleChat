@@ -1,8 +1,8 @@
 import { Err } from "../config"
 import jetLogger from "jet-logger";
-import Elysia, { t } from "elysia";
-import { APIAuthenicationPlugin } from "./plugins";
+import { t, Elysia } from "elysia";
 import { AccessKeyModel } from "../models";
+import APIAuthenicationPlugin from "../plugins/api-authentication";
 
 const accessKeyRouter = new Elysia({ prefix: "/access-keys" });
 

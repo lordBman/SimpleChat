@@ -1,5 +1,5 @@
 import jetLogger from "jet-logger";
-import FriendModel from "../models/friends";;
+import FriendModel from "../models/friends";
 import AccessKeyModel from "../models/access-keys";
 import { ChatModel, GroupModel, OrganizationModel } from "../models";
 import { Err } from "../config";
@@ -7,11 +7,12 @@ import Elysia, { t } from "elysia";
 import { ElysiaWS } from "elysia/ws";
 import { SocketPaths } from "@simplechat/shared";
 import jwt from "@elysiajs/jwt";
-import { CookieAuthenicationPlugin, keyAuthenicationPlugin } from "../api/plugins";
+import { CookieAuthenicationPlugin } from "../api/plugins";
 import chatSocketHandler from "./chats";
 import friendsSocketHandler from "./friends";
+import keyAuthenicationPlugin from "../plugins/key-authentication";
 
-export const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, ElysiaWS>>("connectedSockets", {}).derive({ as: "global" }, async ({ store })=>({
+const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, ElysiaWS>>("connectedSockets", {}).derive({ as: "global" }, async ({ store })=>({
     isOnline: (id: string) => store.connectedSockets[id] !== undefined,
     get: (id: string) => store.connectedSockets[id],
     add: (id: string, ws: ElysiaWS) =>{
@@ -30,7 +31,7 @@ export const connectedPlugin = new Elysia().state<"connectedSockets", Record<str
     }
 }));
 
-const sockets = new Elysia().decorate({ "chatModel": new ChatModel() }).use(connectedPlugin).use(CookieAuthenicationPlugin).use(keyAuthenicationPlugin)
+const sockets = new Elysia().use(connectedPlugin).use(CookieAuthenicationPlugin).use(keyAuthenicationPlugin)
 .ws("/ws", {
     body: t.Object({
         operation: t.String(),
@@ -88,3 +89,5 @@ const sockets = new Elysia().decorate({ "chatModel": new ChatModel() }).use(conn
         }
     }
 });
+
+export default sockets;

@@ -11,7 +11,8 @@ import FriendModel from "../models/friends";
 import GroupModel from "../models/groups";
 import Elysia, { t } from "elysia";
 import authRouter from "./auth";
-import { APIAuthenicationPlugin, ClientAuthenicationPlugin } from "./plugins";
+import APIAuthenicationPlugin from "../plugins/api-authentication";
+import clientAuthenicationPlugin from "../plugins/client";
 
 let api = new Elysia({ prefix: "/api" }).decorate({ "adminModel": new AdminModel(), "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() });
 api.use(projectRouter.use(accessKeyRouter));
@@ -36,7 +37,7 @@ api.use(APIAuthenicationPlugin).get("/", async({ user, developerModel, adminMode
     }
 });
 
-api.use(ClientAuthenicationPlugin).get("/client", async({ project, clientModel, organization, client, status, cookie: { token } }) =>{
+api.use(clientAuthenicationPlugin).get("/client", async({ project, clientModel, organization, client, status, cookie: { token } }) =>{
     try{
         const init = await clientModel.get({ client: client!, project: project!, organization });
         return status(200, { ...init, token: token.value });

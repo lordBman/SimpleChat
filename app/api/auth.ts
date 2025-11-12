@@ -1,14 +1,16 @@
 import { Err } from "../config";
 import DeveloperModel from "../models/developer";
 import jetLogger from "jet-logger";
-import Elysia, { t } from "elysia";
+import { t, Elysia } from "elysia";
 import jwt from "@elysiajs/jwt";
-import { keyAuthenicationPlugin } from "./plugins";
 import { ClienitModel } from "../models";
+import keyAuthenicationPlugin from "../plugins/key-authentication";
 
-const authRouter = new Elysia({ prefix: "/auth" }).use(jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() });
+// @ts-ignore
+const authRouter = new Elysia({ prefix: "/auth" });
 
-authRouter.post("/", async({ jwt, status, body, developerModel, cookie: { token } }) =>{
+authRouter.use(jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() })
+.post("/", async({ jwt, status, body, developerModel, cookie: { token } }) =>{
     try{
         const user = await developerModel.create({ ...body });
         const value = await jwt.sign({ user: JSON.stringify(user) });
@@ -21,12 +23,12 @@ authRouter.post("/", async({ jwt, status, body, developerModel, cookie: { token 
             const err = error as Err;
             return status(err.code, { message: err.message });
         }else{
-            return status(503, { message: "an internal server error occurred when creating user" });
+            return status(503, { message: "an internal server error occurred when creating user" })
         }
     }
 }, { body: t.Object({ name: t.String(), surname: t.String(), email: t.String(), username: t.String(), password: t.String() }) })
 
-authRouter.use(keyAuthenicationPlugin).post("/connect", async({ jwt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
+.use(keyAuthenicationPlugin).post("/connect", async({ jwt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
     if(body.email || body.username){
         try{
             const client = await clientModel.connect({ ...body, project: project!, organization });
@@ -48,7 +50,7 @@ authRouter.use(keyAuthenicationPlugin).post("/connect", async({ jwt, body, statu
     }
 }, { body: t.Object({ id: t.String(), name: t.String(), surname: t.String(), email: t.Optional(t.String()), username: t.Optional(t.String()) }) })
 
-authRouter.post("/login", async ({ jwt, body, status, developerModel, cookie: { token } }) =>{
+.post("/login", async ({ jwt, body, status, developerModel, cookie: { token } }) =>{
     try{
         const user = await developerModel.signin({ ...body });
         const value = await jwt.sign({ user: JSON.stringify(user) });
@@ -67,7 +69,7 @@ authRouter.post("/login", async ({ jwt, body, status, developerModel, cookie: { 
     }
 }, { body: t.Object({ email: t.String(), password: t.String() }) })
 
-authRouter.get("/logout", async({ status, cookie: { token } }) =>{
+.get("/logout", async({ status, cookie: { token } }) =>{
     token?.set({ value: '', maxAge: 0, httpOnly: true });
     
     return status(200, { message: "Logout successful" });

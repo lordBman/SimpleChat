@@ -2,11 +2,12 @@ import { ChatModel, GroupModel } from "../models";
 import { Err } from "../config";
 import jetLogger from "jet-logger";
 import Elysia, { t } from "elysia";
-import { ClientAuthenicationPlugin, keyAuthenicationPlugin } from "./plugins";
+import keyAuthenicationPlugin from "../plugins/key-authentication";
+import clientAuthenicationPlugin from "../plugins/client";
 
 const chatRouter = new Elysia({ prefix: "/chat" }).decorate({ "chatModel": new ChatModel() });
 
-chatRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin)
+chatRouter.use(keyAuthenicationPlugin).use(clientAuthenicationPlugin)
 .get("/:ownerID/:id?", async({ params, body, chatModel, client, status }) =>{
     if(params.ownerID || body.groupID || body.friendID){
         try{

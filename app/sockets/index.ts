@@ -1,16 +1,14 @@
 import jetLogger from "jet-logger";
 import FriendModel from "../models/friends";
-import AccessKeyModel from "../models/access-keys";
-import { ChatModel, GroupModel, OrganizationModel } from "../models";
+import { GroupModel } from "../models";
 import { Err } from "../config";
 import Elysia, { t } from "elysia";
 import { ElysiaWS } from "elysia/ws";
 import { SocketPaths } from "@simplechat/shared";
-import jwt from "@elysiajs/jwt";
-import { CookieAuthenicationPlugin } from "../api/plugins";
 import chatSocketHandler from "./chats";
 import friendsSocketHandler from "./friends";
 import keyAuthenicationPlugin from "../plugins/key-authentication";
+import CookieAuthenicationPlugin from "../plugins/cookie-authentication";
 
 const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, ElysiaWS>>("connectedSockets", {}).derive({ as: "global" }, async ({ store })=>({
     isOnline: (id: string) => store.connectedSockets[id] !== undefined,
@@ -31,8 +29,7 @@ const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, El
     }
 }));
 
-const sockets = new Elysia().use(connectedPlugin).use(CookieAuthenicationPlugin).use(keyAuthenicationPlugin)
-.ws("/ws", {
+const sockets = new Elysia().use(connectedPlugin).use(CookieAuthenicationPlugin).use(keyAuthenicationPlugin).ws("/ws", {
     body: t.Object({
         operation: t.String(),
         path: t.String(),

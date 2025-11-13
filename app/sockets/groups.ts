@@ -6,9 +6,9 @@ import { ElysiaWS } from "elysia/ws";
 import {Organization, Project, SocketPaths, WSGroupOperation} from "@simplechat/shared";
 import MemberModel from "../models/members";
 
-type GroupsData = { name?: string, groupID?: string, userID?: string }
+type GroupsData = { name?: string, groupID?: string, userID?: string, memberID?: string }
 
-const chatSocketHandler = (ws: ElysiaWS, project: Project, client: Client, operation: string, data: GroupsData, organization?: Organization) =>{
+const groupSocketHandler = (ws: ElysiaWS, project: Project, client: Client, operation: string, data: GroupsData, organization?: Organization) =>{
     const model = new GroupModel();
     const memberModel = new MemberModel();
 
@@ -51,10 +51,10 @@ const chatSocketHandler = (ws: ElysiaWS, project: Project, client: Client, opera
             }
             break;
         case WSGroupOperation.Accept:
-            if(data.groupID === undefined || data.userID === undefined){
-                ws.send({ path: SocketPaths.Groups, operation: operation, message: "you must provide both group id and user id", status: 400 });
+            if(data.groupID === undefined || data.memberID === undefined){
+                ws.send({ path: SocketPaths.Groups, operation: operation, message: "you must provide both group id and member id", status: 400 });
             }else{
-                memberModel.accept({ client, userID: data.userID, groupID: data.groupID }).then((response)=>{
+                memberModel.accept({ client, memberID: data.memberID, groupID: data.groupID }).then((response)=>{
                     ws.publish(response.group.id, { path: SocketPaths.Groups, operation, member: response });
                     ws.subscribe(response.group.id);
                 }).catch((error) =>{
@@ -69,10 +69,10 @@ const chatSocketHandler = (ws: ElysiaWS, project: Project, client: Client, opera
             }
             break;
         case WSGroupOperation.Reject:
-            if(data.groupID === undefined || data.userID === undefined){
-                ws.send({ path: SocketPaths.Groups, operation, message: "you must provide both group id and user id", status: 400 });
+            if(data.groupID === undefined || data.memberID === undefined){
+                ws.send({ path: SocketPaths.Groups, operation, message: "you must provide both group id and member id", status: 400 });
             }else{
-                memberModel.reject({ client, userID: data.userID, groupID: data.groupID }).then((response)=>{
+                memberModel.reject({ client, memberID: data.memberID, groupID: data.groupID }).then((response)=>{
                     ws.publish(response.group.id, { path: SocketPaths.Groups, operation, member: response });
                     ws.unsubscribe(response.group.id);
                 }).catch((error) =>{

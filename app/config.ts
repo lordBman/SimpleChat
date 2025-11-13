@@ -1,6 +1,7 @@
 import { uuid } from "./utils";
 import jetLogger from "jet-logger";
 import { PrismaClient } from "@prisma/client";
+import { Credential } from "@prisma/client";
 
 const connect = (): PrismaClient => {
     const client = new PrismaClient({ log: [{ level: 'query', emit: 'event' }], });
@@ -74,12 +75,27 @@ export async function seed() {
     const database = DBManager.instance();
 
     jetLogger.info("initializing seeding: checking database for admin user");
-    let user = await database.user.findFirst({ where: { role: "Admin" } });
-    if(!user){
-        user = await database.user.create({ data: { role: "Admin" }});
-    }
+    
+    let credential = await database.credential.upsert({
+            where: { email: process.env.COMPANY_EMAIL! },
+            update: { email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! },
+            create: { email: process.env.COMPANY_EMAIL!, password: process.env.COMPANY_PASSWORD! }
+    });
 
-    jetLogger.info("initializing seeding: checking database for admin details");
+    let details = await database.details.upsert({ 
+        where: { id: credential.id },
+        create: { id: credential.id, name: process.env.NAME!, surname: process.env.SURNAME!, email: process.env.COMPANY_EMAIL!, username: process.env.ADMIN_USERNAME! },
+        update: { name: process.env.NAME, surname: process.env.SURNAME, email: process.env.COMPANY_EMAIL!, username: process.env.ADMIN_USERNAME! }
+    });
+
+    let user = await database.user.upsert({
+        where: { id: credential.id }, 
+        create: { id: credential.id, role: "Admin" },
+        update: {}
+    });
+    
+
+    /*jetLogger.info("initializing seeding: checking database for admin details");
     let details = await database.details.upsert({ 
         where: { id: user.id },
         create: { id: user.id, name: process.env.NAME!, surname: process.env.SURNAME!, email: process.env.COMPANY_EMAIL!, username: process.env.ADMIN_USERNAME! },
@@ -122,7 +138,7 @@ export async function seed() {
 
     SeedResult.set({ projectID: project.id, organizationID: organization.id, adminID: credential.id });
     
-    jetLogger.info(`${process.env.PROJECT_NAME} all set Project ID: ${project.id} - Access Key: ${accessKey.key}`);
+    jetLogger.info(`${process.env.PROJECT_NAME} all set Project ID: ${project.id} - Access Key: ${accessKey.key}`);*/
 }
 
 export { DBManager };

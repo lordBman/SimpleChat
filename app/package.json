@@ -2,7 +2,7 @@
   "name": "simplechat",
   "module": "index.ts",
   "scripts": {
-    "dev": "concurrently \"bun run compile\" \"bun run dbstudio\" \"bun run start\"",
+    "dev": "concurrently \"bun run dbstudio\" \"bun run start\"",
     "compile": "bun ./esbuild.js",
     "start": "bun --watch run ./index.ts",
     "migrate": "bun x prisma migrate dev --name init",
@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@elysiajs/cookie": "^0.8.0",
-    "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/static": "^1.4.4",
     "@elysiajs/stream": "^1.1.0",
     "@prisma/adapter-pg": "^6.5.0",
@@ -30,6 +29,7 @@
     "@simplechat/shared": "file:../shared",
     "elysia": "^1.4.13",
     "jet-logger": "^2.0.1",
+    "jose": "^6.1.1",
     "react-router-dom": "^5.0.0",
     "simplechat-pages": "file:../pages",
     "ts-loader": "^9.5.2"

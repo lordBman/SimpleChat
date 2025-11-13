@@ -2,18 +2,18 @@ import { Err } from "../config";
 import DeveloperModel from "../models/developer";
 import jetLogger from "jet-logger";
 import { t, Elysia } from "elysia";
-import jwt from "@elysiajs/jwt";
 import { ClienitModel } from "../models";
 import keyAuthenicationPlugin from "../plugins/key-authentication";
+import JWTPlugin from "../plugins/jwt-plugin";
 
 // @ts-ignore
 const authRouter = new Elysia({ prefix: "/auth" });
 
-authRouter.use(jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() })
-.post("/", async({ jwt, status, body, developerModel, cookie: { token } }) =>{
+authRouter.use(JWTPlugin).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() })
+.post("/", async({ encrypt, status, body, developerModel, cookie: { token } }) =>{
     try{
         const user = await developerModel.create({ ...body });
-        const value = await jwt.sign({ user: JSON.stringify(user) });
+        const value = await encrypt(user);
         token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
         return status(201, { message: "Registration successful", ...user });
@@ -28,11 +28,11 @@ authRouter.use(jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).decora
     }
 }, { body: t.Object({ name: t.String(), surname: t.String(), email: t.String(), username: t.String(), password: t.String() }) })
 
-.use(keyAuthenicationPlugin).post("/connect", async({ jwt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
+.use(keyAuthenicationPlugin).post("/connect", async({ encrypt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
     if(body.email || body.username){
         try{
             const client = await clientModel.connect({ ...body, project: project!, organization });
-            const value = await jwt.sign({ client: JSON.stringify(client) });
+            const value = await encrypt(client);
             client_token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
             return status(200, { message: "client connetion success", ...client });
@@ -50,10 +50,10 @@ authRouter.use(jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).decora
     }
 }, { body: t.Object({ id: t.String(), name: t.String(), surname: t.String(), email: t.Optional(t.String()), username: t.Optional(t.String()) }) })
 
-.post("/login", async ({ jwt, body, status, developerModel, cookie: { token } }) =>{
+.post("/login", async ({ encrypt, body, status, developerModel, cookie: { token } }) =>{
     try{
         const user = await developerModel.signin({ ...body });
-        const value = await jwt.sign({ user: JSON.stringify(user) });
+        const value = await encrypt(user);
         token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
         return status(200, { message: "Login successful", ...user });

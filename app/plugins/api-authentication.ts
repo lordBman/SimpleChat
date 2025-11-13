@@ -1,16 +1,14 @@
 import jetLogger from "jet-logger";
 import { Elysia } from "elysia";
-import { jwt } from "@elysiajs/jwt";
 import {User} from "@simplechat/shared";
+import JWTPlugin from "./jwt-plugin";
 
-const APIAuthenicationPlugin =  new Elysia().use( jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).derive({ as: "global" }, async ({ jwt, status, cookie: { token } })=>{
+const APIAuthenicationPlugin =  new Elysia().use(JWTPlugin).derive({ as: "global" }, async ({ status, decrypt, cookie: { token } })=>{
     let user: User | undefined
+
     if(token.value){
         try{
-            const payload: any = await jwt.verify(token?.value as string);
-            if (payload){
-                user = JSON.parse(payload.user);
-            }
+            user = await decrypt(token.value as string);
         }catch(error){
             jetLogger.err(error);
             return status(401, {message: "access token expired, try refreshing or login again"});

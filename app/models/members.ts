@@ -69,6 +69,9 @@ class MemberModel{
             }
             throw new Err(404, "", "you are not a member of this group");
         }catch(error){
+            if(error instanceof Err){
+                throw error;
+            }
             throw new Err(503, error, "error encountered while getting all members");
         }
     }
@@ -89,164 +92,129 @@ class MemberModel{
         }
     }
 
-    async accept(data: { client: Client, groupID: string, memberID: string } ): Promise<Member>{
-        try{
-            const admin = await this.database.member.findUnique({
-                where: { userID_groupID: { groupID: data.groupID, userID: data.client.id } },
-                include: { group: true }
+    async accept(data: { client: Client, memberID: string} ): Promise<Member>{
+        const member = await this.database.member.findUnique({ where: { id: data.memberID } });
+        if(member){
+            const admin = await this.database.member.findFirst({
+                where: { groupID: member.groupID, userID: data.client.id },
             });
 
-            if (admin) {
-                if (admin.role === "Admin") {
-                    const member = await this.database.member.findUnique({ where: { id: data.memberID } });
-                    if(member && member?.groupID === admin.groupID){
-                        const init = await this.database.member.update({
-                            where: { id: data.memberID, groupID: data.groupID },
-                            data: {accepted: true},
-                            include: {
-                                group: {
-                                    include: {
-                                        creator: {
-                                            include: {details: true}
-                                        }
-                                    }
-                                },
-                                client: {include: {details: true}}
-                            }
-                        });
-
-                        await this.database.notification.create({
-                            data: {
-                                recieverID: init.userID, nType: "User",
-                                alert: `${data.client.details.name} accepted request your to join the ${admin.group.name} group`,
-                            }
-                        });
-
-                        const members = await this.database.member.findMany({where: {groupID: data.groupID}});
-                        members.forEach(async (member) => {
-                            if (data.client.id !== member.userID && member.userID !== init.userID) {
-                                await this.database.notification.create({
-                                    data: {
-                                        recieverID: data.groupID, nType: "Group",
-                                        alert: `${data.client.details.name} accepted request ${init.client.details.name} to join the ${admin.group.name} group`,
-                                    }
-                                });
-                            }
-                        });
-                        return {
-                            ...init,
-                            details: data.client.details,
-                            group: {...init.group, creator: init.group.creator.details}
-                        };
+            if(admin && admin.role === "Admin"){
+                const init = await this.database.member.update({
+                    where: { id: data.memberID },
+                    data: {accepted: true},
+                    include: {
+                        group: { include: { creator: { include: {details: true} }}},
+                        client: {include: {details: true}}
                     }
-                    throw new Err(401, "", "you are not an admin for this group");
-                }
-                throw new Err(401, ``, "only admins are allowed to accept users to a group");
+                });
+
+                await this.database.notification.create({
+                    data: {
+                        recieverID: init.userID, nType: "User",
+                        alert: `${data.client.details.name} accepted request your to join the ${init.group.name} group`,
+                    }
+                });
+
+                const members = await this.database.member.findMany({where: {groupID: init.groupID}});
+                members.forEach((member) => {
+                    if (data.client.id !== member.userID && member.userID !== init.userID) {
+                        this.database.notification.create({
+                            data: {
+                                recieverID: init.groupID, nType: "Group",
+                                alert: `${data.client.details.name} accepted request ${init.client.details.name} to join the ${init.group.name} group`,
+                            }
+                        });
+                    }
+                });
+                return {
+                    ...init,
+                    details: data.client.details,
+                    group: {...init.group, creator: init.group.creator.details}
+                };
             }
-            throw new Err(401, ``, "you are not a member of this group");
-        }catch(error){
-            if(error instanceof Err){
-                throw error;
-            }
-            throw new Err(503, error, "error encountered when accpeting user request");
-        }   
+            throw new Err(401, ``, "only admins are allowed to accept users requests to a group");
+        }
+        throw new Err(404, "", "unable to find member provided");
     }
 
-    async reject(data: { client: Client, memberID: string, groupID: string } ): Promise<Member>{
-        try{
+    async reject(data: { client: Client, memberID: string} ): Promise<Member>{
+        const member = await this.database.member.findUnique({ where: { id: data.memberID } });
+        if(member){
             const admin = await this.database.member.findFirst({
-                where: { userID: data.client.id, groupID: data.groupID  },
-                include: { group: { include:{ creator: {
-                    include: { details: true }
-                } } } }
+                where: { groupID: member.groupID, userID: data.client.id },
             });
 
-            if (admin) {
-                if (admin.role === "Admin") {
-                    const member = await this.database.member.findUnique({ where: { id: data.memberID } });
-                    if(member && member?.groupID === admin.groupID){
-                        const init = await this.database.member.delete({
-                            where: {groupID: data.groupID, id: data.memberID},
-                            include: {client: {include: {details: true}}}
-                        });
+            if(admin && admin.role === "Admin"){
+                const init = await this.database.member.delete({
+                    where: {groupID: member.groupID, id: data.memberID},
+                    include: {
+                        client: {include: {details: true} },
+                        group: { include:{ creator: { include: { details: true } } } } }
+                });
 
-                        await this.database.notification.create({
-                            data: {
-                                recieverID: init.client.id, nType: "User",
-                                alert: `${data.client.details.name} rejected your request to join ${admin.group.name} group`,
-                            }
-                        });
-                        return {
-                            ...init,
-                            group: {...admin.group, creator: admin.group.creator.details},
-                            details: data.client.details
-                        };
+                await this.database.notification.create({
+                    data: {
+                        recieverID: init.client.id, nType: "User",
+                        alert: `${data.client.details.name} rejected your request to join ${init.group.name} group`,
                     }
-                    throw new Err(401, "", "you are not an admin for this group");
-                }
-                throw new Err(401, ``, "only admins are allowed to reject users requests to a group");
+                });
+
+                return {
+                    ...init,
+                    group: {...init.group, creator: init.group.creator.details},
+                    details: data.client.details
+                };
             }
-            throw new Err(401, ``, "you are not a member of this group");
-        }catch(error){
-            if(error instanceof Err){
-                throw error;
-            }
-            throw new Err(503, error, "error encountered when rejecting user's request");
-        }   
+            throw new Err(401, ``, "only admins are allowed to reject users requests to a group");
+        }
+        throw new Err(404, "", "unable to find member provided");
     }
 
-    async assign(data: { client: Client, memberID: string, groupID: string, role: MemberRoles} ): Promise<Member>{
-        try{
+    async assign(data: { client: Client, memberID: string, role: MemberRoles} ): Promise<Member>{
+        const member = await this.database.member.findUnique({ where: { id: data.memberID } });
+        if(member){
             const admin = await this.database.member.findFirst({
-                where: { groupID: data.groupID, userID: data.client.id },
-                include: { group: { include:{ creator: { include: { details: true } } } } }
+                where: { groupID: member.groupID, userID: data.client.id },
             });
 
-            if (admin) {
-                if (admin.role === "Admin") {
-                    const member = await this.database.member.findUnique({ where: { id: data.memberID } });
-                    if(member && member?.groupID === admin.groupID){
-                        const init = await this.database.member.update({
-                            where: {groupID: data.groupID, id: data.memberID},
-                            data: {role: data.role},
-                            include: {client: {include: {details: true}}}
-                        });
+            if(admin && admin.role === "Admin"){
+                const init = await this.database.member.update({
+                    where: {groupID: member.groupID, id: data.memberID},
+                    data: {role: data.role},
+                    include: {
+                        client: {include: {details: true} },
+                        group: { include:{ creator: { include: { details: true } } } } }
+                });
 
-                        await this.database.notification.create({
-                            data: {
-                                recieverID: init.userID, nType: "User",
-                                alert: `${data.client.details.name} changed your role to ${data.role} in the ${admin.group.name} group`,
-                            }
-                        });
-
-                        const members = await this.database.member.findMany({where: {groupID: data.groupID}});
-                        members.forEach(async (member) => {
-                            if (data.client.id !== member.id && member.id !== init.userID) {
-                                await this.database.notification.create({
-                                    data: {
-                                        recieverID: member.id, nType: "User",
-                                        alert: `${data.client.details.name} changed ${init.client.details.name} role to ${data.role} in the ${admin.group.name} group`,
-                                    }
-                                });
-                            }
-                        });
-                        return {
-                            ...init,
-                            group: {...admin.group, creator: admin.group.creator.details},
-                            details: data.client.details
-                        };
+                await this.database.notification.create({
+                    data: {
+                        recieverID: init.userID, nType: "User",
+                        alert: `${data.client.details.name} changed your role to ${data.role} in the ${init.group.name} group`,
                     }
-                    throw new Err(401, "", "you are not an admin for this group");
-                }
-                throw new Err(401, ``, "only admins are allowed to assign roles users in a group");
+                });
+
+                const members = await this.database.member.findMany({where: {groupID: init.groupID}});
+                members.forEach((member) => {
+                    if (data.client.id !== member.id && member.id !== init.userID) {
+                        this.database.notification.create({
+                            data: {
+                                recieverID: member.id, nType: "User",
+                                alert: `${data.client.details.name} changed ${init.client.details.name} role to ${data.role} in the ${init.group.name} group`,
+                            }
+                        });
+                    }
+                });
+
+                return {
+                    ...init,
+                    group: {...init.group, creator: init.group.creator.details},
+                    details: data.client.details
+                };
             }
-            throw new Err(401, ``, "you are not a member of this group");
-        }catch(error){
-            if(error instanceof Err){
-                throw error;
-            }
-            throw new Err(503, error, "error encountered when assigning user role");
-        }   
+            throw new Err(401, "", "you are not an admin for this group");
+        }
+        throw new Err(404, "", "unable to find member provided");
     }
 }
 

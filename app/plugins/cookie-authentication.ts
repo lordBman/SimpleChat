@@ -1,17 +1,14 @@
 import jetLogger from "jet-logger";
 import Elysia from "elysia";
-import { jwt } from "@elysiajs/jwt";
 import {Client} from "@simplechat/shared/models";
+import JWTPlugin from "./jwt-plugin";
 
-const CookieAuthenicationPlugin = new Elysia().use( jwt({ name: 'jwt', secret: process.env.SECRET || 'test'})).derive({ as: "global" }, async ({ jwt, cookie: { client_token } })=>{
+const CookieAuthenicationPlugin = new Elysia().use(JWTPlugin).derive({ as: "global" }, async ({ decrypt, cookie: { client_token } })=>{
     let client: Client | undefined = undefined;
 
     if(client_token.value){
         try{
-            const payload: any = await jwt.verify(client_token?.value as string);
-            if (payload){
-                client = JSON.parse(payload.client);
-            }
+            client = await decrypt(client_token.value as string)
         }catch(error){
             jetLogger.err(error);
         }

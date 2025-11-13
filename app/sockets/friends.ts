@@ -7,7 +7,7 @@ import {Organization, Project, SocketPaths, WSFriendOperation} from "@simplechat
 
 type FriendsData = { friendID?: string, userID?: string }
 
-const frinedsSocketHandler = (
+const friendsSocketHandler = (
     ws: ElysiaWS, project: Project, client: Client, operation: string, data: FriendsData,
     isOnline:(id: string)=> boolean, get: (id:string)=> ElysiaWS, organization?: Organization) =>{
     const friendModel = new FriendModel();
@@ -88,4 +88,4 @@ const frinedsSocketHandler = (
     }
 }
 
-export  default frinedsSocketHandler;
+export  default friendsSocketHandler;

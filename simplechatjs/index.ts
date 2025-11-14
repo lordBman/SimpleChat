@@ -1,5 +1,29 @@
-import { AccessHeaderKeys, APIClient, Friend, Member, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
-import { Chat, Chats } from "@simplechat/shared/models";
+import { AccessHeaderKeys, SimpleChatConfig } from "@simplechat/shared";
+
+class SimpleChatClient{
+    static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
+        const headers: HeadersInit = {};
+        headers[AccessHeaderKeys.AccessKey] = config.accessKey;
+        headers[AccessHeaderKeys.ProjectToken] = config.projectToken;
+        if(config.organization){
+            headers[AccessHeaderKeys.Organization] = config.organization;
+        }
+
+        const apiClientInstance =  new APIClient("/api", { headers });
+        try{
+            const user = await apiClientInstance.post("/connect", { data: {...config} });
+            const response = await apiClientInstance.get("/client");
+            
+            return new SimpleChatClient(config, socket, response.data);
+        }catch(error){
+            if(error instanceof AxiosError){
+                throw Error((error as AxiosError).message);
+            }else{
+                throw error;
+            }
+        }
+    }
+}
 
 /*class SimpleChatClient{
     private config: SimpleChatConfig;
@@ -217,28 +241,7 @@ import { Chat, Chats } from "@simplechat/shared/models";
         }
     }
 
-    static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
-        const headers: HeadersInit = {};
-        headers[AccessHeaderKeys.AccessKey] = config.accessKey;
-        headers[AccessHeaderKeys.ProjectToken] = config.projectToken;
-        if(config.organization){
-            headers[AccessHeaderKeys.Organization] = config.organization;
-        }
-
-        const apiClientInstance =  new APIClient("/api", { headers });
-        try{
-            const user = await apiClientInstance.post("/connect", { data: {...config} });
-            const response = await apiClientInstance.get("/client");
-            
-            return new SimpleChatClient(config, socket, response.data);
-        }catch(error){
-            if(error instanceof AxiosError){
-                throw Error((error as AxiosError).message);
-            }else{
-                throw error;
-            }
-        }
-    }
+    
 }
 
 export { SimpleChatClient };*/

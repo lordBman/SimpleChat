@@ -1,7 +1,6 @@
 import { PropsWithChildren, use, useCallback, useEffect, useState } from "react";
 import { ChatContext, ClientContext, FriendsContext, MembersContext, useClientContext } from "./src/contexts";
 import { ChatState, ClientContextType, FriendsState, MembersState } from "./src/models";
-import { Friend, Member, SimpleChatClientConfig, SimpleChatDeveloperConfig } from "@simplechat/shared";
 import { SimpleChatClient } from "simplechatjs"
 import { useRequest, useRequestCallBack } from "./src/request";
 import React from "react";

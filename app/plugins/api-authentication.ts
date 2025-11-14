@@ -1,7 +1,8 @@
 import jetLogger from "jet-logger";
 import { Elysia } from "elysia";
-import {User} from "@simplechat/shared";
+
 import JWTPlugin from "./jwt-plugin";
+import { User } from "@simplechat/shared/models";
 
 const APIAuthenicationPlugin =  new Elysia().use(JWTPlugin).derive({ as: "global" }, async ({ status, decrypt, cookie: { token } })=>{
     let user: User | undefined

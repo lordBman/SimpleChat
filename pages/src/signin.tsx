@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider, useMutation } from "react-query";
 import { axiosInstance, extract, AccessKey } from "./utils";
 import React, { useState } from "react";
 
@@ -77,13 +76,4 @@ const Signin = () =>{
     );
 }
 
-const App = () =>{
-    const queryClient = new QueryClient();
-
-    return (
-        <QueryClientProvider client={queryClient}>
-            <Signin />
-        </QueryClientProvider>
-    );
-}
-export default App;
+export default Signin;

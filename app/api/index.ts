@@ -4,7 +4,7 @@ import jetLogger from "jet-logger";
 import accessKeyRouter from "./access-keys";
 import { AdminModel, ClienitModel } from "../models";
 import { Err } from "../config";
-import { Friend, Group, Member, Details } from "@simplechat/shared";
+import { Friend, Group, Member, Details } from "@simplechat/shared/models";
 import DeveloperModel from "../models/developer";
 import projectRouter from "./projects";
 import FriendModel from "../models/friends";

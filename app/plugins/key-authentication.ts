@@ -1,9 +1,11 @@
 import Elysia from "elysia";
 import {AccessKeyModel, OrganizationModel} from "../models";
 import ProjectModel from "../models/projects";
-import {AccessHeaderKeys, AccessKey, AccessQueryKeys, Organization, Project} from "@simplechat/shared";
-import jetLogger from "jet-logger";
+import { AccessHeaderKeys, AccessQueryKeys} from "@simplechat/shared";
 import {Err} from "../config";
+import jetLogger from "jet-logger";
+import { AccessKey, Project } from "@simplechat/shared/models";
+import Organization from "@simplechat/shared/models/organization";
 
 const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new AccessKeyModel(), "projectModel": new ProjectModel(), "organizationModel": new OrganizationModel() }).derive({ as: "global" }, async ({ headers, query, status, accessKeyModel, projectModel, organizationModel })=>{
     let accesskey: AccessKey | undefined = undefined;
@@ -17,7 +19,7 @@ const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new Acc
         try {
             accesskey = await accessKeyModel.get(key);
             project = await projectModel.getByToken(projectToken);
-            if(accesskey.enabled && project && organizationName){
+            if(accesskey?.enabled && project && organizationName){
                 organization = await organizationModel.get({ project, name: organizationName });
             }
         }catch (error) {

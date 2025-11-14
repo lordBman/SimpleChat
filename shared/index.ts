@@ -1,10 +1,8 @@
 import { Chats, Client, Details, Friend, Project, User } from "./models";
 import AccessKey from "./models/acess-key";
 import Group from "./models/groups";
-import Member, { MemberRoles } from "./models/member";
+import Member from "./models/member";
 import Organization from "./models/organization";
-import Notification from "./models/notifications";
-import APIClient from "./api_client";
 
 export type SimpleChatConfig = {
     name: string,
@@ -73,22 +71,16 @@ export interface Developer extends User{
     projects: Project[]
 }
 
-export enum AccessHeaderKeys{
-    AccessKey = "X-SimpleChat-Access-Key",
-    Organization = "X-SimpleChat-Organization",
-    ProjectToken = "X-SimpleChat-Project-Token"
+export const AccessHeaderKeys = {
+    AccessKey: "X-SimpleChat-Access-Key",
+    Organization: "X-SimpleChat-Organization",
+    ProjectToken: "X-SimpleChat-Project-Token"
 }
 
-export enum AccessQueryKeys{
-    AccessKey = "access-key",
-    Organization = "organization",
-    ProjectToken = "project-token"
+export const AccessQueryKeys = {
+    AccessKey : "access-key",
+    Organization: "organization",
+    ProjectToken: "project-token"
 }
 
-export enum SocketPaths{
-    Chats = "chats",
-    Friends = "friends",
-    Groups = "groups"
-}
-
-export{ AccessKey, Details, User, Group, Member, MemberRoles, Project, Friend, Chats, Organization, Notification, APIClient }
+export type SocketPaths = "chats" | "friends" | "groups"

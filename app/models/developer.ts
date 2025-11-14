@@ -1,5 +1,6 @@
 import {DBManager, Err, SeedResult} from "../config";
-import {Project, User, UserState} from "@simplechat/shared";
+import { UserState} from "@simplechat/shared";
+import {Project, User } from "@simplechat/shared/models";
 import ProjectModel from "./projects";
 
 class DeveloperModel{

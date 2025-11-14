@@ -1,5 +1,4 @@
-import { Details } from "@simplechat/shared";
-import { Client } from "@simplechat/shared/models";
+import { Client, Details } from "@simplechat/shared/models";
 
 const details: Details = {
     id: "me",

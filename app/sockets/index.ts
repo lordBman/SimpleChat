@@ -1,15 +1,21 @@
 import jetLogger from "jet-logger";
+import Elysia, { t } from "elysia";
+import { ElysiaWS } from "elysia/ws";
+
+import keyAuthenicationPlugin from "../plugins/key-authentication";
+import CookieAuthenicationPlugin from "../plugins/cookie-authentication";
+
 import FriendModel from "../models/friends";
 import { GroupModel } from "../models";
 import { Err } from "../config";
-import Elysia, { t } from "elysia";
-import { ElysiaWS } from "elysia/ws";
-import {MemberRoles, SocketPaths} from "@simplechat/shared";
+
+
+import { SocketPaths } from "@simplechat/shared";
 import chatSocketHandler from "./chats";
 import friendsSocketHandler from "./friends";
-import keyAuthenicationPlugin from "../plugins/key-authentication";
-import CookieAuthenicationPlugin from "../plugins/cookie-authentication";
+
 import groupSocketHandler from "./groups";
+import { MemberRoles } from "@simplechat/shared/models/member";
 
 const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, ElysiaWS>>("connectedSockets", {}).derive({ as: "global" }, async ({ store })=>({
     isOnline: (id: string) => store.connectedSockets[id] !== undefined,
@@ -32,7 +38,7 @@ const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, El
 
 const sockets = new Elysia();
 
-sockets.use(connectedPlugin).use(CookieAuthenicationPlugin).use(keyAuthenicationPlugin).ws("/ws", {
+sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(CookieAuthenicationPlugin).ws("/ws", {
     body: t.Object({
         operation: t.String(),
         path: t.String(),
@@ -78,26 +84,26 @@ sockets.use(connectedPlugin).use(CookieAuthenicationPlugin).use(keyAuthenication
     },
     message: (ws, message) =>{
         console.log(`message received: ${message}`);
-        switch(message.path){
-            case SocketPaths.Chats:
+        switch(message.path as SocketPaths){
+            case "chats":
                 if(message.chatData){
                     chatSocketHandler(ws, ws.data.client!, message.operation, message.chatData);
                 }else{
-                    ws.send({ path: SocketPaths.Chats, operation: message.operation, message: "invalid chat data inputs", status: 400 });
+                    ws.send({ path: message.path, operation: message.operation, message: "invalid chat data inputs", status: 400 });
                 }
                 break;
-            case SocketPaths.Friends:
+            case "friends":
                 if(message.friendsData){
                     friendsSocketHandler(ws, ws.data.project!, ws.data.client!, message.operation, message.friendsData, ws.data.isOnline, ws.data.get, ws.data.organization);
                 }else{
-                    ws.send({ path: SocketPaths.Friends, operation: message.operation, message: "invalid friends data inputs", status: 400 });
+                    ws.send({ path: message.path, operation: message.operation, message: "invalid friends data inputs", status: 400 });
                 }
                 break;
-            case SocketPaths.Groups:
+            case "groups":
                 if(message.groupData){
                     groupSocketHandler(ws, ws.data.project!, ws.data.client!, message.operation, { ...message.groupData, role: message.groupData.role as MemberRoles | undefined });
                 }else{
-                    ws.send({ path: SocketPaths.Friends, operation: message.operation, message: "invalid friends data inputs", status: 400 });
+                    ws.send({ path: message.path, operation: message.operation, message: "invalid friends data inputs", status: 400 });
                 }
                 break;
         }

@@ -66,12 +66,12 @@ sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(CookieAuthenication
         try{
             const friendModel = new FriendModel();
             friendModel.all({ project: ws.data.project!, organization: ws.data.organization, client: ws.data.client! }).then((channels)=>{
-                channels.forEach((channel)=> ws.subscribe(channel.id) );
+                channels.forEach((channel)=> ws.subscribe(channel.id));
             });
 
             const groupModel = new GroupModel();
             groupModel.all({ project: ws.data.project!, organization: ws.data.organization, client: ws.data.client! }).then((groups) => {
-                groups.forEach((group) => ws.subscribe(group.id) );
+                groups.forEach((group) => ws.subscribe(group.id));
             });
         }catch(error){
             const err = error as Err;

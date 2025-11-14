@@ -83,4 +83,8 @@ export const AccessQueryKeys = {
     ProjectToken: "project-token"
 }
 
-export type SocketPaths = "chats" | "friends" | "groups"
+export enum SocketPaths {
+    Chats = "chats",
+    Friends = "friends",
+    Groups = "groups"
+}

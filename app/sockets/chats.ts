@@ -6,7 +6,7 @@ import { Client } from "@simplechat/shared/models";
 import { Err } from "../config";
 
 type ChatData = { friendID?: string, groupID?: string, message?: string, chatID?: string }
-const path: SocketPaths = "chats";
+const path: SocketPaths = SocketPaths.Chats;
 
 const chatSocketHandler = (ws: ElysiaWS, client: Client, operation: string, data: ChatData) =>{
     const chatModel = new ChatModel();

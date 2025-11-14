@@ -51,7 +51,6 @@ export class SimpleChatClient{
         }
     }
 
-
     static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
         const headers: HeadersInit = {};
         headers[AccessHeaderKeys.AccessKey] = config.accessKey;

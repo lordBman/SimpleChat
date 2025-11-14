@@ -9,7 +9,7 @@ import { MemberRoles } from '@simplechat/shared/models/member';
 import Organization from '@simplechat/shared/models/organization';
 
 type GroupsData = { name?: string, groupID?: string, userID?: string, memberID?: string, role?: MemberRoles }
-const path: SocketPaths = "groups";
+const path: SocketPaths = SocketPaths.Groups;
 
 const groupSocketHandler = (ws: ElysiaWS, project: Project, client: Client, operation: string, data: GroupsData, organization?: Organization) =>{
     const model = new GroupModel();

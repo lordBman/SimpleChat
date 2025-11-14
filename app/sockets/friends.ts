@@ -7,7 +7,7 @@ import { SocketPaths, WSFriendOperation} from "@simplechat/shared";
 import Organization from '@simplechat/shared/models/organization';
 
 type FriendsData = { friendID?: string, userID?: string }
-const path: SocketPaths = "friends";
+const path: SocketPaths = SocketPaths.Friends;
 
 const friendsSocketHandler = (
     ws: ElysiaWS, project: Project, client: Client, operation: string, data: FriendsData,

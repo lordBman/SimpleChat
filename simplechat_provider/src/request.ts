@@ -1,43 +1,64 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react"
 
-const useRequest = <T>(props: { fn: () => Promise<T> }) =>{
-    const [ state, setState ] = useState<{ data?: T, error?: any, loading: boolean, isError: boolean }>({ loading: true, isError: false });
-
-    const init = useCallback(()=>{
-        props.fn().then((value)=>{
-            setState(init => { return { ...init, data: value } });
-        }).catch((error)=>{
-            setState(init => { return { ...init, error: error, isError: true } });
-        }).finally(()=>{
-            setState(init => { return { ...init, loading: false } });
-        });
-    }, [props.fn]);
-
-    useEffect(()=> init(), [init, props.fn]);
-
-    return state;
+interface RequestProps<T>{
+    fn: () => Promise<T>
 }
 
-const useRequestCallBack = <T>(props: { fn: () => Promise<T>,  started?: () => void, success?: (data: T) => void, failed?: (error: any) => void }) =>{
-    const [ state, setState ] = useState<{ data?: T, error?: any, loading: boolean, isError: boolean }>({ loading: false, isError: false });
+const useRequest = <T>(props: RequestProps<T>) =>{
+    const [state, setState] = useState<{ loading: boolean, error?: any, data?: T }>({ loading: true });
 
-    const init = useCallback(()=>{
-        setState(init => { return { ...init, loading: true } });
-        props.started && props.started();
-        props.fn().then((value)=>{
-            setState(init => { return { ...init, data: value } });
-            props.success && props.success(value);
+    const callback = useCallback(()=>{
+        props.fn().then((data)=>{
+            setState({ loading: false, data });
         }).catch((error)=>{
-            setState(init => { return { ...init, error: error, isError: true } });
-            props.failed && props.failed(error);
-        }).finally(()=>{
-            setState(init => { return { ...init, loading: false } });
-        });
-    }, [props.fn]);
+            setState({ loading: false, error });
+        })
+    }, [props]);
 
-    const run = () => init();
+    useEffect(()=>{
+        if(!state.data){
+            callback();
+        }
+    }, [callback, props]);
 
-    return { ...state, run };
+    return { ...state }
 }
 
-export { useRequest, useRequestCallBack };
+interface CallbackRequestProps<T, R>{
+    request: (input: R) => Promise<T>
+    onStart?: ()=> void,
+    onDone?: (data: T)=> void
+    onFail?: (error: any) =>void
+}
+
+const useCallbackRequest = <T, R>(props: CallbackRequestProps<T, R>) =>{
+    const [state, setState] = useState<{ loading: boolean, error?: any, data?: T }>({ loading: false });
+
+    const callback = useCallback((input: R)=>{
+        setState({ loading: true });
+        if(props.onStart){
+            props.onStart();
+        }
+        props.request(input).then((data)=>{
+            setState({ loading: false, data });
+            if(props.onDone){
+                props.onDone(data);
+            }
+        }).catch((error)=>{
+            setState({ loading: false, error });
+            if(props.onFail){
+                props.onFail(error);
+            }
+        })
+    }, [props]);
+
+    const start = (input: R)=> {
+        if(!state.loading){
+            callback(input);
+        }
+    }
+
+    return { ...state, start }
+}
+
+export { useRequest, useCallbackRequest }

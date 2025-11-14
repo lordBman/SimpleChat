@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "react-query";
-import { axiosInstance, AccessKey } from "../utils";
 import React from "react";
+import { useCallbackRequest, useRequest } from "simplechat_provider/src/request";
+import { apiClientInstance } from "../utils";
 
 const Header = (props:{active?: string}) =>{
     const [active, setActive] = useState(props.active || "about");
@@ -16,18 +16,16 @@ const Header = (props:{active?: string}) =>{
         }
     }
 
-    const initQuery = useQuery({
-        queryKey: ['user'],
-        queryFn: () => axiosInstance.get(`/?key=${AccessKey}`),
+    const initQuery = useRequest({
+        fn: () => apiClientInstance.get("/")
     });
 
-    const logoutMutation = useMutation({
-        mutationKey: ['user'],
-        mutationFn: () => axiosInstance.get(`/auth/logout?key=${AccessKey}`),
-        onSuccess: () => {
+    const logoutMutation = useCallbackRequest<void, void>({
+        request: () => apiClientInstance.get(`/auth/logout`),
+        onDone: () => {
             window.location.reload();
         },
-        onError: ((error)=> alert(error))
+        onFail: ((error)=> alert(error))
     });
 
     const init = useCallback(()=>{
@@ -60,7 +58,7 @@ const Header = (props:{active?: string}) =>{
 
     useEffect(()=> init(), [init, header.current]);
 
-    const signout = () => logoutMutation.mutate();
+    const signout = () => logoutMutation.start();
 
     const scrollToAbout = () => handleClickScroll("about");
     const scrollToFeatures = () => handleClickScroll("features");

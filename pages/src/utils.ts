@@ -1,21 +1,11 @@
-import { Friend, Member, Credential } from "@simplechat/shared/models";
-import axios from "axios";
-
-export const AccessKey = "a02c3f9f81c969467e99509a8edc940f4941";
+import { Friend, Member } from "@simplechat/shared/models";
+import APIClient from "@simplechat/shared/api_client";
 
 export interface LooseObject {
     [key: string]: any
 }
 
-export const axiosInstance =  axios.create({
-	headers: { 
-		'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Credentials': 'true',
-		'Content-Type': 'application/x-www-form-urlencoded' 
-	},
-	withCredentials: true,
-	baseURL: "/api" });
+export const apiClientInstance = new APIClient("/api");
 
 export const getName = ( user: Credential, response : Friend | Member):string =>{
     if((response as any).group){

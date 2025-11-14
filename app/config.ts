@@ -1,7 +1,6 @@
 import { uuid } from "./utils";
 import jetLogger from "jet-logger";
 import { PrismaClient } from "@prisma/client";
-import { Credential } from "@prisma/client";
 
 const connect = (): PrismaClient => {
     const client = new PrismaClient({ log: [{ level: 'query', emit: 'event' }], });

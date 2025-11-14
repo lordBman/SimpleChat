@@ -1,8 +1,5 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { useQuery } from 'react-query';
-import { Friend, Member, UserState } from '@simplechat/shared';
-import { AccessKey, axiosInstance } from '../utils';
 import SimpleChatProvider from 'simplechat_provider';
 
 export type AppContextType = {

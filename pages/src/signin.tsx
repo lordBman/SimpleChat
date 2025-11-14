@@ -1,4 +1,5 @@
-import { axiosInstance, extract, AccessKey } from "./utils";
+import { useCallbackRequest } from "simplechat_provider/src/request";
+import { extract, apiClientInstance } from "./utils";
 import React, { useState } from "react";
 
 const Signin = () =>{
@@ -12,36 +13,33 @@ const Signin = () =>{
         }
     }
 
-    const registerMutation = useMutation({
-        mutationKey: ["user"],
-        mutationFn: (data: {name: string, email: string, password: string })=> axiosInstance.post("/auth", data),
-        onSuccess: done,
-        onError: (error)=> setError(error)
+    const registerCallback = useCallbackRequest({
+        request: (data: {name: string, email: string, password: string })=> apiClientInstance.post("/auth", { data }),
+        onDone: done,
+        onFail: (error: any)=> setError(error)
     });
 
-    const loginMutation = useMutation({
-        mutationKey: ["user"],
-        mutationFn: (data: { email: string, password: string })=> axiosInstance.post("/auth/login", { ...data, key: AccessKey }),
-        onSuccess: done,
-        onError: (error)=> setError(error)
+    const loginCallback = useCallbackRequest({
+        request: (data: { email: string, password: string })=> apiClientInstance.post("/auth/login", { data }),
+        onDone: done,
+        onFail: (error)=> setError(error)
     });
 
     const register = (event: React.FormEvent<HTMLFormElement>)=>{
         event.preventDefault();
 
         const data = extract(event.currentTarget);
-        registerMutation.mutate({ name: data["name"], email: data["email"], password: data["password"] });
+        registerCallback.start({ name: data["name"], email: data["email"], password: data["password"] });
     }
 
     const login = (event: React.FormEvent<HTMLFormElement>)=>{
         event.preventDefault();
 
         const data = extract(event.currentTarget);
-
-        loginMutation.mutate({ email: data["email"], password: data["password"] });
+        loginCallback.start({ email: data["email"], password: data["password"] });
     }
 
-    const loading = loginMutation.isLoading || registerMutation.isLoading;
+    const loading = loginCallback.loading || registerCallback.loading;
 
     return (
         <div>
@@ -56,7 +54,7 @@ const Signin = () =>{
                     <label htmlFor="password">Password:</label>
                     <input id="password" name="password" type="password" placeholder="Password" />
 
-                    <button type="submit" disabled={loading}>{registerMutation.isLoading ? "loading" : "sign up"}</button>
+                    <button type="submit" disabled={loading}>{registerCallback.loading ? "loading" : "sign up"}</button>
                 </form>
             </div>
 
@@ -68,7 +66,7 @@ const Signin = () =>{
                     <label htmlFor="password">Password:</label>
                     <input id="password" name="password" type="password" placeholder="Password" />
 
-                    <button type="submit" disabled={loading}>{loginMutation.isLoading ? "loading" : "login"}</button>
+                    <button type="submit" disabled={loading}>{ loginCallback.loading ? "loading" : "login"}</button>
                 </form>
             </div>
             <div>Error: {error}</div>

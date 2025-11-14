@@ -1,6 +1,57 @@
-import { AccessHeaderKeys, SimpleChatConfig } from "@simplechat/shared";
+import { AccessHeaderKeys, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
+import APIClient from "@simplechat/shared/api_client"; 
 
-class SimpleChatClient{
+export class SimpleChatClient{
+    state: SimpleChatState;
+
+    private config: SimpleChatConfig;
+    private socket: WebSocket;
+    private connected: boolean = false;
+    get isConnected(){
+        return this.connected;
+    }
+
+    private connectionChange?: (connected: boolean)=> void;
+    set onConnectionChange(connectionChange: (connected: boolean)=> void){
+        this.connectionChange = connectionChange;
+    }
+
+    private onError?: (error: any)=> void;
+    set onErrorHandler(onError: (error: any)=> void){
+        this.onError = onError;
+    }
+
+    private constructor(config: SimpleChatConfig, state: SimpleChatState){
+        this.config = config;
+        this.state = state;
+
+        this.socket = new WebSocket("ws:localhost:3000/ws");
+        this.socket.onopen = () =>{
+            console.info("connected to simple chat live server");
+            this.connected = true;
+            this.connectionChange && this.connectionChange(this.connected);
+        }
+
+        this.socket.onclose = () =>{
+            console.info("disconnected to simple chat live server");
+            this.connected = false;
+            this.connectionChange && this.connectionChange(this.connected);
+        }
+
+        this.socket.onerror = (event) =>{
+            console.error(event);
+            this.onError && this.onError("simple chat live server encountered some errors");
+        }
+
+        this.socket.onmessage = (event) =>{
+            console.log(`what is comming from server: ${event.data}`);
+            const message = JSON.parse(event.data);
+
+            
+        }
+    }
+
+
     static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
         const headers: HeadersInit = {};
         headers[AccessHeaderKeys.AccessKey] = config.accessKey;
@@ -10,18 +61,11 @@ class SimpleChatClient{
         }
 
         const apiClientInstance =  new APIClient("/api", { headers });
-        try{
-            const user = await apiClientInstance.post("/connect", { data: {...config} });
-            const response = await apiClientInstance.get("/client");
-            
-            return new SimpleChatClient(config, socket, response.data);
-        }catch(error){
-            if(error instanceof AxiosError){
-                throw Error((error as AxiosError).message);
-            }else{
-                throw error;
-            }
-        }
+        
+        await apiClientInstance.post("/connect", { data: {...config} });
+        const response = await apiClientInstance.get("/client");
+        
+        return new SimpleChatClient(config, response);
     }
 }
 
@@ -242,7 +286,7 @@ class SimpleChatClient{
     }
 
     
-}
+}*/
 
-export { SimpleChatClient };*/
+export default SimpleChatClient;
 

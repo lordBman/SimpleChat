@@ -1,6 +1,5 @@
 import Sections from "./sections";
 import Main from "./main";
-import { QueryClient, QueryClientProvider } from "react-query";
 import { BottomNavigation, DashBoard as DashBoardView, ErrorPage, Loading, MobileHeader } from "../conponents";
 import Options from "../conponents/dashboard/menu/options";
 import { useMemo, useContext } from "react";
@@ -10,7 +9,6 @@ import { ToolBarItem } from "../conponents/dashboard/tool-bar";
 import SimpleChatProvider from "simplechat_provider";
 import AppProviderWraper, { AppContext, AppContextType } from "../providers/app-provider";
 import React from "react";
-import { AccessKey } from "../utils";
 
 
 const App = () =>{
@@ -81,16 +79,12 @@ const App = () =>{
 
 
 const DashBoard = () =>{
-    const queryClient = new QueryClient();
-
     return (
-        <QueryClientProvider client={queryClient}>
-            <AppProviderWraper Loading={Loading} Error={ErrorPage}>
-                <BrowserRouter>
-                    <App />
-                </BrowserRouter>
-            </AppProviderWraper>
-        </QueryClientProvider>
+        <AppProviderWraper Loading={Loading} Error={ErrorPage}>
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+        </AppProviderWraper>
     );
 }
 

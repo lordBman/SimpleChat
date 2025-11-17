@@ -37,7 +37,7 @@ const Footer = () =>{
             </div>
             <div>
                 <hr/>
-                <p className="footer-company-name">All Rights Reserved. &copy; 2024 <a href="#">Bsoft Limited</a> &nbsp;&nbsp;&nbsp;&nbsp; Design By : <a href="https://html.design/">Okelekele Nobel Bobby</a></p>
+                <p className="footer-company-name">All Rights Reserved. &copy; 2025 <a href="#">Bsoft Limited</a> &nbsp;&nbsp;&nbsp;&nbsp; Design By : <a href="https://html.design/">Okelekele Nobel Bobby</a></p>
             </div>
         </div>
     );

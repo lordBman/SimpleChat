@@ -32,3 +32,8 @@ if(element){
 }else{
     console.log("root element not found");
 }
+
+// Hot reload support
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}

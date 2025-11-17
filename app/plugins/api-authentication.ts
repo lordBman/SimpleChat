@@ -9,6 +9,7 @@ const APIAuthenicationPlugin =  new Elysia().use(JWTPlugin).derive({ as: "global
 
     if(token.value){
         try{
+            console.log("cookie found:", token.value);
             user = await decrypt(token.value as string);
         }catch(error){
             jetLogger.err(error);
@@ -17,6 +18,8 @@ const APIAuthenicationPlugin =  new Elysia().use(JWTPlugin).derive({ as: "global
     }
     return { user };
 }).onBeforeHandle(async ({ status, user })=>{
+    jetLogger.info("I entered unauthorized");
+    jetLogger.info(user);
     if(!user){
         return status(401, {message: "access token expired, try refreshing or login again"});
     }

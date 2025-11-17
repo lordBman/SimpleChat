@@ -3,12 +3,14 @@
   "module": "index.ts",
   "scripts": {
     "dev": "concurrently \"bun run dbstudio\" \"bun run start\"",
-    "start": "bun --watch run ./index.ts",
+    "start": "bun run --watch ./index.ts",
     "migrate": "bun x prisma migrate dev --name init",
     "dbstudio": "bun x prisma studio",
     "generate": "bun x prisma generate"
   },
   "devDependencies": {
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
     "@types/react-router-dom": "^5.3.3",
     "bun-types": "latest",
     "concurrently": "^9.2.1",
@@ -27,9 +29,12 @@
     "@prisma/adapter-pg": "^6.5.0",
     "@prisma/client": "^6.5.0",
     "@simplechat/shared": "file:../shared",
+    "simplechat_provider": "file:../simplechat_provider",
     "elysia": "^1.4.13",
     "jet-logger": "^2.0.1",
     "jose": "^6.1.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "react-router-dom": "^5.0.0",
     "ts-loader": "^9.5.2"
   }

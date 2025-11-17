@@ -4,6 +4,7 @@ import About from "./about";
 import Features from "./features";
 import Footer from "./footer";
 
+import ReactDOM from "react-dom/client";
 
 const Homepage  = () =>{
     return (
@@ -24,4 +25,10 @@ const Homepage  = () =>{
     );
 }
 
-export default Homepage;
+const element = document.getElementById("root");
+if(element){
+    const root = ReactDOM.createRoot(element);
+    root.render( <Homepage />);
+}else{
+    console.log("root element not found");
+}

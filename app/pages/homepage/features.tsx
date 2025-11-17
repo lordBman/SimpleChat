@@ -1,5 +1,4 @@
 import React from "react";
-import "../css/home/features.scss";
 
 const Features = () =>{
     return (

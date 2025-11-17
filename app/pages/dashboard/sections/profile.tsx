@@ -1,5 +1,7 @@
 import React, { useContext } from "react";
-import "../../css/chats/profile.scss";
+
+import "../../../assets/css/chats/profile.scss";
+
 import { AppContext, AppContextType } from "../../providers/app-provider";
 
 const Profile = () =>{
@@ -14,8 +16,8 @@ const Profile = () =>{
 
             <div className="profile-container">
                 <div style={{ display: "flex", alignItems:"center", justifyContent: "center", flexDirection: "column", gap: 6 }}>
-                    <div id="profile-picture">{ user?.name.charAt(0).toUpperCase() }</div>
-                    <div id="profile-name">{user?.name}</div>
+                    <div id="profile-picture">{ user?.details.name.charAt(0).toUpperCase() }</div>
+                    <div id="profile-name">{user?.details.name}</div>
                     <div style={{ display: "flex", gap: 10, alignItems: "center"}}>
                         <div style={{ border: "solid 3px #06D6A3; border-radius:50%" }}>
                             <div style={{ width:2, height:2, backgroundColor: "white", borderRadius:"50%" }}></div>
@@ -33,11 +35,11 @@ const Profile = () =>{
                     </div>
                     <div className="about-container-item">
                         <div className="title">Name</div>
-                        <div>{ user?.name }</div>
+                        <div>{ user?.details.name }</div>
                     </div>
                     <div className="about-container-item">
                         <div className="title">Email</div>
-                        <div>{ user?.email }</div>
+                        <div>{ user?.details.email }</div>
                     </div>
                     <div className="about-container-item">
                         <div className="title">Time</div>

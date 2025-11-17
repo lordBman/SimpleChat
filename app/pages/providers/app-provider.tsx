@@ -1,8 +1,15 @@
-import * as React from 'react';
+import { Friend, Member, User } from '@simplechat/shared/models';
+import React from 'react';
 import { useState } from 'react';
-import SimpleChatProvider from 'simplechat_provider';
+import { useRequest } from 'simplechat_provider/src/request';
+import { apiClientInstance } from '../utils';
 
 export type AppContextType = {
+    user?: User
+    loading: boolean;
+    isError: boolean;
+    error?: any;
+
     message?: any;
     current?: Member | Friend;
 
@@ -20,12 +27,15 @@ export const useAppContext = () => {
 
 const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const [current, setCurrent] = useState<Member | Friend>();
-    con
 
     const makeCurrent = (response: Member | Friend)=> setCurrent(response);
+
+    const init = useRequest<User>({
+        fn: () => apiClientInstance.get("/api/auth/me")
+    });
     
     return (
-        <AppContext.Provider value={{  makeCurrent,  current }}>{ children }</AppContext.Provider>
+        <AppContext.Provider value={{  makeCurrent,  current, user: init.data, loading: init.loading, isError: init.error, error: init.error  }}>{ children }</AppContext.Provider>
     );
 }
 
@@ -40,18 +50,16 @@ const ProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading, Error
         <>
             { app.loading && <Loading /> }
             { !app.loading && app.isError && <Error /> }
-            { !app.loading && !app.isError && {children} }
+            { !app.loading && !app.isError && children }
         </>
     );
 }
 
 const AppProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading, Error }) =>{
     return (
-        <SimpleChatProvider>
-            <AppProvider>
-                <ProviderWraper children={children} Loading={Loading} Error={Error} />
-            </AppProvider>
-        </SimpleChatProvider>
+        <AppProvider>
+            <ProviderWraper children={children} Loading={Loading} Error={Error} />
+        </AppProvider>
     );
 }
 

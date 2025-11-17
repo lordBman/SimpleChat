@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { BackButton, ChatView } from "../../conponents";
-import "../../css/chats/chat.scss";
-import { Friend, Member } from "@simplechat/shared";
+import { BackButton, ChatView } from "../../components";
+import { Friend, Member } from "@simplechat/shared/models";
 import { ChatContext } from "simplechat_provider/src/contexts";
 import { ChatContextType } from "simplechat_provider/src/models";
 import { Chat } from "@simplechat/shared/models";

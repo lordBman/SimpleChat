@@ -3,7 +3,6 @@
   "module": "index.ts",
   "scripts": {
     "dev": "concurrently \"bun run dbstudio\" \"bun run start\"",
-    "compile": "bun ./esbuild.js",
     "start": "bun --watch run ./index.ts",
     "migrate": "bun x prisma migrate dev --name init",
     "dbstudio": "bun x prisma studio",
@@ -15,7 +14,8 @@
     "concurrently": "^9.2.1",
     "esbuild": "^0.25.1",
     "esbuild-sass-plugin": "^3.3.1",
-    "prisma": "^6.5.0"
+    "prisma": "^6.5.0",
+    "sass": "^1.94.0"
   },
   "peerDependencies": {
     "typescript": "^5.8.2"
@@ -31,7 +31,6 @@
     "jet-logger": "^2.0.1",
     "jose": "^6.1.1",
     "react-router-dom": "^5.0.0",
-    "simplechat-pages": "file:../pages",
     "ts-loader": "^9.5.2"
   }
 }

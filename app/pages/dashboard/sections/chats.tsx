@@ -1,6 +1,6 @@
 import React from "react";
-import Message from "../../conponents/message";
-import "../../css/chats/chats.scss";
+import Message from "../../components/message";
+import "../../../assets/css/chats/chats.scss";
 import { ChatContext } from "simplechat_provider/src/contexts";
 import { ChatContextType } from "simplechat_provider/src/models";
 

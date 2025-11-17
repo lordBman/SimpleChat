@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface RequestProps<T>{
     fn: () => Promise<T>
@@ -7,19 +7,18 @@ interface RequestProps<T>{
 const useRequest = <T>(props: RequestProps<T>) =>{
     const [state, setState] = useState<{ loading: boolean, error?: any, data?: T }>({ loading: true });
 
-    const callback = useCallback(()=>{
-        props.fn().then((data)=>{
-            setState({ loading: false, data });
-        }).catch((error)=>{
-            setState({ loading: false, error });
-        })
-    }, [props]);
+    const executedRef = useRef(false);
 
-    useEffect(()=>{
-        if(!state.data){
-            callback();
+    useEffect(() => {
+        if (!executedRef.current) {
+            executedRef.current = true;
+            props.fn().then((data) => {
+                setState({ loading: false, data });
+            }).catch((error) => {
+                setState({ loading: false, error });
+            });
         }
-    }, [callback, props]);
+    }, [executedRef.current, state.data]); // Only depend on props.fn
 
     return { ...state }
 }

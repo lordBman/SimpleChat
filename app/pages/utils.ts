@@ -1,4 +1,4 @@
-import { Friend, Member } from "@simplechat/shared/models";
+import { Details, Friend, Member } from "@simplechat/shared/models";
 import APIClient from "@simplechat/shared/api_client";
 
 export interface LooseObject {
@@ -7,7 +7,7 @@ export interface LooseObject {
 
 export const apiClientInstance = new APIClient("/api");
 
-export const getName = ( user: Credential, response : Friend | Member):string =>{
+export const getName = ( user: Details, response : Friend | Member):string =>{
     if((response as any).group){
         const init = response as Member;
 

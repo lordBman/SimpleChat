@@ -1,11 +1,28 @@
-import { AccessHeaderKeys, SimpleChatConfig, SimpleChatState } from "@simplechat/shared";
+import { AccessHeaderKeys, SimpleChatConfig, SimpleChatState, SocketPaths, WSChatOperation, WSFriendOperation, WSGroupOperation } from "@simplechat/shared";
 import APIClient from "@simplechat/shared/api_client"; 
+import { Chat, Chats, Client, Details, Friend, Member } from "@simplechat/shared/models";
 
-export class SimpleChatClient{
-    state: SimpleChatState;
+interface WSChatResponse { operation: WSChatOperation, message?: string, status: number, chat?: Chat, chatID?: string, details?: Details }
+interface WSFriendResponse { operation: WSFriendOperation, message?: string, status: number, friend?: Friend }
+interface WSGroupResponse { operation: WSGroupOperation, message?: string, status: number, member?: Member }
 
-    private config: SimpleChatConfig;
+abstract class SocketResponseHandler{
+    abstract handleChats(response: WSChatResponse): void;
+    abstract handleFriends(response: WSFriendResponse): void;
+    abstract handleGroups(response: WSGroupResponse): void
+}
+
+class ConnectionManager{
+    private path: string;
+    private handler: SocketResponseHandler;
     private socket: WebSocket;
+    get socketInstance(){
+        if(!this.connected){
+            this.socket = this.connect();
+        }
+        return this.socket;
+    }
+
     private connected: boolean = false;
     get isConnected(){
         return this.connected;
@@ -21,168 +38,196 @@ export class SimpleChatClient{
         this.onError = onError;
     }
 
-    private constructor(config: SimpleChatConfig, state: SimpleChatState){
-        this.config = config;
-        this.state = state;
+    constructor(path: string, handler: SocketResponseHandler){
+        this.handler = handler;
+        this.path = path;
+        this.socket = this.connect();
+    }
 
-        this.socket = new WebSocket("ws:localhost:3000/ws");
-        this.socket.onopen = () =>{
+    private connect(): WebSocket{
+        let socket = new WebSocket(this.path);
+        socket.onopen = () =>{
             console.info("connected to simple chat live server");
             this.connected = true;
             this.connectionChange && this.connectionChange(this.connected);
         }
 
-        this.socket.onclose = () =>{
+        socket.onclose = () =>{
             console.info("disconnected to simple chat live server");
             this.connected = false;
             this.connectionChange && this.connectionChange(this.connected);
         }
 
-        this.socket.onerror = (event) =>{
+        socket.onerror = (event) =>{
             console.error(event);
             this.onError && this.onError("simple chat live server encountered some errors");
         }
 
-        this.socket.onmessage = (event) =>{
+        socket.onmessage = (event) =>{
             console.log(`what is comming from server: ${event.data}`);
             const message = JSON.parse(event.data);
 
-            
+            switch(message.path as SocketPaths){
+                case SocketPaths.Chats:
+                    this.handler.handleChats(message);
+                    break;
+                case SocketPaths.Friends:
+                    this.handler.handleFriends(message);
+                    break;
+                case SocketPaths.Groups:
+                    this.handler.handleGroups(message);
+                    break;
+            }
         }
-    }
-
-    static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
-        const headers: HeadersInit = {};
-        headers[AccessHeaderKeys.AccessKey] = config.accessKey;
-        headers[AccessHeaderKeys.ProjectToken] = config.projectToken;
-        if(config.organization){
-            headers[AccessHeaderKeys.Organization] = config.organization;
-        }
-
-        const apiClientInstance =  new APIClient("/api", { headers });
-        
-        await apiClientInstance.post("/connect", { data: {...config} });
-        const response = await apiClientInstance.get("/client");
-        
-        return new SimpleChatClient(config, response);
+        return socket;
     }
 }
 
-/*class SimpleChatClient{
-    private config: SimpleChatConfig;
-    private socket: WebSocket;
-
+export class SimpleChatClient{
     state: SimpleChatState;
-    messages: string[];
+    connectionManager: ConnectionManager;
+    readonly client: Client;
 
-    onChatsChange?: (chats: Chats) => void;
-    onMessageChange?: (message: string[]) => void;
-    onFriendChange?: (friend: Friend[]) => void;
-    onMemberChange?: (member: Member[]) => void;
+    private apiClientInstance: APIClient;
 
-    private constructor(config: SimpleChatConfig, state: SimpleChatState){
-        this.config = config;
+    private chatsChange?: (chats: Chats) => void
+    set onChatsChange(chatsChange: (chats: Chats) => void){
+        this.chatsChange = chatsChange;
+    }
+
+    private friendChange?: (friend: Friend[]) => void
+    set onFriendChange(friendChange: (friend: Friend[]) => void){
+        this.friendChange = friendChange;
+    }
+    
+    private memberChange?: (member: Member[]) => void;
+    set onMemberChange(memberChange: (member: Member[]) => void){
+        this.memberChange = memberChange;
+    }
+
+    private constructor(client: Client, apiClientInstance: APIClient, state: SimpleChatState){
+        this.client = client;
         this.state = state;
-        this.messages = this.sort();
-
-        this.chatSocket = new WebSocket("/ws")
-
-        this.socket.on("chat", (data: Chat, room: string)=>{
-            const chats = { ...this.state.chats };
-            chats[room] = [...this.state.chats[room], data];
-    
-            this.state =  {...this.state, chats}
-            this.messages = [room].concat([...this.messages].filter((value) => value !== room));
-    
-            console.log(`Recieved chat - ${JSON.stringify(room)}: ${JSON.stringify(data)}`);
-
-            this.onMessageChange && this.onMessageChange(this.messages);
-            this.onChatsChange && this.onChatsChange(this.state.chats);
+        this.apiClientInstance = apiClientInstance;
+        this.connectionManager = new ConnectionManager("ws:localhost:3000/ws", {
+            handleChats: this.handleChats,
+            handleFriends: this.handleFriends,
+            handleGroups: this.handleGroups
         });
-    
-        this.socket.on("typing", (message: string, room: string)=>{
-            if(room === status.room){
-                if(status.message !== message){
-                    setStatus({ message, room });
-                }                
-            }else if(room === current?.id){
-                setStatus({ message, room });
-            }
-        });
+    }
 
-        this.socket.on("friends/request", (response: Friend) =>{
-            this.state = { ...this.state, friends: [response, ...this.state.friends] }
+    private handleChats = (response: WSChatResponse) =>{
+        const chats = { ...this.state.chats };
 
-            if(this.onFriendChange){
-                this.onFriendChange(this.state.friends);
-            }
-        });
-    
-        this.socket.on("friends/accept", (response: Friend) =>{
-            console.log(JSON.stringify(`just recieved: ${response}`));
+        switch(response.operation){
+            case WSChatOperation.SendMessage:
+                if(response.chat){
+                    if(chats[response.chat.ownerID] === undefined){
+                        chats[response.chat.ownerID] = [];
+                    }
+                    chats[response.chat.ownerID].push(response.chat);
+                    this.state = { ...this.state, chats };
+                }
+                break;
+            case WSChatOperation.SentMessage:
+            case WSChatOperation.EditMessage:
+            case WSChatOperation.ReadReceipt:
+                if(response.chat){
+                    const index = chats[response.chat.ownerID].findIndex((value)=> response.chat!.id === value.id);
+                    const init = [...chats[response.chat.ownerID]];
+                    init.splice(index, 1, response.chat!);
+                    chats[response.chat.ownerID]= init;
+                    this.state = { ...this.state, chats };
+                }
+                break;
+            case WSChatOperation.DeleteMessage:
+                if(response.chat){
+                    const index = chats[response.chat.ownerID].findIndex((value)=> response.chat!.id === value.id);
+                    const init = [...chats[response.chat.ownerID]];
+                    init.splice(index, 1);
+                    chats[response.chat.ownerID]= init;
+                    this.state = { ...this.state, chats };
+                }
+                break;
+            case WSChatOperation.Subscribe:
+                break;
+            case WSChatOperation.Unsubscribe:
+                break;
+            case WSChatOperation.ReplyMessage:
+                break;
+        }
+
+        this.chatsChange && this.chatsChange(this.state.chats);
+    }
+
+    private handleFriends = (response: WSFriendResponse) =>{
+        switch(response.operation){
+            case WSFriendOperation.Request:
+                if(response.friend){
+                    this.state = { ...this.state, friends: [response.friend!, ...this.state.friends] }
+                }
+                break;
+            case WSFriendOperation.Approve:
+                if(response.friend){
+                    const index = this.state.friends.findIndex((value)=> response.friend!.id === value.id);
+                    const init = [...this.state.friends];
+                    init.splice(index, 1, response.friend!);
             
-            const index = this.state.friends.findIndex((value)=> response.id === value.id);
-            const init = [...this.state.friends];
-            init.splice(index, 1, response);
-    
-            this.state = {...state, friends: init };
-
-            if(this.onFriendChange){
-                this.onFriendChange(this.state.friends);
-            }
-        });
-    
-        this.socket.on("friends/cancel", (response: Friend) =>{
-            const index = this.state.friends.findIndex((value)=> response.id === value.id);
-            const init = [...this.state.friends];
-            init.splice(index, 1);
-    
-            this.state = {...state, friends: init };
-
-            if(this.onFriendChange){
-                this.onFriendChange(this.state.friends);
-            }
-        });
-
-        socket.on("friends/error", (error: any) =>{});
-
-        socket.on("groups/request", (response: Member) =>{
-            const init = [response, ...state.members]
-            this.state = {...state, members: init };
-
-            if(this.onMemberChange){
-                this.onMemberChange(this.state.members);
-            }
-        });
-    
-        socket.on("groups/accept", (response: Member) =>{
-            console.log(JSON.stringify(`just recieved: ${response}`));
+                    this.state = {...this.state, friends: init };
+                }
+                break;
+            case WSFriendOperation.Reject:
+            case WSFriendOperation.Cancel:
+                if(response.friend){
+                    const index = this.state.friends.findIndex((value)=> response.friend!.id === value.id);
+                    const init = [...this.state.friends];
+                    init.splice(index, 1);
             
-            const index = state.members.findIndex((value)=> response.credential.id === value.credential.id);
-            const init = [...state.members];
-            init.splice(index, 1, response);
-    
-            this.state = {...state, members: init };
-            if(this.onMemberChange){
-                this.onMemberChange(this.state.members);
-            }
-        });
-    
-        socket.on("groups/cancel", (response: Friend) =>{
-            const index = state.members.findIndex((value)=> response.id === value.credential.id);
-            const init = [...state.members];
-            init.splice(index, 1);
-    
-            this.state = {...state, members: init };
-            if(this.onMemberChange){
-                this.onMemberChange(this.state.members);
-            }
-        });
+                    this.state = {...this.state, friends: init };
+                }
+                break;
+        }
+        this.friendChange && this.friendChange(this.state.friends);
+    }
+
+    private handleGroups = (response: WSGroupResponse) =>{
+        switch(response.operation){
+            case WSGroupOperation.Create:
+                break;
+            case WSGroupOperation.Request:
+                if(response.member){
+                    this.state = {...this.state, members: [response.member!, ...this.state.members] };
+                }
+                break;
+            case WSGroupOperation.Accept:
+                if(response.member){
+                    const index = this.state.members.findIndex((value)=> response.member!.id === value.id);
+                    const init = [...this.state.members];
+                    init.splice(index, 1, response.member);
+            
+                    this.state = {...this.state, members: init };
+                }
+                break;
+            case WSGroupOperation.Reject:
+            case WSGroupOperation.Cancel:
+                if(response.member){
+                    const index = this.state.members.findIndex((value)=> response.member!.id === value.id);
+                    const init = [...this.state.members];
+                    init.splice(index, 1);
+
+                    this.state = {...this.state, members: init };
+                }
+                break;
+            case WSGroupOperation.Assign:
+                break;
+            case WSGroupOperation.Delete:
+                break;
+        }
+        this.memberChange && this.memberChange(this.state.members);
     }
 
     private sort = ()=>{
         const map = new Map(Object.entries(this.state.chats));
-        
         return Array.from(map.entries()).sort((entryA, entryB)=>{
             if(entryA[1].length > 0 && entryB[1].length > 0){
                 return entryB[1][ entryB[1].length - 1].created.toString().localeCompare(entryA[1][  entryA[1].length - 1].created.toString());
@@ -196,13 +241,13 @@ export class SimpleChatClient{
     send = (message: string, targert: Friend | Member) =>{
         if("acceptorID" in targert){
             const friend = targert as Friend;
-            if(this.socket && friend.accepted){
-                this.socket.emit("chat", { message, friendID: friend.id }, friend.id);
+            if(friend.accepted){
+                this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Chats, operation: WSChatOperation.SendMessage, message, friendID: friend.id }));
             }
         }else{
             const member = targert as Member;
-            if(this.socket && member.accepted){
-                this.socket.emit("chat", { message, groupID: member.group.id }, member.group.id);
+            if(member.accepted){
+                this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Chats, operation: WSChatOperation.SendMessage, message, groupID: member.group.id }));
             }
         }
     }
@@ -210,82 +255,83 @@ export class SimpleChatClient{
     typing = (targert: Friend | Member) => {
         if("acceptorID" in targert){
             const friend = targert as Friend;
-            if(this.socket && friend.accepted){
-                this.socket.emit("typing", { status: true }, friend.id);
+            if(friend.accepted){
+                this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Chats,  operation: WSChatOperation.Typing, friendID: friend.id }));
             }
         }else{
             const member = targert as Member;
-            if(this.socket && member.accepted){
-                this.socket.emit("typing", { status: true }, member.group.id);
+            if(member.accepted){
+                this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Chats, operation: WSChatOperation.Typing, groupID: member.group.id }) );
             }
         }
     }
 
     refreshChats = async () => {
-        try{
-            const response = await axiosInstance.get(`/chats?key=${this.accessKey}`);
-            this.state = { ...this.state, chats: response.data };
-            if(this.onChatsChange){
-                this.onChatsChange(this.state.chats);
-            }
-        }catch(error){
-            if(error instanceof AxiosError){
-                throw Error((error as AxiosError).message);
-            }else{
-                throw error;
-            }
+        const response = await this.apiClientInstance.get("/api/chats");
+        this.state = { ...this.state, chats: response.data };
+        if(this.onChatsChange){
+            this.onChatsChange(this.state.chats);
         }
     }
 
     sendFriendRequest = (userID: string) =>{
-        this.socket.emit("request", { userID });
+        this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Friends, operation: WSFriendOperation.Request, userID }));
     }
 
     acceptFriendRequest = (friendID: string) =>{
-        this.socket.emit("accept", { friendID }, friendID);
+        this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Friends, operation: WSFriendOperation.Approve, friendID }));
     }
 
     cancelFriendRequest = (friendID: string) =>{
-        this.socket.emit("cancel", { friendID }, friendID);
+        this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Friends, operation: WSFriendOperation.Cancel, friendID }));
     }
 
     refreshFriends = async () =>{
-        try{
-            const response = await axiosInstance.get(`/friends?key=${this.accessKey}`);
-
-            this.state = { ...this.state, friends: response.data };
-
-            if(this.onFriendChange){
-                this.onFriendChange(this.state.friends);
-            }
-        }catch(error){
-            if(error instanceof AxiosError){
-                throw Error((error as AxiosError).message);
-            }else{
-                throw error;
-            }
+        const response = await this.apiClientInstance.get(`/api/friend`);
+        this.state = { ...this.state, friends: response.data };
+        if(this.friendChange){
+            this.friendChange(this.state.friends);
         }
     }
 
     refreshMembers = async () =>{
-        try{
-            const response = await axiosInstance.get(`/groups?key=${this.accessKey}`);
-
-            this.state = { ...this.state, members: response.data };
-            if(this.onMemberChange){
-                this.onMemberChange(this.state.members);
-            }
-        }catch(error){
-            if(error instanceof AxiosError){
-                throw Error((error as AxiosError).message);
-            }else{
-                throw error;
-            }
+        const response = await this.apiClientInstance.get(`/api/groups`);
+        this.state = { ...this.state, members: response.data };
+        if(this.memberChange){
+            this.memberChange(this.state.members);
         }
     }
 
-    
-}*/
+    createGroup = (name: string) =>{
+        this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Groups, operation: WSGroupOperation.Create, name }));
+    }
+
+    acceptGroupRequest = (memberID: string) =>{
+        this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Groups, operation: WSGroupOperation.Accept, memberID }));
+    }
+
+    declineGroupRequest = (memberID: string) =>{
+        this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Groups, operation: WSGroupOperation.Reject, memberID }));
+    }
+
+    assignMemberRole = (memberID: string, role: "Member" | "Admin") =>{
+        this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Groups, operation: WSGroupOperation.Assign, memberID, role }));
+    }
+
+    static async connect(config: SimpleChatConfig): Promise<SimpleChatClient>{
+        const headers: HeadersInit = {};
+        headers[AccessHeaderKeys.AccessKey] = config.accessKey;
+        headers[AccessHeaderKeys.ProjectToken] = config.projectToken;
+        if(config.organization){
+            headers[AccessHeaderKeys.Organization] = config.organization;
+        }
+        const apiClientInstance =  new APIClient("/api", { headers });
+        
+        const client: Client = await apiClientInstance.post("/auth/connect", { data: {...config} });
+        const response = await apiClientInstance.get("/client");
+        
+        return new SimpleChatClient(client, apiClientInstance, response);
+    }
+}
 
 export default SimpleChatClient;
-

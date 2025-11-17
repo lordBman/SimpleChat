@@ -1,7 +1,7 @@
-import { Chats, Friend, Member, Credential } from "@simplechat/shared/models";
+import { Chats, Client, Friend, Member } from "@simplechat/shared/models";
 
 export type ClientContextType = {
-    credential?: Credential
+    client?: Client;
     loading: boolean;
     isError: boolean;
     message?: any;
@@ -58,9 +58,9 @@ export type MembersContextType = {
     members: Member[],
     refreshMembers: CallableFunction,
     create: (name: string) => void,
-    accept: (userID: string, groupID: string) => void,
-    decline: (userID: string, groupID: string) => void,
-    assign: (userID: string, groupID: string, role: "Member" | "Admin") => void,
+    accept: (memberID: string) => void,
+    decline: (memberID: string) => void,
+    assign: (memberID: string, role: "Member" | "Admin") => void,
     remove: (groupID: string) => void,
     leave: (groupID: string)  => void
 }

@@ -1,0 +1,7 @@
+preload = ["./sass-plugins.ts"]
+
+[serve.static]
+plugins=["./sass-plugins.ts"]
+
+[loaders]
+".scss" = "scss"

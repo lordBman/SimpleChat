@@ -2,8 +2,10 @@ import { PropsWithChildren, use, useCallback, useEffect, useState } from "react"
 import { ChatContext, ClientContext, FriendsContext, MembersContext, useClientContext } from "./src/contexts";
 import { ChatState, ClientContextType, FriendsState, MembersState } from "./src/models";
 import { SimpleChatClient } from "simplechatjs"
-import { useRequest, useRequestCallBack } from "./src/request";
+import { useRequest, useCallbackRequest } from "./src/request";
 import React from "react";
+import { Friend, Member } from "@simplechat/shared/models";
+import { SimpleChatConfig } from "@simplechat/shared";
 
 interface MultiProviderProps extends React.PropsWithChildren{
     providers: React.FC<React.PropsWithChildren>[],
@@ -35,7 +37,7 @@ const ClientProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     const init = useCallback(()=>{
         if(client){
-            setClientState({ loading: false, isError: false, credential: client.state });
+            setClientState({ loading: false, isError: false, client: client.client });
         }else if(isError){
             setClientState({ loading: false, isError: true, message: message });
         }else if(loading){
@@ -71,18 +73,18 @@ const FriendsProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const accept = (friendID: string) =>client?.acceptFriendRequest(friendID);
     const cancel = (friendID: string) =>client?.cancelFriendRequest(friendID);
 
-    const refreshFriendsMutation = useRequestCallBack({
-        fn: () => client?.refreshFriends()!,
-        started:()=> setFriendsState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
-        success(_) {
+    const refreshFriendsMutation = useCallbackRequest<void, void>({
+        request: () => client?.refreshFriends()!,
+        onStart:()=> setFriendsState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
+        onDone(_) {
             setFriendsState(init => { return { ...init, loading: false, isError: false, message: "", friends: client?.state.friends! }});
         },
-        failed(error) {
+        onFail(error) {
             setFriendsState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
 
-    const refreshFriends = () => refreshFriendsMutation.run();
+    const refreshFriends = () => refreshFriendsMutation.start();
 
     return (
         <FriendsContext.Provider value={{ ...friendsState, loading: loading && friendsState.loading, friends: client?.state.friends ?? [], refreshFriends, accept, cancel, request }}>{ children }</FriendsContext.Provider>
@@ -106,21 +108,21 @@ const MembersProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     useEffect(init, [ client, loading, init ]);
 
-    const refreshMembers = () => refreshMembersMutation.run();
-    const create = (name: string) => {}
-    const accept = (userID: string, groupID: string) => {}
-    const decline = (userID: string, groupID: string) => {}
-    const assign = (userID: string, groupID: string, role: "Member" | "Admin") => {}
+    const refreshMembers = () => refreshMembersMutation.start();
+    const create = (name: string) => client?.createGroup(name);
+    const accept = (memberID: string) => client?.acceptGroupRequest(memberID);
+    const decline = (memberID: string) => client?.declineGroupRequest(memberID);
+    const assign = (memberID: string, role: "Member" | "Admin") => client?.assignMemberRole(memberID, role);
     const remove = (groupID: string) => {}
     const leave = (groupID: string)  => {}
 
-    const refreshMembersMutation = useRequestCallBack({
-        fn: () => client?.refreshMembers()!,
-        started:()=> setMembersState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
-        success(_) {
+    const refreshMembersMutation = useCallbackRequest<void, void>({
+        request: () => client?.refreshMembers()!,
+        onStart:()=> setMembersState(init => { return { ...init, loading: true, isError: false, messages: "refreshing friends list"}}),
+        onDone(_) {
             setMembersState(init => { return { ...init, loading: false, isError: false, message: "", members: client?.state?.members ?? [] }});
         },
-        failed(error) {
+        onFail(error) {
             setMembersState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
@@ -148,15 +150,15 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     useEffect(init, [ client, loading, init ]);
 
-    const refreshChatsMutation = useRequestCallBack({
-        fn: () => client?.refreshChats()!,
-        started:()=> setState(init => { return { ...init, loading: true, isError: false, messages: "refreshing chats list"}}),
-        success(_) {
+    const refreshChatsMutation = useCallbackRequest<void, void>({
+        request: () => client?.refreshChats()!,
+        onStart:()=> setState(init => { return { ...init, loading: true, isError: false, messages: "refreshing chats list"}}),
+        onDone(_) {
             setState(init => {
                 return { ...init, loading: false, isError: false, message: "", chats: client?.state.chats! }
             });
         },
-        failed(error) {
+        onFail(error) {
             setState(init => { return { ...init, isError: true, loading: false, message: error}});
         }
     });
@@ -177,7 +179,7 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const send = (message: string, targert: Friend | Member) => client?.send(message, targert);
     const typing = (targert: Friend | Member) => client?.typing(targert);
 
-    const refreshChats = () => refreshChatsMutation.run();
+    const refreshChats = () => refreshChatsMutation.start();
 
     return (
         <ChatContext.Provider value={{ ...state, loading: loading && state.loading, status, refreshChats, send, typing, order }}>{ children }</ChatContext.Provider>
@@ -185,26 +187,21 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 }
 
 export interface SimpleChatProviderProps extends PropsWithChildren{ 
-    clientConfig?: SimpleChatClientConfig,
-    developerConfig?: SimpleChatDeveloperConfig 
+    config?: SimpleChatConfig,
 }
 
 export const SimpleChatProvider: React.FC<SimpleChatProviderProps>  = (props) =>{
-    if(!props.clientConfig  && !props.developerConfig){
-        throw Error("Simple Chat provider requires a client or developer Configuration, but neither was provided");
-    }
-
-    const { data, error, loading, isError } = useRequest({
+    const { data, error, loading } = useRequest({
         fn: () => {
-            if(props.developerConfig){
-                return SimpleChatClient.init(props.developerConfig);
+            if(!props.config){
+                return SimpleChatClient.connect(props.config!);
             }
-            return SimpleChatClient.connect(props.clientConfig!);
+            throw Error("Simple Chat provider requires a client Configuration");
         }
     });
 
     return (
-        <SimpleChatContext.Provider value={{ client: data, isError, loading, message: error }}>
+        <SimpleChatContext.Provider value={{ client: data, isError: error, loading, message: error }}>
             <MultiProvider providers={[ ClientProvider, FriendsProvider, MembersProvider, ChatProvider ]}>
                 {props.children}
             </MultiProvider>

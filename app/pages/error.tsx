@@ -1,6 +1,13 @@
 import React from "react";
-import ErrorPage from "simplechat-pages/src/error";
-import ReactDOM from "react-dom/client";;
+import ReactDOM from "react-dom/client";
+
+const ErrorPage = () =>{
+    return (
+        <div>
+            You do not have permission to access this page.
+        </div>
+    );
+}
 
 const element = document.getElementById("root");
 if(element){

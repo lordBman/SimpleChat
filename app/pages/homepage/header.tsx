@@ -20,13 +20,13 @@ const Header = (props:{active?: string}) =>{
         fn: () => apiClientInstance.get("/")
     });
 
-    const logoutMutation = useCallbackRequest<void, void>({
+    /*const logoutMutation = useCallbackRequest<void, void>({
         request: () => apiClientInstance.get(`/auth/logout`),
         onDone: () => {
             window.location.reload();
         },
         onFail: ((error)=> alert(error))
-    });
+    });*/
 
     const init = useCallback(()=>{
         if(header.current){
@@ -58,7 +58,9 @@ const Header = (props:{active?: string}) =>{
 
     useEffect(()=> init(), [init, header.current]);
 
-    const signout = () => logoutMutation.start();
+    const signout = () => {
+        //logoutMutation.start();
+    }
 
     const scrollToAbout = () => handleClickScroll("about");
     const scrollToFeatures = () => handleClickScroll("features");

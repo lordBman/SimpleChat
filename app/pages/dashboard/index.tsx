@@ -1,14 +1,15 @@
 import Sections from "./sections";
 import Main from "./main";
-import { BottomNavigation, DashBoard as DashBoardView, ErrorPage, Loading, MobileHeader } from "../conponents";
-import Options from "../conponents/dashboard/menu/options";
+import { BottomNavigation, DashBoard as DashBoardView, ErrorPage, Loading, MobileHeader } from "../components";
+import Options from "../components/dashboard/menu/options";
 import { useMemo, useContext } from "react";
 import { useHistory } from "react-router";
 import { BrowserRouter } from "react-router-dom";
-import { ToolBarItem } from "../conponents/dashboard/tool-bar";
+import { ToolBarItem } from "../components/dashboard/tool-bar";
 import SimpleChatProvider from "simplechat_provider";
 import AppProviderWraper, { AppContext, AppContextType } from "../providers/app-provider";
 import React from "react";
+import ReactDOM from "react-dom/client";
 
 
 const App = () =>{
@@ -38,13 +39,13 @@ const App = () =>{
     }, [location.pathname]);
     
     return (
-        <SimpleChatProvider developerConfig={{ token: user?.token!, accessKey: AccessKey }}>
+        <SimpleChatProvider>
             <DashBoardView>
                 <DashBoardView.Menu initial={current} choose={chosen}>
                     <Options>
                         <Options.Item id="home" isMiddle icon="hugeicons--dashboard-square-02" label="Home" />
                         <Options.Item id="developers" isMiddle icon="hugeicons--computer-programming-01" label="Developers" hide={user?.role !== "Admin"} />
-                        <Options.Item id="projects" isMiddle icon="hugeicons--code" label="Projects" hide={user?.role === "Client"} />
+                        <Options.Item id="projects" isMiddle icon="hugeicons--code" label="Projects" />
                         <Options.Item id="chats" isMiddle icon="fluent--chat-20-regular" label="Chats" />
                         <Options.Item id="connections" isMiddle icon="heroicons--user-group" label="Connections" />
                     </Options>
@@ -54,7 +55,7 @@ const App = () =>{
                     </Options>
                 </DashBoardView.Menu>
                 <DashBoardView.ToolBar title="Simple Chat">
-                    <ToolBarItem id="settings/user" icon="guidance--user-1" label={`Hi, ${user?.name}`} choose={chosen} />
+                    <ToolBarItem id="settings/user" icon="guidance--user-1" label={`Hi, ${user?.details.name}`} choose={chosen} />
                     <ToolBarItem icon="solar--bell-linear" id="notifications" choose={chosen} />
                     <ToolBarItem icon="solar--exit-outline" id="logout" choose={chosen} />
                 </DashBoardView.ToolBar>
@@ -88,4 +89,10 @@ const DashBoard = () =>{
     );
 }
 
-export default DashBoard;
+const element = document.getElementById("root");
+if(element){
+    const root = ReactDOM.createRoot(element);
+    root.render( <DashBoard />);
+}else{
+    console.log("root element not found");
+}

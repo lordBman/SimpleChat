@@ -88,15 +88,15 @@ const chatSocketHandler = (ws: ElysiaWS, client: Client, operation: string, data
             if(data.friendID === undefined && data.groupID === undefined){
                 ws.send({ path, operation: operation, message: "either friendID or groupID must be provided to send typing indicator", status: 400 });
             }else{
-                ws.publish(data.friendID ?? data.groupID!, { path, operation: operation, chatID: data.chatID, userID: client.id });
+                ws.publish(data.friendID ?? data.groupID!, { path, operation: operation, details: client.details });
             }
             break;
         case WSChatOperation.ReadReceipt:
             if(data.friendID === undefined && data.groupID === undefined){
                 ws.send({ path, operation: operation, message: "either friendID or groupID must be provided to send read receipt", status: 400 });
             }else{
-                chatModel.seen({ ...data, chatID: data.chatID!, client}).then(()=>{
-                    ws.publish(data.friendID ?? data.groupID!, { path, operation: operation, chatID: data.chatID, userID: client.id });
+                chatModel.seen({ ...data, chatID: data.chatID!, client}).then((chat)=>{
+                    ws.publish(data.friendID ?? data.groupID!, { path, operation: operation, chat });
                 }).catch((error)=>{
                     jetLogger.err(error);
                     if(error instanceof Err){

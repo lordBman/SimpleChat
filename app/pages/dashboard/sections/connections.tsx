@@ -1,14 +1,15 @@
 import React, { useContext, useMemo, useState } from "react";
-import { MemberResultView, MemberView } from "../../conponents/members-view";
-import { useMutation } from "react-query";
-import { AccessKey, axiosInstance, getName } from "../../utils";
-import { FriendResultView, FriendView } from "../../conponents";
+import { MemberResultView, MemberView } from "../../components/members-view";
+import { FriendResultView, FriendView } from "../../components";
 import { AppContext, AppContextType } from "../../providers/app-provider";
 
-import "../../css/chats/friends.scss";
+import "../../../assets/css/chats/friends.scss";
+
 import { FriendsContext, MembersContext } from "simplechat_provider/src/contexts";
 import { FriendsContextType, MembersContextType } from "simplechat_provider/src/models";
-import { Friend, Group, Member, Credential } from "@simplechat/shared";
+import { Friend, Group, Member } from "@simplechat/shared/models";
+import { useCallbackRequest } from "simplechat_provider/src/request";
+import { apiClientInstance, getName } from "../../utils";
 
 enum Filter{
     all, friends, groups
@@ -24,36 +25,34 @@ const Connections = () =>{
     const [createState, setCreateState] = useState({ isOpen: false, name: "" });
     const [filter, setFilter] = useState<Filter>(Filter.all);
     
-    const searchMutation = useMutation({
-        mutationKey:  ["connections"],
-        mutationFn: (variables: string)=> axiosInstance.get(`/search?query=${variables}&key=${AccessKey}`),
-        onSuccess: (data) =>{
+    const searchMutation = useCallbackRequest({
+        request: (variables: string)=> apiClientInstance.get(`/search?query=${variables}`),
+        onDone: (data) =>{
             setResults(data.data);
         },
-        onError: (error) =>alert(error)
+        onFail: (error) =>alert(error)
     });
 
     const onSearch = (event: React.FormEvent<HTMLFormElement>) =>{
         event.preventDefault();
-        if(query.length > 0 && !searchMutation.isLoading){
-            searchMutation.mutate(query)
+        if(query.length > 0 && !searchMutation.loading){
+            searchMutation.start(query)
         }
     }
 
-    const createMutation = useMutation({
-        mutationKey:  ["connections"],
-        mutationFn: (name: string)=> axiosInstance.post(`/groups/create`, { name, key: AccessKey }),
-        onSuccess: (data) =>{
+    const createMutation = useCallbackRequest({
+        request: (name: string)=> apiClientInstance.post(`/groups/create`, { data: { name } }),
+        onDone: (data) =>{
             setResults(data.data);
             close();
         },
-        onError: (error) =>alert(error)
+        onFail: (error) =>alert(error)
     });
 
     const onCreate = (event: React.FormEvent<HTMLFormElement>) =>{
         event.preventDefault();
-        if(createState.name.length > 0 && !createMutation.isLoading){
-            createMutation.mutate(createState.name);
+        if(createState.name.length > 0 && !createMutation.loading){
+            createMutation.start(createState.name);
         }
     }
 
@@ -83,8 +82,8 @@ const Connections = () =>{
         }
 
         const sorted = responses.sort((a, b)=>{
-            const aName = getName(user!, a);
-            const bName = getName(user!, b);
+            const aName = getName(user?.details!, a);
+            const bName = getName(user!.details, b);
 
             return aName.localeCompare(bName);
         });
@@ -93,7 +92,7 @@ const Connections = () =>{
         let [letter, index] = [ "", 0 ];
         while(index < sorted.length){
             const item = sorted[index];
-            const name = getName(user!, item);
+            const name = getName(user!.details, item);
             if(name.charAt(0).toUpperCase() === letter){
                 if((item as any).group){
                     const member = item as Member;
@@ -148,7 +147,7 @@ const Connections = () =>{
                 </div>
             ) }
             { query.length <= 0 && filter === Filter.friends && <div id="friends-list">{ views }</div> }
-            { searchMutation.isLoading && <div id="friends-search-loading">
+            { searchMutation.loading && <div id="friends-search-loading">
                 <span>Loading...</span>
             </div> }
             { query.length > 0 && <div id="friends-search-results">{results.map((result, index)=> {

@@ -4,9 +4,8 @@ import { t, Elysia } from "elysia";
 import { AccessKeyModel } from "../models";
 import UserAuthenicationPlugin from "../plugins/user-authentication";
 
-const accessKeyRouter = new Elysia({ prefix: "/access-keys" });
+const accessKeyRouter = new Elysia({ prefix: "/access-keys" }).use(UserAuthenicationPlugin).decorate({ "accessKeyModel": new AccessKeyModel(), })
 
-accessKeyRouter.use(UserAuthenicationPlugin).decorate({ "accessKeyModel": new AccessKeyModel(), })
 .post("/", async({ body, accessKeyModel, status }) =>{
     try{
         const response = await accessKeyModel.add({ name: body.name, projectID: body.projectID });

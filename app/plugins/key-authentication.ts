@@ -33,8 +33,7 @@ const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new Acc
             }
         }
     }
-    return { accesskey, project, organization };
-}).onBeforeHandle(async ({ status, accesskey, project })=>{
+
     if(!accesskey){
         return status(401, {message: "API Access key not found" });
     }
@@ -50,6 +49,8 @@ const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new Acc
     if(accesskey.projectID !== project.id){
         return status(401, {message: "access key does not belong to the provided project" });
     }
+
+    return { accesskey, project, organization };
 });
 
 export default keyAuthenicationPlugin;

@@ -1,8 +1,9 @@
-import {  Project, AccessKey, ProjectDetails, Group } from "@simplechat/shared";
+import {  Project, AccessKey, Group } from "@simplechat/shared/models";
 import { DBManager, Err } from "../config";
 import { uuid } from "../utils";
 import { Details, ResourceType } from "@prisma/client";
 import { User } from "@simplechat/shared/models";
+import { ProjectDetails } from "@simplechat/shared";
 
 class ProjectModel{
     database = DBManager.instance();
@@ -79,7 +80,7 @@ class ProjectModel{
 
             return projects.map((project) => { return {...project, owner: project.owner.details, isDeleted: undefined} });
         }catch(error){
-            throw new Err( 503, error, "error encountered while loading project list");
+            throw new Err( 500, error, "error encountered while loading project list");
         }
     }
 

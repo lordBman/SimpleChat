@@ -16,13 +16,12 @@ const UserAuthenicationPlugin =  new Elysia().use(JWTPlugin).derive({ as: "scope
             return status(401, {message: "invalid access token, try refreshing or login again"});
         }
     }
-    return { user };
-}).onBeforeHandle(async ({ status, user })=>{
-    jetLogger.info("I entered unauthorized");
-    jetLogger.info(user);
+
     if(!user){  
         return status(401, {message: "access token expired, try refreshing or login again"});
     }
+
+    return { user };
 });
 
 export default UserAuthenicationPlugin;

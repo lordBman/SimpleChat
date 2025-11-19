@@ -15,15 +15,15 @@ import keyAuthenicationPlugin from "../plugins/key-authentication";
 import UserAuthenicationPlugin from "../plugins/user-authentication";
 import ClientAuthenicationPlugin from "../plugins/client-authentication";
 
-let api = new Elysia({ prefix: "/api" }).decorate({ "adminModel": new AdminModel(), "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() });
-api.use(projectRouter.use(accessKeyRouter));
-api.use(chatRouter);
-api.use(friendRouter);
-api.use(authRouter);
+let api = new Elysia({ prefix: "/api" })
+.use(projectRouter.use(accessKeyRouter))
+.use(chatRouter)
+.use(friendRouter)
+.use(authRouter);
 
-api.use(UserAuthenicationPlugin).get("/", async({ user, developerModel, adminModel, cookie: { token }, status }) =>{
+api.use(new Elysia().use(UserAuthenicationPlugin.get("/", async({ user, cookie: { token }, status }) =>{
     try{
-        let model: DeveloperModel | AdminModel = user?.role === "Admin" ? adminModel : developerModel;
+        let model: DeveloperModel | AdminModel = user?.role === "Admin" ? new AdminModel() : new DeveloperModel();
         const init = await model.get({ user: user! });
 
         return status(200, { ...init, token: token.value });
@@ -33,14 +33,14 @@ api.use(UserAuthenicationPlugin).get("/", async({ user, developerModel, adminMod
             const err = error as Err;
             return status(err.code, { message: err.message });
         }else{
-            return status(503, { message: "an internal server error occurred when creating user" });
+            return status(503, { message: "an internal server error occurred when getting user" });
         }
     }
-});
+})));
 
-api.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).get("/client", async({ project, clientModel, organization, client, status, cookie: { token } }) =>{
+api.use(new Elysia().use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).get("/client", async({ project, organization, client, status, cookie: { token } }) =>{
     try{
-        const init = await clientModel.get({ client: client!, project: project!, organization });
+        const init = await new ClienitModel().get({ client, project, organization });
         return status(200, { ...init, token: token.value });
     }catch(error){
         jetLogger.err(error);
@@ -55,8 +55,8 @@ api.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).get("/client", as
 
 .get("/search:query", async({ organization, params, client, project, status })=>{
     try{
-        const friendsResponse = await new FriendModel().find({ project: project!, client: client!, organization, query: params.query });
-        const groupResponse = await new GroupModel().find({ project: project!, client: client!, organization, query: params.query });
+        const friendsResponse = await new FriendModel().find({ project, client, organization, query: params.query });
+        const groupResponse = await new GroupModel().find({ project, client, organization, query: params.query });
 
         const getName = (result: { user: Details, friend?: Friend } | { group: Group, member?: Member }):string =>{
             if('user' in result){
@@ -85,7 +85,7 @@ api.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).get("/client", as
             return status(503, { message: "an internal server error occurred while searching for users" });
         }
     }
-}, { params: t.Object({ query: t.String() }) });
+}, { params: t.Object({ query: t.String() }) }));
 
 api.all("*", ({ status })=>{
     return status(404, { message: "endpoint doesnot exists" });

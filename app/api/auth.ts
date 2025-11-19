@@ -6,10 +6,10 @@ import { ClienitModel } from "../models";
 import keyAuthenicationPlugin from "../plugins/key-authentication";
 import JWTPlugin from "../plugins/jwt-plugin";
 
-const authRouter = new Elysia({ prefix: "/auth" }).use(JWTPlugin).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() })
-.post("/", async({ encrypt, status, body, developerModel, cookie: { token } }) =>{
+const authRouter = new Elysia({ prefix: "/auth" }).use(JWTPlugin)
+.post("/", async({ encrypt, status, body, cookie: { token } }) =>{
     try{
-        const user = await developerModel.create({ ...body });
+        const user = await new DeveloperModel().create({ ...body });
         const value = await encrypt(user);
         token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
@@ -25,9 +25,9 @@ const authRouter = new Elysia({ prefix: "/auth" }).use(JWTPlugin).decorate({ "de
     }
 }, { body: t.Object({ name: t.String(), surname: t.String(), email: t.String(), username: t.String(), password: t.String() }) })
 
-.post("/login", async ({ encrypt, body, status, developerModel, cookie: { token } }) =>{
+.post("/login", async ({ encrypt, body, status, cookie: { token } }) =>{
     try{
-        const user = await developerModel.signin({ ...body });
+        const user = await new DeveloperModel().signin({ ...body });
         const value = await encrypt(user);
         token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
@@ -50,10 +50,10 @@ const authRouter = new Elysia({ prefix: "/auth" }).use(JWTPlugin).decorate({ "de
     return status(200, { message: "Logout successful" });
 });
 
-authRouter.use(keyAuthenicationPlugin).post("/connect", async({ encrypt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
+authRouter.use(new Elysia().use(keyAuthenicationPlugin).use(JWTPlugin).post("/connect", async({ encrypt, body, status, cookie: { client_token } , project, organization }) =>{
     if(body.email || body.username){
         try{
-            const client = await clientModel.connect({ ...body, project: project!, organization });
+            const client = await new ClienitModel().connect({ ...body, project: project!, organization });
             const value = await encrypt(client);
             client_token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 
@@ -70,6 +70,6 @@ authRouter.use(keyAuthenicationPlugin).post("/connect", async({ encrypt, body, s
     }else{
         return status(400, {message: "invalid req to server"});
     }
-}, { body: t.Object({ id: t.String(), name: t.String(), surname: t.String(), email: t.Optional(t.String()), username: t.Optional(t.String()) }) });
+}, { body: t.Object({ id: t.String(), name: t.String(), surname: t.String(), email: t.Optional(t.String()), username: t.Optional(t.String()) }) }));
 
 export default authRouter;

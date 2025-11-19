@@ -1,7 +1,7 @@
 import {DBManager, Err} from "../config";
 import ProjectModel from "./projects";
-import {Developer, Project, UserState} from "@simplechat/shared";
-import {User} from "@simplechat/shared/models";
+import {Developer, UserState} from "@simplechat/shared";
+import {Project, User} from "@simplechat/shared/models";
 
 class AdminModel{
     database = DBManager.instance();

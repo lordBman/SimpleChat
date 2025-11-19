@@ -3,7 +3,7 @@ import Elysia from "elysia";
 import {Client} from "@simplechat/shared/models";
 import JWTPlugin from "./jwt-plugin";
 
-const ClientAuthenicationPlugin = new Elysia().use(JWTPlugin).derive({ as: "scoped" }, async ({ decrypt, cookie: { client_token } })=>{
+const ClientAuthenicationPlugin = new Elysia().use(JWTPlugin).derive({ as: "scoped" }, async ({ decrypt, status, cookie: { client_token } })=>{
     let client: Client | undefined = undefined;
 
     if(client_token.value){
@@ -13,11 +13,12 @@ const ClientAuthenicationPlugin = new Elysia().use(JWTPlugin).derive({ as: "scop
             jetLogger.err(error);
         }
     }
-    return { client };
-}).onBeforeHandle(async ({ status, client })=>{
+
     if(!client){
         return status(401, {message: "access token expired, try refreshing or login again"});
     }
+
+    return { client };
 });
 
 export default ClientAuthenicationPlugin;

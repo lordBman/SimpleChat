@@ -1,7 +1,7 @@
 import React, { useContext, useMemo } from "react";
 import { useAppContext } from "../providers/app-provider";
 import { formatTime } from "../utils";
-import { Friend, Member } from "@simplechat/shared";
+import { Friend, Member } from "@simplechat/shared/models";
 import { useChatContext, useFriendsContext, useMembersContext } from "simplechat_provider/src/contexts";
 
 interface FrinedMessageProps{
@@ -37,7 +37,7 @@ const FrinedMessage: React.FC<FrinedMessageProps> = ({message}) =>{
                     <span className="messages-item-name">{friend?.name}</span>
                     <span className="messages-item-time">{ formatTime(new Date(last.created.toString())) }</span>
                 </div>
-                <span className="messages-item-message">{ user?.id === last.senderID ? `You: ${last.message}` : last.message }</span>
+                <span className="messages-item-message">{ user?.id === last.sender.id ? `You: ${last.message}` : last.message }</span>
             </div>
         </div>
     );
@@ -71,7 +71,7 @@ const GroupMessage: React.FC<GroupMessageProps> = ({ message }) =>{
                     <span className="messages-item-name">{message.group.name}</span>
                     <span className="messages-item-time">{ formatTime(new Date(last.created.toString())) }</span>
                 </div>
-                <span className="messages-item-message">{ user?.id === last.senderID ? `You: ${last.message}` : `${last.sender.name.split(" ")[0]}: ${last.message}` }</span>
+                <span className="messages-item-message">{ user?.id === last.sender.id ? `You: ${last.message}` : `${last.sender.name.split(" ")[0]}: ${last.message}` }</span>
             </div>
         </div>
     );

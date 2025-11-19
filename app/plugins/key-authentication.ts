@@ -7,7 +7,7 @@ import jetLogger from "jet-logger";
 import { AccessKey, Project } from "@simplechat/shared/models";
 import Organization from "@simplechat/shared/models/organization";
 
-const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new AccessKeyModel(), "projectModel": new ProjectModel(), "organizationModel": new OrganizationModel() }).derive({ as: "global" }, async ({ headers, query, status, accessKeyModel, projectModel, organizationModel })=>{
+const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new AccessKeyModel(), "projectModel": new ProjectModel(), "organizationModel": new OrganizationModel() }).derive({ as: "scoped" }, async ({ headers, query, status, accessKeyModel, projectModel, organizationModel })=>{
     let accesskey: AccessKey | undefined = undefined;
     let project: Project | undefined = undefined;
     let organization: Organization | undefined = undefined;

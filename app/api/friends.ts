@@ -3,11 +3,11 @@ import { Err } from "../config";
 import jetLogger from "jet-logger";
 import Elysia, { t } from "elysia";
 import keyAuthenicationPlugin from "../plugins/key-authentication";
-import clientAuthenicationPlugin from "../plugins/client";
+import ClientAuthenicationPlugin from "../plugins/client-authentication";
 
 const friendRouter = new Elysia({ prefix: "/friends" }).decorate({ "friendModel": new FriendModel() });
 
-friendRouter.use(keyAuthenicationPlugin).use(clientAuthenicationPlugin)
+friendRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin)
 .get("/search", async({ status, query, client, friendModel, project, organization })=>{
     try{
         const response = await friendModel.find({ query: query.query, project: project!, organization, client: client! });

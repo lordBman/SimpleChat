@@ -1,4 +1,4 @@
-import { Group, Member } from "@simplechat/shared";
+import { Group, Member } from "@simplechat/shared/models";
 import React from "react";
 import { useMembersContext } from "simplechat_provider/src/contexts";
 import { useAppContext } from "../providers/app-provider";

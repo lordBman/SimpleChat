@@ -11,16 +11,17 @@ import FriendModel from "../models/friends";
 import GroupModel from "../models/groups";
 import Elysia, { t } from "elysia";
 import authRouter from "./auth";
-import APIAuthenicationPlugin from "../plugins/api-authentication";
-import clientAuthenicationPlugin from "../plugins/client";
+import keyAuthenicationPlugin from "../plugins/key-authentication";
+import UserAuthenicationPlugin from "../plugins/user-authentication";
+import ClientAuthenicationPlugin from "../plugins/client-authentication";
 
 let api = new Elysia({ prefix: "/api" }).decorate({ "adminModel": new AdminModel(), "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() });
 api.use(projectRouter.use(accessKeyRouter));
 api.use(chatRouter);
 api.use(friendRouter);
+api.use(authRouter);
 
-api.use(api.use(authRouter));
-api.use(APIAuthenicationPlugin).get("/", async({ user, developerModel, adminModel, cookie: { token }, status }) =>{
+api.use(UserAuthenicationPlugin).get("/", async({ user, developerModel, adminModel, cookie: { token }, status }) =>{
     try{
         let model: DeveloperModel | AdminModel = user?.role === "Admin" ? adminModel : developerModel;
         const init = await model.get({ user: user! });
@@ -37,7 +38,7 @@ api.use(APIAuthenicationPlugin).get("/", async({ user, developerModel, adminMode
     }
 });
 
-api.use(clientAuthenicationPlugin).get("/client", async({ project, clientModel, organization, client, status, cookie: { token } }) =>{
+api.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).get("/client", async({ project, clientModel, organization, client, status, cookie: { token } }) =>{
     try{
         const init = await clientModel.get({ client: client!, project: project!, organization });
         return status(200, { ...init, token: token.value });
@@ -85,5 +86,9 @@ api.use(clientAuthenicationPlugin).get("/client", async({ project, clientModel, 
         }
     }
 }, { params: t.Object({ query: t.String() }) });
+
+api.all("*", ({ status })=>{
+    return status(404, { message: "endpoint doesnot exists" });
+});
 
 export default api;

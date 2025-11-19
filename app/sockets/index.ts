@@ -3,7 +3,6 @@ import Elysia, { t } from "elysia";
 import { ElysiaWS } from "elysia/ws";
 
 import keyAuthenicationPlugin from "../plugins/key-authentication";
-import CookieAuthenicationPlugin from "../plugins/cookie-authentication";
 
 import FriendModel from "../models/friends";
 import { GroupModel } from "../models";
@@ -16,6 +15,7 @@ import friendsSocketHandler from "./friends";
 
 import groupSocketHandler from "./groups";
 import { MemberRoles } from "@simplechat/shared/models/member";
+import ClientAuthenicationPlugin from "../plugins/client-authentication";
 
 const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, ElysiaWS>>("connectedSockets", {}).derive({ as: "global" }, async ({ store })=>({
     isOnline: (id: string) => store.connectedSockets[id] !== undefined,
@@ -37,8 +37,7 @@ const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, El
 }));
 
 const sockets = new Elysia();
-
-sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(CookieAuthenicationPlugin).ws("/ws", {
+sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).ws("/ws", {
     body: t.Object({
         operation: t.String(),
         path: t.String(),

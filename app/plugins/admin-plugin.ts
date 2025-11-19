@@ -1,5 +1,5 @@
 import Elysia from "elysia";
-import APIAuthenicationPlugin from "./api-authentication";
+import APIAuthenicationPlugin from "./user-authentication";
 
 const adminAuthenicationPlugin = new Elysia().use(APIAuthenicationPlugin).onBeforeHandle(async ({ status, user })=>{
     if(!user || user.role !== "Admin"){

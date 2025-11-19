@@ -3,7 +3,7 @@ import Elysia from "elysia";
 import {Client} from "@simplechat/shared/models";
 import JWTPlugin from "./jwt-plugin";
 
-const CookieAuthenicationPlugin = new Elysia().use(JWTPlugin).derive({ as: "global" }, async ({ decrypt, cookie: { client_token } })=>{
+const ClientAuthenicationPlugin = new Elysia().use(JWTPlugin).derive({ as: "scoped" }, async ({ decrypt, cookie: { client_token } })=>{
     let client: Client | undefined = undefined;
 
     if(client_token.value){
@@ -20,4 +20,4 @@ const CookieAuthenicationPlugin = new Elysia().use(JWTPlugin).derive({ as: "glob
     }
 });
 
-export default CookieAuthenicationPlugin;
+export default ClientAuthenicationPlugin;

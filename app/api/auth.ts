@@ -6,10 +6,7 @@ import { ClienitModel } from "../models";
 import keyAuthenicationPlugin from "../plugins/key-authentication";
 import JWTPlugin from "../plugins/jwt-plugin";
 
-// @ts-ignore
-const authRouter = new Elysia({ prefix: "/auth" });
-
-authRouter.use(JWTPlugin).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() })
+const authRouter = new Elysia({ prefix: "/auth" }).use(JWTPlugin).decorate({ "developerModel": new DeveloperModel(), "clientModel": new ClienitModel() })
 .post("/", async({ encrypt, status, body, developerModel, cookie: { token } }) =>{
     try{
         const user = await developerModel.create({ ...body });
@@ -27,28 +24,6 @@ authRouter.use(JWTPlugin).decorate({ "developerModel": new DeveloperModel(), "cl
         }
     }
 }, { body: t.Object({ name: t.String(), surname: t.String(), email: t.String(), username: t.String(), password: t.String() }) })
-
-.use(keyAuthenicationPlugin).post("/connect", async({ encrypt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
-    if(body.email || body.username){
-        try{
-            const client = await clientModel.connect({ ...body, project: project!, organization });
-            const value = await encrypt(client);
-            client_token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
-
-            return status(200, { message: "client connetion success", ...client });
-        }catch(error){
-            jetLogger.err(error);
-            if(error instanceof Err){
-                const err = error as Err;
-                return status(err.code, { message: err.message });
-            }else{
-                return status(503, { message: "an internal server error occurred when creating user" });
-            }
-        }
-    }else{
-        return status(400, {message: "invalid req to server"});
-    }
-}, { body: t.Object({ id: t.String(), name: t.String(), surname: t.String(), email: t.Optional(t.String()), username: t.Optional(t.String()) }) })
 
 .post("/login", async ({ encrypt, body, status, developerModel, cookie: { token } }) =>{
     try{
@@ -74,5 +49,27 @@ authRouter.use(JWTPlugin).decorate({ "developerModel": new DeveloperModel(), "cl
     
     return status(200, { message: "Logout successful" });
 });
+
+authRouter.use(keyAuthenicationPlugin).post("/connect", async({ encrypt, body, status, clientModel, cookie: { client_token } , project, organization }) =>{
+    if(body.email || body.username){
+        try{
+            const client = await clientModel.connect({ ...body, project: project!, organization });
+            const value = await encrypt(client);
+            client_token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
+
+            return status(200, { message: "client connetion success", ...client });
+        }catch(error){
+            jetLogger.err(error);
+            if(error instanceof Err){
+                const err = error as Err;
+                return status(err.code, { message: err.message });
+            }else{
+                return status(503, { message: "an internal server error occurred when creating user" });
+            }
+        }
+    }else{
+        return status(400, {message: "invalid req to server"});
+    }
+}, { body: t.Object({ id: t.String(), name: t.String(), surname: t.String(), email: t.Optional(t.String()), username: t.Optional(t.String()) }) });
 
 export default authRouter;

@@ -2,11 +2,11 @@ import { Err } from "../config"
 import jetLogger from "jet-logger";
 import { t, Elysia } from "elysia";
 import { AccessKeyModel } from "../models";
-import APIAuthenicationPlugin from "../plugins/api-authentication";
+import UserAuthenicationPlugin from "../plugins/user-authentication";
 
 const accessKeyRouter = new Elysia({ prefix: "/access-keys" });
 
-accessKeyRouter.use(APIAuthenicationPlugin).decorate({ "accessKeyModel": new AccessKeyModel(), })
+accessKeyRouter.use(UserAuthenicationPlugin).decorate({ "accessKeyModel": new AccessKeyModel(), })
 .post("/", async({ body, accessKeyModel, status }) =>{
     try{
         const response = await accessKeyModel.add({ name: body.name, projectID: body.projectID });

@@ -2,11 +2,11 @@ import Elysia, { t } from "elysia";
 import { Err } from "../config";
 import ProjectModel from "../models/projects";
 import jetLogger from "jet-logger";
-import APIAuthenicationPlugin from "../plugins/api-authentication";
+import UserAuthenicationPlugin from "../plugins/user-authentication";
 
 const projectRouter = new Elysia({ prefix: "/projects" }).decorate({ "projectModel": new ProjectModel() });
 
-projectRouter.use(APIAuthenicationPlugin)
+projectRouter.use(UserAuthenicationPlugin)
 .post("/", async({ body, projectModel, user, status }) =>{
     try{
         const response = await projectModel.create({ ...body, user: user! });

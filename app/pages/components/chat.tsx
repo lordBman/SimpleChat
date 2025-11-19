@@ -32,7 +32,7 @@ const MyChat: React.FC<ChatProps> = ({ chat }) =>{
                 <div className="my-chat-time">{new Date(chat.created.toString()).toLocaleTimeString()}</div>
             </div>
             <div className="messages-item-profile-container">
-                <div className="messages-item-profile">{ user?.name.charAt(0).toUpperCase()}</div>
+                <div className="messages-item-profile">{ user?.details.name.charAt(0).toUpperCase()}</div>
             </div>
         </div>
     );
@@ -42,7 +42,7 @@ const MyChat: React.FC<ChatProps> = ({ chat }) =>{
 const ChatView: React.FC<ChatProps> = ({ chat }) =>{
     const { user } = useAppContext();
 
-    if(chat.senderID === user?.id){
+    if(chat.sender.id === user?.id){
         return <MyChat chat={chat} />
     }
     return <RecievedChat chat={chat} />

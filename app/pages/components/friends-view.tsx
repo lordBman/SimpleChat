@@ -1,13 +1,13 @@
 import React, { useContext, useState } from "react";
 import { CircleLoading } from ".";
-import { Friend, Credential } from "@simplechat/shared";
+import { Details, Friend } from "@simplechat/shared/models";
 import { AppContext, AppContextType } from "../providers/app-provider";
-import { useMutation } from "react-query";
-import { AccessKey, axiosInstance } from "../utils";
 import { useFriendsContext } from "simplechat_provider/src/contexts";
+import { useCallbackRequest } from "simplechat_provider/src/request";
+import { apiClientInstance } from "../utils";
 
 interface FriendResultViewProps{
-    result: { user: Credential, friend?: Friend }
+    result: { user: Details, friend?: Friend }
 }
 
 const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
@@ -16,42 +16,39 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 
     const [ state, setState ] = useState(result);
 
-    const requestMutation = useMutation({
-        mutationKey : ["friend_request"],
-        mutationFn: () => axiosInstance.post(`/friends`, { userID: state.user.id,  key: AccessKey }),
-        onSuccess: (data) => {
+    const requestMutation = useCallbackRequest<Friend, void>({
+        request: () => apiClientInstance.post(`/friends`,{ data:  { userID: state.user.id } }),
+        onDone: (data) => {
             refreshFriends();
-            setState(init => { return {...init, friend: data.data } });
+            setState(init => { return {...init, friend: data } });
         },
-        onError: (error) => alert(error),
+        onFail: (error) => alert(error),
     });
-    const sendRequest = () => requestMutation.mutate();
+    const sendRequest = () => requestMutation.start();
 
-    const acceptMutation = useMutation({
-        mutationKey: ["accept_request"],
-        mutationFn: () => axiosInstance.post(`/friends/accept`, { id: state.friend?.id, key: AccessKey }),
-        onSuccess: (data) =>{
+    const acceptMutation = useCallbackRequest<Friend, void>({
+        request: () => apiClientInstance.post(`/friends/accept`,{ data:  { id: state.friend?.id } }),
+        onDone: (data) =>{
             refreshFriends();
-            setState(init => { return {...init, friend: data.data } });
+            setState(init => { return {...init, friend: data } });
         },
-        onError: (error) => alert(error),
+        onFail: (error) => alert(error),
     });
-    const acceptRequest = () => acceptMutation.mutate();
+    const acceptRequest = () => acceptMutation.start();
     
-    const cancelMutation = useMutation({
-        mutationKey: ["cancel_request"],
-        mutationFn: () => axiosInstance.post(`/friends/cancel`, { id: state.friend?.id, key: AccessKey }),
-        onSuccess: (data) => {
+    const cancelMutation = useCallbackRequest<Friend, void>({
+        request: () => apiClientInstance.post(`/friends/cancel`, { data: { id: state.friend?.id } }),
+        onDone: (data) => {
             refreshFriends();
             setState(init => { return {...init, friend: undefined } });
         },
-        onError: (error) => alert(error),
+        onFail: (error) => alert(error),
     });
-    const cancelRequest = () =>cancelMutation.mutate();
+    const cancelRequest = () =>cancelMutation.start();
 
     let accepted = state.friend && state.friend.accepted;
 
-    let loading = requestMutation.isLoading || acceptMutation.isLoading || cancelMutation.isLoading;
+    let loading = requestMutation.loading || acceptMutation.loading || cancelMutation.loading;
     let requesting = !accepted && state.friend && state.friend.acceptor.id === user?.id;
     let requested = !accepted && state.friend && state.friend.requester.id === user?.id;
 
@@ -85,7 +82,7 @@ const FriendResultView: React.FC<FriendResultViewProps> = ({ result }) =>{
 }
 
 interface FriendViewProps{
-    friend: Friend,
+    friend: Friend
 } 
 
 const FriendView: React.FC<FriendViewProps> = ({ friend }) =>{

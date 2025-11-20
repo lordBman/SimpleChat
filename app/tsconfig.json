@@ -20,9 +20,7 @@
       "bun-types" // add Bun global
     ],
     "outDir": "./assets",
-
     "sourceMap": true,
-    
     "removeComments": true,
     "preserveValueImports": false
   },

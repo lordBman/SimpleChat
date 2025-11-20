@@ -1,7 +1,7 @@
 import { useCallbackRequest } from "simplechat_provider/src/request";
-import { extract, apiClientInstance } from "./utils";
 import React, { useState } from "react";
-import ReactDOM from "react-dom/client";
+import { createRoot } from "react-dom/client";
+import { apiClientInstance, extract } from "../utils";
 
 const Signin = () =>{
     const [error, setError] = useState<any>();
@@ -77,7 +77,7 @@ const Signin = () =>{
 
 const element = document.getElementById("root");
 if(element){
-    const root = ReactDOM.createRoot(element);
+    const root = createRoot(element);
     root.render( <Signin />);
 }else{
     console.log("root element not found");

@@ -1,10 +1,9 @@
+import * as ReactDOM from "react-dom/client";
 import React from "react";
 import Header from "./header";
 import About from "./about";
 import Features from "./features";
 import Footer from "./footer";
-
-import ReactDOM from "react-dom/client";
 
 const Homepage  = () =>{
     return (
@@ -31,9 +30,4 @@ if(element){
     root.render( <Homepage />);
 }else{
     console.log("root element not found");
-}
-
-// Hot reload support
-if (import.meta.hot) {
-  import.meta.hot.accept();
 }

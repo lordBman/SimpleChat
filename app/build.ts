@@ -5,7 +5,7 @@ Bun.build({
     entrypoints: ['./pages/homepage.html', "./pages/signin.html", "./pages/error.html"],
     outdir: './public',
     minify: true,
-    sourcemap: "external",
+    sourcemap: 'linked',
     splitting: false,
     drop: ['console', 'debugger'],
     plugins: [ sassPlugin ],

@@ -3,11 +3,9 @@ import { MemberResultView, MemberView } from "../../components/members-view";
 import { FriendResultView, FriendView } from "../../components";
 import { AppContext, AppContextType } from "../../providers/app-provider";
 
-import "../../../assets/css/chats/friends.scss";
-
 import { FriendsContext, MembersContext } from "simplechat_provider/src/contexts";
 import { FriendsContextType, MembersContextType } from "simplechat_provider/src/models";
-import { Friend, Group, Member } from "@simplechat/shared/models";
+import { Details, Friend, Group, Member } from "@simplechat/shared/models";
 import { useCallbackRequest } from "simplechat_provider/src/request";
 import { apiClientInstance, getName } from "../../utils";
 
@@ -21,7 +19,7 @@ const Connections = () =>{
     const { friends } = useContext(FriendsContext) as FriendsContextType;
     
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<Array<{ user: Credential, friend?: Friend } | { group: Group, member?: Member }>>([]);
+    const [results, setResults] = useState<Array<{ user: Details, friend?: Friend } | { group: Group, member?: Member }>>([]);
     const [createState, setCreateState] = useState({ isOpen: false, name: "" });
     const [filter, setFilter] = useState<Filter>(Filter.all);
     

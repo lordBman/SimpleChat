@@ -22,7 +22,11 @@ export type SimpleChatState = Client & {
 export interface UserState extends User{ 
     token: string, 
     projects : Array<Project & { userCount: number }>,
-    developers?: Details[] 
+    developers?: Details[],
+    defaults?: {
+        key: AccessKey,
+        projectToken: string
+    }
 }
 
 export interface OrganizationDetails extends Organization{

@@ -1,8 +1,8 @@
+import Organization from "@simplechat/shared/models/organization";
 import { DBManager, Err } from "../config";
-import { Group, Member, Organization, Project, MemberRoles } from "@simplechat/shared";
 import { uuid } from "../utils";
 import { ResourceType } from "@prisma/client";
-import { Client } from "@simplechat/shared/models";
+import { Client, Group, Member, Project } from "@simplechat/shared/models";
 
 class GroupModel{
     database = DBManager.instance();

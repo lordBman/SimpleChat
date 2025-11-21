@@ -1,5 +1,5 @@
-import { useHistory } from "react-router";
-import "../../assets/css/chats/back-button.scss";
+import { useHistory } from "react-router-dom";
+import "../css/chats/back-button.scss";
 import React from "react";
 
 const BackButton = () =>{

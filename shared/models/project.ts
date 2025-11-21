@@ -4,6 +4,7 @@ type Project = {
     id: string;
     name: string;
     token: string;
+    default: boolean;
     
     owner: Details;
     created: Date

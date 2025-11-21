@@ -1,6 +1,7 @@
 import {Client, Member, Project} from "@simplechat/shared/models";
 import {DBManager, Err} from "../config";
-import {MemberRoles, Organization} from "@simplechat/shared";
+import Organization from "@simplechat/shared/models/organization";
+import { MemberRoles } from "@simplechat/shared/models/member";
 
 class MemberModel{
     database = DBManager.instance();

@@ -1,5 +1,5 @@
 import { DBManager, Err } from "../config";
-import { Notification, Details, Group  } from "@simplechat/shared";
+import { Notification, Details, Group  } from "@simplechat/shared/models";
 class NotificationModel{
     database = DBManager.instance();
 

@@ -1,6 +1,6 @@
-import {Client, FriendSearchResult} from "@simplechat/shared/models";
+import {Client, Friend, FriendSearchResult, Project} from "@simplechat/shared/models";
 import {DBManager, Err} from "../config";
-import {Friend, Organization, Project} from "@simplechat/shared";
+import Organization from "@simplechat/shared/models/organization";
 
 class FriendModel{
     database = DBManager.instance();

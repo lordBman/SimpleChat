@@ -1,6 +1,5 @@
 import React, { ReactElement, useMemo, useState } from "react";
 import Options, { OptionsItem, OptionsItemProps, OptionsProps } from "./options";
-import "../../../css/menu.scss";
 
 export interface MenuProps{
     initial: string,

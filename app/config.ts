@@ -103,8 +103,8 @@ export async function seed() {
     jetLogger.info("initializing seeding: checking database for admin default project");
     let project = await database.project.upsert({ 
         where: { name_ownerID: { name: process.env.PROJECT_NAME!, ownerID: credential.id } },
-        update: {},
-        create: { name: process.env.PROJECT_NAME!, ownerID: credential.id }
+        update: { },
+        create: { name: process.env.PROJECT_NAME!, ownerID: credential.id, default: true }
     });
 
     jetLogger.info("initializing seeding: checking database for company organization");
@@ -120,9 +120,9 @@ export async function seed() {
     });
 
     jetLogger.info("initializing seeding: initializing Project default Access Key");
-    let accessKey = await database.accessKey.findFirst({ where:{ projectID: project?.id, name: "default" } });
+    let accessKey = await database.accessKey.findFirst({ where:{ projectID: project?.id, default: true } });
     if(!accessKey){
-        accessKey = await database.accessKey.create({ data: { id: uuid(), projectID: project.id, name: "default", key: uuid(), enabled: true } });
+        accessKey = await database.accessKey.create({ data: { id: uuid(), projectID: project.id, key: uuid(), enabled: true, default: true } });
     }
 
     SeedResult.set({ projectID: project.id, organizationID: organization.id, adminID: credential.id });

@@ -1,7 +1,7 @@
 import api from "./api";
 import { Elysia, file } from "elysia";
 import staticPlugin from "@elysiajs/static";
-import sockets from "./public/sockets";
+import sockets from "./sockets";
 import PageAuthenicationPlugin from "./plugins/page-authentication";
 
 const app = new Elysia().use(PageAuthenicationPlugin).onBeforeHandle(async ({ redirect, user, path })=>{

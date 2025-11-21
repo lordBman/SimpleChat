@@ -1,5 +1,5 @@
-import React, { useContext } from "react";
-import { AppContext, AppContextType, useAppContext } from "../providers/app-provider";
+import React from "react";
+import { useAppContext } from "../providers/app-provider";
 import { Chat } from "@simplechat/shared/models";
 
 interface ChatProps{

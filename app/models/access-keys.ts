@@ -1,6 +1,6 @@
 import {DBManager, Err} from "../config";
 import {uuid} from "../utils";
-import {AccessKey} from "@simplechat/shared";
+import {AccessKey} from "@simplechat/shared/models";
 
 class AccessKeyModel{
     database = DBManager.instance();
@@ -9,6 +9,16 @@ class AccessKeyModel{
         try{
             return await this.database.accessKey.findUniqueOrThrow({
                 where: {key}
+            });
+        }catch(error){
+            throw new Err(503, error, "error encountered when getting access key");
+        }
+    }
+
+    async default(projectID: string): Promise<AccessKey | null>{
+        try{
+            return await this.database.accessKey.findFirst({
+                where: { projectID, default: true }
             });
         }catch(error){
             throw new Err(503, error, "error encountered when getting access key");

@@ -1,7 +1,5 @@
 import React, { useContext } from "react";
 
-import "../../../assets/css/chats/profile.scss";
-
 import { AppContext, AppContextType } from "../../providers/app-provider";
 
 const Profile = () =>{

@@ -6,4 +6,4 @@ import BackButton from "./back-button";
 import MobileHeader from "./mobile-header";
 import DashBoard from "./dashboard";
 
-export { FriendResultView, FriendView, CircleLoading, Loading, ChatView, BottomNavigation, BackButton, MobileHeader, DashBoard, ErrorPage }
+export { FriendResultView, FriendView, CircleLoading, Loading, ChatView, BottomNavigation, BackButton, MobileHeader, DashBoard }

@@ -1,7 +1,8 @@
 import {DBManager, Err} from "../config";
+import AccessKeyModel from "./access-keys";
 import ProjectModel from "./projects";
 import {Developer, UserState} from "@simplechat/shared";
-import {Project, User} from "@simplechat/shared/models";
+import {AccessKey, Project, User} from "@simplechat/shared/models";
 
 class AdminModel{
     database = DBManager.instance();
@@ -29,7 +30,16 @@ class AdminModel{
                 init.push({ ...project, userCount: userCount! });
             }
 
-            return { ...data.user, projects: init, developers: developers.map((developer)=> developer.details) };
+            let defaults: { key: AccessKey, projectToken: string } | undefined = undefined;
+            const defaultProject = projects.find((project)=> project.default);
+            if(defaultProject){
+                const defaultKey = await new AccessKeyModel().default(defaultProject.id);
+                if(defaultKey){
+                    defaults = { key: defaultKey, projectToken: defaultProject.token }
+                }
+            }
+
+            return { ...data.user, projects: init, developers: developers.map((developer)=> developer.details), defaults };
         }catch(error){
             if(error instanceof Err){
                 throw error;

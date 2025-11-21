@@ -2,7 +2,7 @@ import sassPlugin from "./sass-plugins";
 import JetLogger from "jet-logger";
 
 Bun.build({
-    entrypoints: ['./pages/homepage.html', "./pages/signin.html", "./pages/error.html", "./pages/docs.html", "./pages/notfound.html"],
+    entrypoints: [ './pages/dashboard.html', './pages/homepage.html', "./pages/signin.html", "./pages/error.html", "./pages/docs.html", "./pages/notfound.html"],
     outdir: './public',
     minify: true,
     sourcemap: 'linked',

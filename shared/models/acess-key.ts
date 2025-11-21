@@ -4,6 +4,7 @@ type AccessKey = {
     name: string;
     key: string;
     enabled: boolean;
+    default: boolean
 }
 
 export default AccessKey;

@@ -100,6 +100,8 @@ model Project {
 
   created   DateTime @default(now())
   isDeleted Boolean  @default(false)
+  default Boolean @default(false)
+
   deleted   Deleted?
 
   @@unique([name, ownerID])
@@ -107,9 +109,10 @@ model Project {
 
 model AccessKey {
   id      String  @id @default(uuid())
-  key     String  @unique
-  name    String  @unique
+  key     String  @unique @default(uuid())
+  name    String  @default("default")
   enabled Boolean @default(false)
+  default Boolean @default(false)
 
   projectID String
   project   Project @relation(fields: [projectID], references: [id], onDelete: Cascade)

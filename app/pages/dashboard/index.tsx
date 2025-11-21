@@ -3,7 +3,6 @@ import Main from "./main";
 import { BottomNavigation, DashBoard as DashBoardView, ErrorPage, Loading, MobileHeader } from "../components";
 import Options from "../components/dashboard/menu/options";
 import { useMemo, useContext } from "react";
-import { useHistory } from "react-router";
 import { BrowserRouter } from "react-router-dom";
 import { ToolBarItem } from "../components/dashboard/tool-bar";
 import SimpleChatProvider from "simplechat_provider";
@@ -14,10 +13,8 @@ import ReactDOM from "react-dom/client";
 
 const App = () =>{
     const { user } = useContext(AppContext) as AppContextType;
-    //const location = useLocation();
-    const history = useHistory();
 
-    const chosen = (id: string)=> history.push(`/dashboard/${id}`);
+    const chosen = (id: string)=> window.location.href = `/dashboard/${id}`;
 
     const [current, hideSection]  = useMemo(()=>{
         const paths =  document.location.pathname.split('/');

@@ -1,6 +1,7 @@
-import { Organization, Project } from "@simplechat/shared";
+import { Project } from "@simplechat/shared/models";
 import { DBManager, Err } from "../config";
 import { ResourceType } from "@prisma/client";
+import Organization from "@simplechat/shared/models/organization";
 
 class OrganizationModel{
     async create(data: { project: Project, name: string }): Promise<Organization>{

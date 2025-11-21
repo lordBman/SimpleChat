@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import React from "react";
 import { useCallbackRequest, useRequest } from "simplechat_provider/src/request";
 import { apiClientInstance } from "../utils";
+import { UserState } from "@simplechat/shared";
 
 const Header = (props:{active?: string}) =>{
     const [active, setActive] = useState(props.active || "about");
@@ -16,7 +17,7 @@ const Header = (props:{active?: string}) =>{
         }
     }
 
-    const initQuery = useRequest({
+    const initQuery = useRequest<UserState>({
         fn: () => apiClientInstance.get("/")
     });
 
@@ -58,10 +59,7 @@ const Header = (props:{active?: string}) =>{
 
     useEffect(()=> init(), [init, header.current]);
 
-    const signout = () => {
-        logoutMutation.start();
-    }
-
+    const signout = () => logoutMutation.start();
     const scrollToAbout = () => handleClickScroll("about");
     const scrollToFeatures = () => handleClickScroll("features");
     const scrollToContacts = () => handleClickScroll("contacts");
@@ -75,8 +73,8 @@ const Header = (props:{active?: string}) =>{
                 <a href="/docs">Docs</a>
                 <a className={active === "contacts" ? "active" : ""} onClick={scrollToContacts}>Contacts</a>
             </div>
-            { !initQuery.data?.data && <a href="/signin" className="options-signin">Sign In</a> }
-            { initQuery.data?.data && (
+            { !initQuery.data && <a href="/signin" className="options-signin">Sign In</a> }
+            { initQuery.data && (
                 <div className="options options-icon">
                     <a className="options-signin" href="/dashboard">
                         <span className="hugeicons--dashboard-square-02"></span>

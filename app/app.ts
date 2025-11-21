@@ -1,7 +1,7 @@
 import api from "./api";
 import { Elysia, file } from "elysia";
 import staticPlugin from "@elysiajs/static";
-import sockets from "./sockets";
+import sockets from "./public/sockets";
 import PageAuthenicationPlugin from "./plugins/page-authentication";
 
 const app = new Elysia().use(PageAuthenicationPlugin).onBeforeHandle(async ({ redirect, user, path })=>{
@@ -15,7 +15,7 @@ const app = new Elysia().use(PageAuthenicationPlugin).onBeforeHandle(async ({ re
 app.use(api)
 app.use(sockets)
 app.use(staticPlugin({ assets: "./assets", prefix: "/assets" }));
-app.use(staticPlugin({ assets: "./public/chunks", prefix: "/chunks" }));
+app.use(staticPlugin({ assets: "public/chunks", prefix: "/chunks" }));
 
 app.get("/", () => file("./public/homepage.html"));
 app.get("/signin", () => file("./public/signin.html"));
@@ -23,8 +23,6 @@ app.get("/dashboard", () => file("./public/dashboard.html"));
 app.get("/docs", () => file("./public/docs.html"));
 app.get("/error", () => file("./public/error.html"));
 
-app.all("*", ({ status })=>{
-    return status(404, { message: "page not found" });
-});
+app.all("*", ()=> file("./public/notfound.html"));
 
 export default app;

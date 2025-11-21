@@ -2,12 +2,11 @@ import sassPlugin from "./sass-plugins";
 import JetLogger from "jet-logger";
 
 Bun.build({
-    entrypoints: ['./pages/homepage.html', "./pages/signin.html", "./pages/error.html"],
+    entrypoints: ['./pages/homepage.html', "./pages/signin.html", "./pages/error.html", "./pages/docs.html", "./pages/notfound.html"],
     outdir: './public',
     minify: true,
     sourcemap: 'linked',
     splitting: false,
-    drop: ['console', 'debugger'],
     plugins: [ sassPlugin ],
     naming: {
         entry: '[name].[ext]',

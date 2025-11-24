@@ -40,7 +40,7 @@ const sockets = new Elysia();
 sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).ws("/ws", {
     body: t.Object({
         operation: t.String(),
-        path: t.String(),
+        path: t.Union([ t.Literal('chats'), t.Literal('friends'), t.Literal('groups') ]),
         chatData: t.Optional(t.Object({
             friendID: t.Optional(t.String()),
             groupID: t.Optional(t.String()),
@@ -83,7 +83,7 @@ sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(ClientAuthenication
     },
     message: (ws, message) =>{
         console.log(`message received: ${message}`);
-        switch(message.path as SocketPaths){
+        switch(message.path){
             case "chats":
                 if(message.chatData){
                     chatSocketHandler(ws, ws.data.client!, message.operation, message.chatData);

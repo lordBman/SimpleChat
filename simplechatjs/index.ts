@@ -267,8 +267,8 @@ export class SimpleChatClient{
     }
 
     refreshChats = async () => {
-        const response = await this.apiClientInstance.get<any>("/api/chats");
-        this.state = { ...this.state, chats: response.data };
+        const response = await this.apiClientInstance.get<Chats>("/api/chats");
+        this.state = { ...this.state, chats: response };
         if(this.onChatsChange){
             this.onChatsChange(this.state.chats);
         }
@@ -287,16 +287,16 @@ export class SimpleChatClient{
     }
 
     refreshFriends = async () =>{
-        const response = await this.apiClientInstance.get(`/api/friend`);
-        this.state = { ...this.state, friends: response.data };
+        const response = await this.apiClientInstance.get<Friend[]>(`/api/friend`);
+        this.state = { ...this.state, friends: response };
         if(this.friendChange){
             this.friendChange(this.state.friends);
         }
     }
 
     refreshMembers = async () =>{
-        const response = await this.apiClientInstance.get(`/api/groups`);
-        this.state = { ...this.state, members: response.data };
+        const response = await this.apiClientInstance.get<Member[]>(`/api/groups`);
+        this.state = { ...this.state, members: response };
         if(this.memberChange){
             this.memberChange(this.state.members);
         }

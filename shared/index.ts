@@ -5,6 +5,7 @@ import Member from "./models/member";
 import Organization from "./models/organization";
 
 export type SimpleChatConfig = {
+    id: string,
     name: string,
     surname: string,
     username?: string,
@@ -25,7 +26,8 @@ export interface UserState extends User{
     developers?: Details[],
     defaults?: {
         key: AccessKey,
-        projectToken: string
+        projectToken: string,
+        organization?: string
     }
 }
 
@@ -76,9 +78,9 @@ export interface Developer extends User{
 }
 
 export const AccessHeaderKeys = {
-    AccessKey: "X-SimpleChat-Access-Key",
-    Organization: "X-SimpleChat-Organization",
-    ProjectToken: "X-SimpleChat-Project-Token"
+    AccessKey: "x-simplechat-access-key",
+    Organization: "x-simplechat-organization",
+    ProjectToken: "x-simplechat-project-token"
 }
 
 export const AccessQueryKeys = {

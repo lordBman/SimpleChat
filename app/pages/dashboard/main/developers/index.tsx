@@ -1,18 +1,17 @@
-import { Route, Switch } from "react-router-dom";
+import { useAppContext } from "../../../providers/app-provider";
 import AllDevelpoers from "./all";
 import DeveloperDetails from "./details";
 import React from "react";
 
 const Developers = () =>{
+    const { pageState } = useAppContext();
+    const id = pageState.params;
+
     return (
-        <Switch>
-            <Route exact path="/dashboard/developers">
-                <AllDevelpoers />
-            </Route>
-            <Route path="/dashboard/developers/:id">
-                <DeveloperDetails />
-            </Route>
-        </Switch>
+        <>
+            { !id && <AllDevelpoers /> }
+            { id && <DeveloperDetails /> }
+        </>
     );
 }
 

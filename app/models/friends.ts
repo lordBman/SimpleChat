@@ -9,7 +9,7 @@ class FriendModel{
         try{
             return await this.database.friend.findMany({
                 where: {
-                    project: data.project,
+                    projectID: data.project.id,
                     organizationID: data.organization?.id,
                     OR: [{requesterID: data.client.id}, {acceptorID: data.client.id}]
                 },

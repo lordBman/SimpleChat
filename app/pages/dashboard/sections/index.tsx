@@ -1,30 +1,21 @@
-import { Route, Switch } from "react-router-dom";
 import Chats from "./chats";
 import Groups from "./connections";
 import Info from "./info";
 import Settings from "./settings";
 import Connections from "./connections";
-import React from "react";
+import React, { use } from "react";
+import { useAppContext } from "../../providers/app-provider";
 
 const Sections = () =>{
+    const { pageState } = useAppContext();
+
     return (
-        <Switch>
-            <Route path="/dashboard/chats">
-                <Chats />
-            </Route>
-                <Route path="/dashboard/groups">
-            <Groups />
-            </Route>
-            <Route path="/dashboard/connections">
-                <Connections />
-            </Route>
-            <Route path="/dashboard/settings">
-                <Settings />
-            </Route>
-            <Route path="/dashboard/info">
-                <Info />
-            </Route>
-        </Switch>
+        <>
+            { pageState.section === "chats" && <Chats /> }
+            { pageState.section === "connections" && <Connections /> }
+            { pageState.section === "settings" && <Settings /> }
+            { pageState.section === "info" && <Info /> }
+        </>
     );
 }
 

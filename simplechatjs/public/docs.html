@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Library Documentation — Multi-language Template</title>
+    <style>
+        :root{
+            --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#3b82f6; --glass: rgba(255,255,255,0.03);
+            --radius:10px; --maxw:1200px;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef6;background:linear-gradient(180deg,#061021 0%, #081426 60%);-webkit-font-smoothing:antialiased}
+        .container{max-width:var(--maxw);margin:32px auto;padding:20px;display:grid;grid-template-columns:260px 1fr;gap:20px}
+        .header{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+        .brand{display:flex;flex-direction:column}
+        .brand h1{margin:0;font-size:18px;letter-spacing:0.2px}
+        .brand p{margin:0;color:var(--muted);font-size:13px}
+        .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+        .search{padding:8px 12px;border-radius:10px;background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:var(--muted);min-width:180px}
+        .lang-select{padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+        nav.sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--radius);padding:12px;height:calc(100vh - 120px);overflow:auto}
+        .toc-title{font-size:13px;color:var(--muted);margin:6px 6px 12px}
+        .chapter{margin-bottom:8px}
+        .chapter button{width:100%;text-align:left;padding:10px;border-radius:8px;background:transparent;border:0;color:#d7e8ff;font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+        .chapter ul{list-style:none;padding:6px 6px;margin:8px 0 0;display:none}
+        .chapter ul li a{display:block;padding:8px;border-radius:6px;color:var(--muted);text-decoration:none;font-size:13px}
+        .chapter ul li a:hover{background:rgba(255,255,255,0.02);color:#fff}
+        main.doc{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--radius);padding:20px;min-height:70vh;overflow:auto}
+        .chapter-heading{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+        .chapter-heading h2{margin:0;font-size:18px}
+        .meta{color:var(--muted);font-size:13px}
+        section.topic{background:rgba(255,255,255,0.02);padding:14px;border-radius:8px;margin:14px 0}
+        section.topic h3{margin:0 0 10px 0}
+        .desc{color:var(--muted);margin-bottom:12px}
+        .code-card{background:#07202e;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
+        .code-tabs{display:flex;gap:8px;margin-bottom:8px}
+        .code-tab{padding:6px 10px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted);cursor:pointer;font-size:13px}
+        .code-tab.active{background:var(--accent);color:#06233a}
+        pre{margin:0;overflow:auto;padding:12px;border-radius:6px;background:#04121a;color:#cfeefe;font-size:13px;line-height:1.45}
+        .copy-btn{float:right;background:transparent;border:0;color:var(--muted);cursor:pointer}
+        footer{grid-column:1/-1;color:var(--muted);font-size:13px;margin-top:8px; text-align:center}
+        @media(max-width:900px){.container{grid-template-columns:1fr;padding:12px}.header{flex-wrap:wrap}.sidebar{display:none}}
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="header">
+            <div class="brand">
+                <h1 id="title">Library Documentation</h1>
+                <p id="subtitle">A multi-language, multi-chapter template</p>
+            </div>
+
+            <div class="controls" aria-hidden="false">
+                <input id="search" class="search" placeholder="Search chapters, sections..." />
+                <select id="lang" class="lang-select" aria-label="Documentation language">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="zh">中文</option>
+                </select>
+            </div>
+        </div>
+
+        <nav class="sidebar" id="sidebar" aria-label="Table of contents">
+            <div class="toc-title" id="toc-title">Contents</div>
+
+            <!-- Chapters populated by JS -->
+            <div id="toc"></div>
+        </nav>
+
+        <main class="doc" id="content" tabindex="0" aria-live="polite">
+            <!-- Content populated by JS -->
+        </main>
+
+        <footer>
+            <span id="footer-text">Generated template • Use as a starting point for your documentation site.</span>
+        </footer>
+    </div>
+
+    <script>
+        // Data model: chapters -> sections
+        const docs = {
+            chapters: [
+                {
+                    id: "getting-started",
+                    title: { en: "Getting started", es: "Comenzando", zh: "入门指南" },
+                    description: {
+                        en: "Quickstart, installation, and initialization examples.",
+                        es: "Guía rápida, instalación e inicialización.",
+                        zh: "快速入门、安装与初始化示例。"
+                    },
+                    sections: [
+                        {
+                            id: "install",
+                            title: { en: "Installation", es: "Instalación", zh: "安装" },
+                            body: {
+                                en: "Install the library using your package manager of choice and initialize the client.",
+                                es: "Instale la biblioteca usando su gestor de paquetes preferido e inicialice el cliente.",
+                                zh: "使用你偏好的包管理器安装库并初始化客户端。"
+                            },
+                            examples: {
+                                js: "npm install mylib\n\n// init\nimport MyLib from 'mylib';\nconst client = new MyLib({ key: 'YOUR_KEY' });",
+                                py: "pip install mylib\n\n# init\nfrom mylib import Client\nclient = Client(key='YOUR_KEY')",
+                                cs: "// Install via NuGet\n// dotnet add package MyLib\n\nusing MyLib;\nvar client = new Client(\"YOUR_KEY\");"
+                            }
+                        },
+                        {
+                            id: "first-call",
+                            title: { en: "First API call", es: "Primera llamada", zh: "第一次调用" },
+                            body: {
+                                en: "A minimal example showing a basic request/response.",
+                                es: "Ejemplo mínimo que muestra una solicitud/respuesta básica.",
+                                zh: "最小示例，展示基本请求/响应。"
+                            },
+                            examples: {
+                                js: "const result = await client.fetch('resource');\nconsole.log(result);",
+                                py: "result = client.fetch('resource')\nprint(result)",
+                                cs: "var result = client.Fetch(\"resource\");\nConsole.WriteLine(result);"
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: "core-concepts",
+                    title: { en: "Core concepts", es: "Conceptos clave", zh: "核心概念" },
+                    description: {
+                        en: "Data modeling, partitioning, and concurrency best practices.",
+                        es: "Modelado de datos, particionado y prácticas de concurrencia.",
+                        zh: "数据建模、分区与并发最佳实践。"
+                    },
+                    sections: [
+                        {
+                            id: "modeling",
+                            title: { en: "Data modeling", es: "Modelado de datos", zh: "数据建模" },
+                            body: {
+                                en: "Guidance on structuring data to match access patterns; minimize cross-partition work.",
+                                es: "Guía para estructurar datos según patrones de acceso; minimizar trabajo entre particiones.",
+                                zh: "根据访问模式组织数据；尽量减少跨分区查询。"
+                            },
+                            examples: {
+                                js: "// Embed small related objects\nconst item = { id:'1', userId:'u1', profile:{name:'Ana',age:28} };",
+                                py: "# Prefer embedding related small objects\nitem = {'id':'1','userId':'u1','profile':{'name':'Ana','age':28}}",
+                                cs: "// Prefer embedding small related objects\nvar item = new { id=\"1\", userId=\"u1\", profile = new { name = \"Ana\", age = 28 } };"
+                            }
+                        },
+                        {
+                            id: "concurrency",
+                            title: { en: "Concurrency & retries", es: "Concurrencia y reintentos", zh: "并发与重试" },
+                            body: {
+                                en: "Use retries with exponential backoff and favor idempotent operations for safety.",
+                                es: "Use reintentos con backoff exponencial y prefiera operaciones idempotentes.",
+                                zh: "使用指数退避重试，优先使用幂等操作以保证安全。"
+                            },
+                            examples: {
+                                js: "// Pseudo: retry loop with backoff\nfor (let i=0;i<5;i++){ try{break;}catch(e){await sleep(100*(2**i))}}",
+                                py: "# Pseudo: retry loop with backoff\nfor i in range(5):\n  try: break\n  except: time.sleep(0.1*(2**i))",
+                                cs: "// Pseudo: retry loop with backoff\nfor(int i=0;i<5;i++){ try{break;} catch{ Thread.Sleep(100*(1<<i)); } }"
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: "advanced",
+                    title: { en: "Advanced topics", es: "Temas avanzados", zh: "高级主题" },
+                    description: {
+                        en: "Customization, extension points, plugins, and advanced configuration.",
+                        es: "Personalización, puntos de extensión, complementos y configuración avanzada.",
+                        zh: "自定义、扩展点、插件与高级配置。"
+                    },
+                    sections: [
+                        {
+                            id: "plugins",
+                            title: { en: "Plugins & middleware", es: "Plugins y middleware", zh: "插件与中间件" },
+                            body: {
+                                en: "How to extend the library with middleware or plugins.",
+                                es: "Cómo extender la biblioteca con middleware o plugins.",
+                                zh: "如何使用中间件或插件扩展库。"
+                            },
+                            examples: {
+                                js: "// register middleware\nclient.use(req=>{ /* mutate */ return req })",
+                                py: "# register middleware\nclient.use(lambda req: req)",
+                                cs: "// register middleware\nclient.Use(req => { return req; });"
+                            }
+                        },
+                        {
+                            id: "perf",
+                            title: { en: "Performance tuning", es: "Optimización de rendimiento", zh: "性能调优" },
+                            body: {
+                                en: "Tips for benchmarking, batching, and connection pooling.",
+                                es: "Consejos para benchmark, batching y pool de conexiones.",
+                                zh: "基准测试、批处理与连接池建议。"
+                            },
+                            examples: {
+                                js: "// Batch requests example\nawait client.batch([{op:'read',id:'1'},{op:'read',id:'2'}])",
+                                py: "# Batch requests example\nclient.batch([{'op':'read','id':'1'},{'op':'read','id':'2'}])",
+                                cs: "// Batch requests example\nclient.Batch(new[]{ new{op=\"read\",id=\"1\"}, new{op=\"read\",id=\"2\"} });"
+                            }
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Translations for UI static text
+        const ui = {
+            en: { contents: "Contents", searchPlaceholder: "Search chapters, sections...", copy: "Copy", copied: "Copied!", footer: "Generated template • Use as a starting point for your documentation site." },
+            es: { contents: "Contenido", searchPlaceholder: "Buscar capítulos, secciones...", copy: "Copiar", copied: "¡Copiado!", footer: "Plantilla generada • Úsala como punto de partida para tu documentación." },
+            zh: { contents: "目录", searchPlaceholder: "搜索章节、专题...", copy: "复制", copied: "已复制！", footer: "已生成的模板 • 用作文档站点的起点。" }
+        };
+
+        // Render table of contents and content
+        const tocEl = document.getElementById('toc');
+        const contentEl = document.getElementById('content');
+        const langEl = document.getElementById('lang');
+        const searchEl = document.getElementById('search');
+
+        function t(strObj) { const l = langEl.value; return (typeof strObj === 'object' && strObj[l]) ? strObj[l] : strObj['en'] || '' }
+
+        function buildTOC(filter = '') {
+            tocEl.innerHTML = '';
+            const currentLang = langEl.value;
+            docs.chapters.forEach(ch => {
+                const matchesChapter = (t(ch.title).toLowerCase().includes(filter) || (t(ch.description)||'').toLowerCase().includes(filter));
+                const chapterDiv = document.createElement('div'); chapterDiv.className = 'chapter';
+                const btn = document.createElement('button');
+                btn.innerHTML = `<span>${t(ch.title)}</span><small style="opacity:.6;font-weight:500">${t(ch.sections.length===0?{en:''}: {en: ch.sections.length + ' sections'})}</small>`;
+                btn.addEventListener('click', ()=> {
+                    const ul = chapterDiv.querySelector('ul');
+                    const open = ul.style.display === 'block';
+                    document.querySelectorAll('.chapter ul').forEach(u=>u.style.display='none');
+                    ul.style.display = open ? 'none' : 'block';
+                });
+                chapterDiv.appendChild(btn);
+
+                const ul = document.createElement('ul');
+                ch.sections.forEach(sec => {
+                    const title = t(sec.title);
+                    const bodyText = (t(sec.body)||'');
+                    const matchesSection = title.toLowerCase().includes(filter) || bodyText.toLowerCase().includes(filter);
+                    if (filter && !matchesChapter && !matchesSection) return;
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = `#${ch.id}/${sec.id}`;
+                    a.textContent = title;
+                    a.addEventListener('click', (e)=> {
+                        e.preventDefault();
+                        renderContent(ch.id, sec.id);
+                        window.location.hash = `${ch.id}/${sec.id}`;
+                        // close sidebar on small screens
+                        if (window.innerWidth < 900) document.querySelector('.sidebar').style.display='none';
+                    });
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                });
+                chapterDiv.appendChild(ul);
+                tocEl.appendChild(chapterDiv);
+            });
+
+            document.getElementById('toc-title').textContent = ui[currentLang].contents;
+        }
+
+        function renderContent(chapterId=null, sectionId=null) {
+            contentEl.innerHTML = '';
+            const currentLang = langEl.value;
+
+            const fragment = document.createDocumentFragment();
+
+            // If specific section provided: render single chapter and section context
+            if (chapterId && sectionId) {
+                const ch = docs.chapters.find(c=>c.id===chapterId);
+                const sec = ch && ch.sections.find(s=>s.id===sectionId);
+                if (!ch || !sec) { contentEl.innerHTML = '<p>Not found</p>'; return; }
+                const header = document.createElement('div'); header.className='chapter-heading';
+                const h2 = document.createElement('h2'); h2.textContent = t(ch.title);
+                const meta = document.createElement('div'); meta.className='meta'; meta.textContent = t(ch.description);
+                header.appendChild(h2); header.appendChild(meta);
+                fragment.appendChild(header);
+
+                const section = renderSection(ch, sec);
+                fragment.appendChild(section);
+            } else {
+                // full listing: render all chapters and an intro
+                const intro = document.createElement('div');
+                const mainTitle = document.createElement('h2'); mainTitle.textContent = document.getElementById('title').textContent;
+                const sub = document.createElement('p'); sub.className='meta'; sub.textContent = document.getElementById('subtitle').textContent;
+                intro.appendChild(mainTitle); intro.appendChild(sub);
+                fragment.appendChild(intro);
+
+                docs.chapters.forEach(ch => {
+                    const chHead = document.createElement('div'); chHead.className='chapter-heading';
+                    const h2 = document.createElement('h2'); h2.textContent = t(ch.title);
+                    const meta = document.createElement('div'); meta.className='meta'; meta.textContent = t(ch.description);
+                    chHead.appendChild(h2); chHead.appendChild(meta);
+                    fragment.appendChild(chHead);
+
+                    ch.sections.forEach(sec => fragment.appendChild(renderSection(ch, sec)));
+                });
+            }
+
+            contentEl.appendChild(fragment);
+        }
+
+        function renderSection(ch, sec) {
+            const secEl = document.createElement('section'); secEl.className='topic'; secEl.id = `${ch.id}/${sec.id}`;
+            const h3 = document.createElement('h3'); h3.textContent = t(sec.title);
+            const desc = document.createElement('div'); desc.className='desc'; desc.textContent = t(sec.body);
+            secEl.appendChild(h3); secEl.appendChild(desc);
+
+            // code card with language tabs
+            const card = document.createElement('div'); card.className='code-card';
+            const tabs = document.createElement('div'); tabs.className='code-tabs';
+
+            const languages = Object.keys(sec.examples || { js:'', py:'', cs:'' });
+
+            languages.forEach((lang, idx) => {
+                const tab = document.createElement('button'); tab.className='code-tab';
+                tab.textContent = langLabel(lang);
+                if (idx===0) tab.classList.add('active');
+                tab.addEventListener('click', ()=> {
+                    card.querySelectorAll('button.code-tab').forEach(b=>b.classList.remove('active'));
+                    tab.classList.add('active');
+                    card.querySelectorAll('pre').forEach(p=>p.style.display = p.dataset.lang === lang ? 'block' : 'none');
+                });
+                tabs.appendChild(tab);
+            });
+
+            const copyBtn = document.createElement('button'); copyBtn.className='copy-btn'; copyBtn.textContent = ui[langEl.value].copy;
+            copyBtn.addEventListener('click', async ()=> {
+                const visible = card.querySelector('pre:not([style*="display: none"])') || card.querySelector('pre');
+                if (!visible) return;
+                try {
+                    await navigator.clipboard.writeText(visible.textContent);
+                    copyBtn.textContent = ui[langEl.value].copied;
+                    setTimeout(()=> copyBtn.textContent = ui[langEl.value].copy, 1200);
+                } catch {}
+            });
+
+            const headerRow = document.createElement('div'); headerRow.style.display='flex'; headerRow.style.justifyContent='space-between'; headerRow.style.alignItems='center';
+            headerRow.appendChild(tabs); headerRow.appendChild(copyBtn);
+            card.appendChild(headerRow);
+
+            // code blocks
+            languages.forEach((lang, idx) => {
+                const pre = document.createElement('pre');
+                pre.dataset.lang = lang;
+                pre.style.display = idx===0 ? 'block' : 'none';
+                pre.textContent = sec.examples ? sec.examples[mapLangKey(lang)] || '' : '';
+                card.appendChild(pre);
+            });
+
+            secEl.appendChild(card);
+            return secEl;
+        }
+
+        function mapLangKey(k) {
+            if (k === 'js') return 'js';
+            if (k === 'py') return 'py';
+            if (k === 'cs') return 'cs';
+            return k;
+        }
+
+        function langLabel(k){
+            if (k === 'js') return 'JavaScript';
+            if (k === 'py') return 'Python';
+            if (k === 'cs') return 'C#';
+            return k;
+        }
+
+        // Events
+        langEl.addEventListener('change', ()=> {
+            const l = langEl.value;
+            // update UI text
+            document.getElementById('toc-title').textContent = ui[l].contents;
+            searchEl.placeholder = ui[l].searchPlaceholder;
+            document.getElementById('footer-text').textContent = ui[l].footer;
+            // rebuild
+            buildTOC(searchEl.value.trim().toLowerCase());
+            // re-render content preserving hash
+            navigateFromHash();
+        });
+
+        searchEl.addEventListener('input', (e)=> {
+            const q = e.target.value.trim().toLowerCase();
+            buildTOC(q);
+            // optionally highlight filtered content
+        });
+
+        // Hash navigation: #chapter/section
+        function navigateFromHash() {
+            const hash = window.location.hash.replace('#','');
+            if (!hash) { renderContent(); return; }
+            const [ch, sec] = hash.split('/');
+            if (ch && sec) renderContent(ch, sec);
+            else renderContent();
+        }
+
+        window.addEventListener('hashchange', navigateFromHash);
+
+        // initial build
+        function init(){
+            // seeds
+            document.getElementById('title').textContent = 'Library Documentation';
+            document.getElementById('subtitle').textContent = 'A multi-language, multi-chapter template';
+            buildTOC('');
+            navigateFromHash();
+        }
+
+        init();
+    </script>
+</body>
+</html>

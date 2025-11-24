@@ -1,4 +1,4 @@
-import {DBManager, Err} from "../config";
+import {DBManager, Err, SeedResult} from "../config";
 import AccessKeyModel from "./access-keys";
 import ProjectModel from "./projects";
 import {Developer, UserState} from "@simplechat/shared";
@@ -30,13 +30,12 @@ class AdminModel{
                 init.push({ ...project, userCount: userCount! });
             }
 
-            let defaults: { key: AccessKey, projectToken: string } | undefined = undefined;
-            const defaultProject = projects.find((project)=> project.default);
-            if(defaultProject){
-                const defaultKey = await new AccessKeyModel().default(defaultProject.id);
-                if(defaultKey){
-                    defaults = { key: defaultKey, projectToken: defaultProject.token }
-                }
+            let defaults: { key: AccessKey, projectToken: string, organization?: string } | undefined = undefined;
+            const defaultProject = await this.database.project.findUniqueOrThrow({ where: { id: SeedResult.instance().projectID } });
+            const defaultOrg = await this.database.organization.findUniqueOrThrow({ where: { id: SeedResult.instance().organizationID } });
+            const defaultKey = await new AccessKeyModel().default(defaultProject.id);
+            if(defaultKey){
+                defaults = { key: defaultKey, projectToken: defaultProject.token, organization: defaultOrg.id };
             }
 
             return { ...data.user, projects: init, developers: developers.map((developer)=> developer.details), defaults };

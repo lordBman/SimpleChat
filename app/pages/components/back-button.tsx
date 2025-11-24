@@ -1,11 +1,10 @@
-import { useHistory } from "react-router-dom";
 import "../css/chats/back-button.scss";
 import React from "react";
 
 const BackButton = () =>{
-    const history = useHistory();
-
-    const clicked = () => history.goBack();
+    const clicked = () => {
+        
+    }
 
     return (
         <span className="back-btn" onClick={clicked}>

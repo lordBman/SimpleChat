@@ -4,7 +4,7 @@ import JetLogger from "jet-logger";
 Bun.build({
     entrypoints: [ './pages/dashboard.html', './pages/homepage.html', "./pages/signin.html", "./pages/error.html", "./pages/docs.html", "./pages/notfound.html"],
     outdir: './public',
-    minify: true,
+    minify: false,
     sourcemap: 'linked',
     splitting: false,
     plugins: [ sassPlugin ],

@@ -1,5 +1,4 @@
-import React from "react"
-import "../../css/bottom-navigation.scss";      
+import React from "react"   
 
 interface BottomNavigationItemProps{active?: string, icon: string, label:string, id: string, onClicked?: CallableFunction }
 

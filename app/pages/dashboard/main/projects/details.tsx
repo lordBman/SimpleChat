@@ -1,11 +1,12 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useAppContext } from "../../../providers/app-provider";
 
 const ProjectDetails = () =>{
-    const params = useParams<{id: string}>();
+    const { sectionState } = useAppContext();
+    const id = sectionState.params || "unknown";
     
     return (
-        <div>project details - {params.id}</div>
+        <div>project details - {id}</div>
     );
 }
 

@@ -2,7 +2,6 @@ import React, { ReactElement } from "react";
 import Menu, { MenuProps } from "./menu";
 import DashBoardSection, { DashBoardSectionProps } from "./section";
 import DashboardContent, { DashboardContentProps } from "./content";
-import "../../css/dashboard.scss";
 import BottomNavigation, { BottomNavigationProps } from "./bottom";
 import ToolBar, { ToolBarProps } from "./tool-bar";
 

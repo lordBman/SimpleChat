@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import React from "react";
 import { useCallbackRequest, useRequest } from "simplechat_provider/src/request";
 import { apiClientInstance } from "../utils";
-import { UserState } from "@simplechat/shared";
+import { User } from "@simplechat/shared/models";
 
 const Header = (props:{active?: string}) =>{
     const [active, setActive] = useState(props.active || "about");
@@ -17,8 +17,8 @@ const Header = (props:{active?: string}) =>{
         }
     }
 
-    const initQuery = useRequest<UserState>({
-        fn: () => apiClientInstance.get("/")
+    const initQuery = useRequest<User>({
+        fn: () => apiClientInstance.get("/auth/me")
     });
 
     const logoutMutation = useCallbackRequest<void, void>({

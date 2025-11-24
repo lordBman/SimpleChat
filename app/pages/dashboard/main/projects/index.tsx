@@ -1,18 +1,17 @@
-import { Route, Switch } from "react-router-dom";
+import { useAppContext } from "../../../providers/app-provider";
 import AllProjects from "./all";
 import ProjectDetails from "./details";
 import React from "react";
 
 const Projects = () =>{
+    const { pageState } = useAppContext();
+    const id = pageState.params;
+
     return (
-        <Switch>
-            <Route exact path="/dashboard/projects">
-                <AllProjects />
-            </Route>
-            <Route path="/dashboard/projects/:id">
-                <ProjectDetails />
-            </Route>
-        </Switch>
+        <>
+            { !id && <AllProjects /> }
+            { id && <ProjectDetails /> }
+        </>
     );
 }
 

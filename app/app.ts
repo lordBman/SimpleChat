@@ -22,6 +22,11 @@ app.get("/signin", () => file("./public/signin.html"));
 app.get("/dashboard", () => file("./public/dashboard.html"));
 app.get("/docs", () => file("./public/docs.html"));
 app.get("/error", () => file("./public/error.html"));
+app.get("/logout", ({ redirect, cookie: { token } }) =>{
+    token?.set({ value: '', maxAge: 0, httpOnly: true });
+    
+    return redirect("/");
+});
 
 app.all("*", ()=> file("./public/notfound.html"));
 

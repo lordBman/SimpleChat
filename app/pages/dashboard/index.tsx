@@ -3,40 +3,57 @@ import Main from "./main";
 import { BottomNavigation, DashBoard as DashBoardView, ErrorPage, Loading, MobileHeader } from "../components";
 import Options from "../components/dashboard/menu/options";
 import { useMemo, useContext } from "react";
-import { BrowserRouter } from "react-router-dom";
 import { ToolBarItem } from "../components/dashboard/tool-bar";
 import SimpleChatProvider from "simplechat_provider";
-import AppProviderWraper, { AppContext, AppContextType } from "../providers/app-provider";
+import AppProviderWraper, { AppContext, AppContextType, MainPage, Section, useAppContext } from "../providers/app-provider";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { SimpleChatConfig } from "@simplechat/shared";
 
 
 const App = () =>{
-    const { user } = useContext(AppContext) as AppContextType;
+    const { user, pageState, setPage } = useAppContext();
+    const [current, setCurrent] = React.useState<MainPage | Section>(pageState.section ?? pageState.current);
 
-    const chosen = (id: string)=> window.location.href = `/dashboard/${id}`;
-
-    const [current, hideSection]  = useMemo(()=>{
-        const paths =  document.location.pathname.split('/');
-
-        let current = "home";
-        if(paths[2] && paths[2] !== ""){
-            current = paths[2];
+    const chosen = (id: string)=> {
+        if(id === "logout"){
+            window.location.href = "/logout";
+            return;
         }
 
-        let hideSection = false;
-        if(paths.length === 2 || current === "" || current === "home"){
-            hideSection = true;
-        }
+        setCurrent(id as MainPage | Section);
 
-        if(paths.length === 3 && (current === "projects" || current === "developers")){
-            hideSection = true;
+        switch(id){
+            case "home":
+            case "developers":
+            case "projects":
+                setPage({ main: id as MainPage ?? "home" });
+                break;
+            case "chats":
+            case "connections":
+                setPage({ section: id as Section, main: "chat" });
+            case "settings":
+            case "info":
+                setPage({ section: id as Section });
+                break;
         }
-        return [current, hideSection];
-    }, [location.pathname]);
+    };
+
+
+    const simpleChatConfig: SimpleChatConfig | undefined = useMemo(()=>{
+        if(!user || !user.defaults){
+            throw Error("User is not defined");
+        }
+        return {
+            id: user.details.id,
+            projectToken: user!.defaults!.projectToken, accessKey: user!.defaults!.key.key, 
+            name: user!.details.name, surname: user.details.surname, email: user!.details.email!, 
+            username: user!.details.username!,
+        };
+    }, [user]);
     
     return (
-        <SimpleChatProvider>
+        <SimpleChatProvider config={ simpleChatConfig }>
             <DashBoardView>
                 <DashBoardView.Menu initial={current} choose={chosen}>
                     <Options>
@@ -56,7 +73,7 @@ const App = () =>{
                     <ToolBarItem icon="solar--bell-linear" id="notifications" choose={chosen} />
                     <ToolBarItem icon="solar--exit-outline" id="logout" choose={chosen} />
                 </DashBoardView.ToolBar>
-                <DashBoardView.Section hide={hideSection}>
+                <DashBoardView.Section hide={pageState.section === undefined}>
                     <MobileHeader />
                     <Sections />
                 </DashBoardView.Section>
@@ -79,9 +96,7 @@ const App = () =>{
 const DashBoard = () =>{
     return (
         <AppProviderWraper Loading={Loading} Error={ErrorPage}>
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
+            <App />
         </AppProviderWraper>
     );
 }

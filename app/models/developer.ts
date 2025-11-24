@@ -1,7 +1,8 @@
 import {DBManager, Err, SeedResult} from "../config";
 import { UserState} from "@simplechat/shared";
-import {Project, User } from "@simplechat/shared/models";
+import {AccessKey, Project, User } from "@simplechat/shared/models";
 import ProjectModel from "./projects";
+import AccessKeyModel from "./access-keys";
 
 class DeveloperModel{
     database = DBManager.instance();
@@ -42,7 +43,15 @@ class DeveloperModel{
                 init.push({ ...project, userCount: userCount! });
             }
 
-            return { ...data.user, projects: init };
+            let defaults: { key: AccessKey, projectToken: string, organization?: string } | undefined = undefined;
+            const defaultProject = await this.database.project.findUniqueOrThrow({ where: { id: SeedResult.instance().projectID } });
+            const defaultOrg = await this.database.organization.findUniqueOrThrow({ where: { id: SeedResult.instance().organizationID } });
+            const defaultKey = await new AccessKeyModel().default(defaultProject.id);
+            if(defaultKey){
+                defaults = { key: defaultKey, projectToken: defaultProject.token, organization: defaultOrg.id };
+            }
+
+            return { ...data.user, projects: init, defaults };
         }catch(error){
             if(error instanceof Err){
                 throw error;

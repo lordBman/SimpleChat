@@ -164,6 +164,10 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     });
 
     const order = React.useMemo(()=>{
+        if(!state.chats){
+            return [];
+        }
+
         const map = new Map(Object.entries(state.chats));
         
         return Array.from(map.entries()).sort((entryA, entryB)=>{
@@ -187,17 +191,12 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 }
 
 export interface SimpleChatProviderProps extends PropsWithChildren{ 
-    config?: SimpleChatConfig,
+    config: SimpleChatConfig,
 }
 
 export const SimpleChatProvider: React.FC<SimpleChatProviderProps>  = (props) =>{
     const { data, error, loading } = useRequest({
-        fn: () => {
-            if(!props.config){
-                return SimpleChatClient.connect(props.config!);
-            }
-            throw Error("Simple Chat provider requires a client Configuration");
-        }
+        fn: () => SimpleChatClient.connect(props.config)
     });
 
     return (

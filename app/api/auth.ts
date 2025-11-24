@@ -5,6 +5,7 @@ import { t, Elysia } from "elysia";
 import { ClienitModel } from "../models";
 import keyAuthenicationPlugin from "../plugins/key-authentication";
 import JWTPlugin from "../plugins/jwt-plugin";
+import UserAuthenicationPlugin from "../plugins/user-authentication";
 
 const authRouter = new Elysia({ prefix: "/auth" }).use(JWTPlugin)
 .post("/", async({ encrypt, status, body, cookie: { token } }) =>{
@@ -49,6 +50,20 @@ const authRouter = new Elysia({ prefix: "/auth" }).use(JWTPlugin)
     
     return status(200, { message: "Logout successful" });
 });
+
+authRouter.use(new Elysia().use(UserAuthenicationPlugin.get("/me", async({ user, status }) =>{
+    try{
+        return status(200, user);
+    }catch(error){
+        jetLogger.err(error);
+        if(error instanceof Err){
+            const err = error as Err;
+            return status(err.code, { message: err.message });
+        }else{
+            return status(503, { message: "an internal server error occurred when getting user" });
+        }
+    }
+})));
 
 authRouter.use(new Elysia().use(keyAuthenicationPlugin).use(JWTPlugin).post("/connect", async({ encrypt, body, status, cookie: { client_token } , project, organization }) =>{
     if(body.email || body.username){

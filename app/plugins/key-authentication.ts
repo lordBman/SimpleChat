@@ -15,6 +15,9 @@ const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new Acc
     const organizationName = headers[AccessHeaderKeys.Organization] ?? query[AccessQueryKeys.Organization];
     const key = headers[AccessHeaderKeys.AccessKey] ?? query[AccessQueryKeys.AccessKey];
     const projectToken = headers[AccessHeaderKeys.ProjectToken] ?? query[AccessQueryKeys.ProjectToken];
+
+    jetLogger.info(`Authenticating access key with headers: ${JSON.stringify(headers)}`);
+    jetLogger.info(`Authenticating access key: ${key} for project token: ${projectToken} and organization: ${organizationName}`);
     if(key && projectToken){
         try {
             accesskey = await accessKeyModel.get(key);

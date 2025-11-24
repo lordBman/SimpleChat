@@ -267,7 +267,7 @@ export class SimpleChatClient{
     }
 
     refreshChats = async () => {
-        const response = await this.apiClientInstance.get("/api/chats");
+        const response = await this.apiClientInstance.get<any>("/api/chats");
         this.state = { ...this.state, chats: response.data };
         if(this.onChatsChange){
             this.onChatsChange(this.state.chats);
@@ -325,10 +325,12 @@ export class SimpleChatClient{
         if(config.organization){
             headers[AccessHeaderKeys.Organization] = config.organization;
         }
+
         const apiClientInstance =  new APIClient("/api", { headers });
         
         const client: Client = await apiClientInstance.post("/auth/connect", { data: {...config} });
-        const response = await apiClientInstance.get("/client");
+        const response: SimpleChatState = await apiClientInstance.get("/client");
+        console.log("simple chat client connected:", response);
         
         return new SimpleChatClient(client, apiClientInstance, response);
     }

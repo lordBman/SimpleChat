@@ -11,8 +11,7 @@ CREATE TABLE "Details" (
     "name" TEXT NOT NULL,
     "surname" TEXT NOT NULL,
     "username" TEXT,
-    "email" TEXT,
-    CONSTRAINT "Details_id_fkey" FOREIGN KEY ("id") REFERENCES "Credential" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "email" TEXT
 );
 
 -- CreateTable
@@ -47,6 +46,7 @@ CREATE TABLE "Project" (
     "ownerID" TEXT NOT NULL,
     "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "default" BOOLEAN NOT NULL DEFAULT false,
     CONSTRAINT "Project_ownerID_fkey" FOREIGN KEY ("ownerID") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -54,8 +54,9 @@ CREATE TABLE "Project" (
 CREATE TABLE "AccessKey" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "key" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "name" TEXT NOT NULL DEFAULT 'default',
     "enabled" BOOLEAN NOT NULL DEFAULT false,
+    "default" BOOLEAN NOT NULL DEFAULT false,
     "projectID" TEXT NOT NULL,
     CONSTRAINT "AccessKey_projectID_fkey" FOREIGN KEY ("projectID") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -188,9 +189,6 @@ CREATE UNIQUE INDEX "Project_name_ownerID_key" ON "Project"("name", "ownerID");
 CREATE UNIQUE INDEX "AccessKey_key_key" ON "AccessKey"("key");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AccessKey_name_key" ON "AccessKey"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "AccessKey_projectID_name_key" ON "AccessKey"("projectID", "name");
 
 -- CreateIndex
@@ -204,6 +202,9 @@ CREATE UNIQUE INDEX "Friend_requesterID_acceptorID_projectID_key" ON "Friend"("r
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Group_id_key" ON "Group"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Group_name_projectID_organizationID_key" ON "Group"("name", "projectID", "organizationID");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Member_id_key" ON "Member"("id");

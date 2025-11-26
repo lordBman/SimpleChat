@@ -14,6 +14,12 @@ class DeveloperModel{
                 const credential = await this.database.credential.create({data: { ...data}});
                 const details = await this.database.details.create({  data: { id: credential.id, ...data } });
                 const user = await this.database.user.create({data: {id: details.id}});
+
+                const seed = SeedResult.instance();
+                await this.database.member.create({
+                    data: { groupID: seed.groupID, userID: user.id }
+                });
+                
                 await this.database.notification.create({
                     data: {
                         recieverID: SeedResult.instance().adminID, nType: "User",

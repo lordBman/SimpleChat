@@ -50,6 +50,8 @@ class DBManager{
 type Seed = {
     projectID: string;
     organizationID: string
+    memberID: string
+    groupID: string
     adminID: string
 } 
 
@@ -58,7 +60,7 @@ export class SeedResult{
 
     private constructor(){}
     
-    static set = (result: { adminID: string, projectID: string, organizationID: string }) =>SeedResult.seed = result;
+    static set = (result: Seed) =>SeedResult.seed = result;
 
 
     static instance = () => {
@@ -125,7 +127,26 @@ export async function seed() {
         accessKey = await database.accessKey.create({ data: { id: uuid(), projectID: project.id, key: uuid(), enabled: true, default: true } });
     }
 
-    SeedResult.set({ projectID: project.id, organizationID: organization.id, adminID: credential.id });
+    jetLogger.info("initializing seeding: initializing Cummunity group");
+    let group = await database.group.upsert({
+        where: { name_projectID_organizationID: { name: `${process.env.PROJECT_NAME} Community`, organizationID: organization.id, projectID: project.id } },
+        update: {  },
+        create: { name: `${process.env.PROJECT_NAME} Community`, creatorID: user.id, organizationID: organization.id, projectID: project.id }
+    });
+
+    let member = await database.member.upsert({
+        where: { userID_groupID: { groupID: group.id, userID: user.id } },
+        update: {},
+        create: { groupID: group.id, userID: user.id, role: "Admin" }
+    });
+
+    jetLogger.info("seeding initialized");
+    SeedResult.set({
+        projectID: project.id,
+        organizationID: organization.id,
+        adminID: credential.id,
+        memberID: member.id,
+        groupID: group.id });
     
     jetLogger.info(`${process.env.PROJECT_NAME} all set Project ID: ${project.id} - Access Key: ${accessKey.key}`);
 }

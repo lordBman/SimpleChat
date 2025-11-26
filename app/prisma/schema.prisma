@@ -215,6 +215,8 @@ model Group {
   members       Member[]
   notifications Notification[]
   chats         Chat[]
+
+  @@unique([ name, projectID, organizationID ])
 }
 
 enum MemberRole {

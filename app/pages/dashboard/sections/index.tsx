@@ -1,5 +1,4 @@
 import Chats from "./chats";
-import Groups from "./connections";
 import Info from "./info";
 import Settings from "./settings";
 import Connections from "./connections";

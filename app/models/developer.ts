@@ -3,6 +3,7 @@ import { UserState} from "@simplechat/shared";
 import {AccessKey, Project, User } from "@simplechat/shared/models";
 import ProjectModel from "./projects";
 import AccessKeyModel from "./access-keys";
+import JetLogger from "jet-logger";
 
 class DeveloperModel{
     database = DBManager.instance();
@@ -81,6 +82,9 @@ class DeveloperModel{
             }
             throw new Err(401, ``, "account does not exists, try signing up");
         }catch(error){
+            if(error instanceof Err){
+                throw error;
+            }
             throw new Err(503, error, "error encountered when getting user");
         }
     }

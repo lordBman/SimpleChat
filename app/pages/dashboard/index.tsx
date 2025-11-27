@@ -47,8 +47,7 @@ const App = () =>{
         return {
             id: user.details.id,
             projectToken: user!.defaults!.projectToken, accessKey: user!.defaults!.key.key, 
-            name: user!.details.name, surname: user.details.surname, email: user!.details.email!, 
-            username: user!.details.username!,
+            name: user!.details.name, surname: user.details.surname, email: user!.details.email!
         };
     }, [user]);
     

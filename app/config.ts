@@ -136,8 +136,8 @@ export async function seed() {
 
     let member = await database.member.upsert({
         where: { userID_groupID: { groupID: group.id, userID: user.id } },
-        update: {},
-        create: { groupID: group.id, userID: user.id, role: "Admin" }
+        update: { accepted: true, role: "Admin" },
+        create: { groupID: group.id, userID: user.id, role: "Admin", accepted: true }
     });
 
     jetLogger.info("seeding initialized");

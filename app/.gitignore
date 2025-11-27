@@ -3,3 +3,7 @@ node_modules
 .env
 assets/dist
 public
+prisma/migrations
+.DS_Store
+prisma/dev.db
+.vscode

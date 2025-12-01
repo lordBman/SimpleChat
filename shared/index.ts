@@ -1,7 +1,7 @@
 import { Chats, Client, Details, Friend, Project, User } from "./models";
 import AccessKey from "./models/acess-key";
 import Group from "./models/groups";
-import Member from "./models/member";
+import Member, { MemberRoles } from "./models/member";
 import Organization from "./models/organization";
 
 export type SimpleChatConfig = {
@@ -93,4 +93,26 @@ export enum SocketPaths {
     Chats = "chats",
     Friends = "friends",
     Groups = "groups"
+}
+
+export interface SocketInput {
+    operation: WSChatOperation | WSFriendOperation | WSGroupOperation,
+    path: SocketPaths,
+    chatData?: {
+        friendID?: string,
+        groupID?: string,
+        message?: string,
+        chatID?: string
+    },
+    friendsData?: {
+        friendID?: string,
+        userID?: string,
+    },
+    groupData?: {
+        name?: string,
+        groupID?: string,
+        userID?: string,
+        memberID?: string,
+        role?: MemberRoles
+    }
 }

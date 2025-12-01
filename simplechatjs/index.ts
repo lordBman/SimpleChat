@@ -1,4 +1,4 @@
-import { AccessHeaderKeys, SimpleChatConfig, SimpleChatState, SocketPaths, WSChatOperation, WSFriendOperation, WSGroupOperation } from "@simplechat/shared";
+import { AccessHeaderKeys, SimpleChatConfig, SimpleChatState, SocketInput, SocketPaths, WSChatOperation, WSFriendOperation, WSGroupOperation } from "@simplechat/shared";
 import APIClient from "@simplechat/shared/api_client"; 
 import { Chat, Chats, Client, Details, Friend, Member } from "@simplechat/shared/models";
 
@@ -41,7 +41,11 @@ class ConnectionManager{
     constructor(path: string, handler: SocketResponseHandler){
         this.handler = handler;
         this.path = path;
-        this.socket = this.connect();
+        try{
+            this.socket = this.connect();
+        }catch(error){
+            throw Error(`connecting to websocket exception: ${error}`);
+        }
     }
 
     private connect(): WebSocket{
@@ -105,11 +109,11 @@ export class SimpleChatClient{
         this.memberChange = memberChange;
     }
 
-    private constructor(client: Client, apiClientInstance: APIClient, state: SimpleChatState){
+    private constructor(client: Client, apiClientInstance: APIClient, state: SimpleChatState, key: string){
         this.client = client;
         this.state = state;
         this.apiClientInstance = apiClientInstance;
-        this.connectionManager = new ConnectionManager("ws:localhost:3000/ws", {
+        this.connectionManager = new ConnectionManager(`/ws?key=${key}`, {
             handleChats: this.handleChats,
             handleFriends: this.handleFriends,
             handleGroups: this.handleGroups
@@ -226,7 +230,7 @@ export class SimpleChatClient{
         this.memberChange && this.memberChange(this.state.members);
     }
 
-    private sort = ()=>{
+    sort = ()=>{
         const map = new Map(Object.entries(this.state.chats));
         return Array.from(map.entries()).sort((entryA, entryB)=>{
             if(entryA[1].length > 0 && entryB[1].length > 0){
@@ -242,12 +246,24 @@ export class SimpleChatClient{
         if("acceptorID" in targert){
             const friend = targert as Friend;
             if(friend.accepted){
-                this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Chats, operation: WSChatOperation.SendMessage, message, friendID: friend.id }));
+                const input: SocketInput = {
+                    path: SocketPaths.Chats, operation: WSChatOperation.SendMessage,
+                    chatData: {
+                        message, friendID: friend.id
+                    }
+                }
+                this.connectionManager.socketInstance.send(JSON.stringify(input));
             }
         }else{
             const member = targert as Member;
             if(member.accepted){
-                this.connectionManager.socketInstance.send(JSON.stringify({ path: SocketPaths.Chats, operation: WSChatOperation.SendMessage, message, groupID: member.group.id }));
+                const input: SocketInput = {
+                    path: SocketPaths.Chats, operation: WSChatOperation.SendMessage,
+                    chatData: {
+                        message, groupID: member.group.id
+                    }
+                }
+                this.connectionManager.socketInstance.send(JSON.stringify(input));
             }
         }
     }
@@ -330,9 +346,7 @@ export class SimpleChatClient{
         
         const client: Client = await apiClientInstance.post("/auth/connect", { data: {...config} });
         const response: SimpleChatState = await apiClientInstance.get("/client");
-        console.log("simple chat client connected:", response);
-        
-        return new SimpleChatClient(client, apiClientInstance, response);
+        return new SimpleChatClient(client, apiClientInstance, response, config.accessKey);
     }
 }
 

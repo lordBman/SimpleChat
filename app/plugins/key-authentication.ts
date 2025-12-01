@@ -7,7 +7,7 @@ import jetLogger from "jet-logger";
 import { AccessKey, Project } from "@simplechat/shared/models";
 import Organization from "@simplechat/shared/models/organization";
 
-const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new AccessKeyModel(), "projectModel": new ProjectModel(), "organizationModel": new OrganizationModel() }).derive({ as: "scoped" }, async ({ headers, query, status, accessKeyModel, projectModel, organizationModel })=>{
+const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new AccessKeyModel(), "projectModel": new ProjectModel(), "organizationModel": new OrganizationModel() }).derive({ as: "scoped" }, async ({ headers, path, query, status, accessKeyModel, projectModel, organizationModel })=>{
     let accesskey: AccessKey | undefined = undefined;
     let project: Project | undefined = undefined;
     let organization: Organization | undefined = undefined;
@@ -16,8 +16,7 @@ const keyAuthenicationPlugin = new Elysia().decorate({ "accessKeyModel": new Acc
     const key = headers[AccessHeaderKeys.AccessKey] ?? query[AccessQueryKeys.AccessKey];
     const projectToken = headers[AccessHeaderKeys.ProjectToken] ?? query[AccessQueryKeys.ProjectToken];
 
-    jetLogger.info(`Authenticating access key with headers: ${JSON.stringify(headers)}`);
-    jetLogger.info(`Authenticating access key: ${key} for project token: ${projectToken} and organization: ${organizationName}`);
+    jetLogger.info(`Authenticating on ${path}: access key: ${key} for project token: ${projectToken} and organization: ${organizationName}`);
     if(key && projectToken){
         try {
             accesskey = await accessKeyModel.get(key);

@@ -2,14 +2,10 @@ import jetLogger from "jet-logger";
 import Elysia, { t } from "elysia";
 import { ElysiaWS } from "elysia/ws";
 
-import keyAuthenicationPlugin from "../plugins/key-authentication";
-
 import FriendModel from "../models/friends";
-import { GroupModel } from "../models";
+import { AccessKeyModel, GroupModel } from "../models";
 import { Err } from "../config";
 
-
-import { SocketPaths } from "@simplechat/shared";
 import chatSocketHandler from "./chats";
 import friendsSocketHandler from "./friends";
 
@@ -36,8 +32,8 @@ const connectedPlugin = new Elysia().state<"connectedSockets", Record<string, El
     }
 }));
 
-const sockets = new Elysia();
-sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).ws("/ws", {
+const sockets = new Elysia().decorate("accessKeyModel", new AccessKeyModel());
+sockets.use(connectedPlugin).use(ClientAuthenicationPlugin).ws("/ws", {
     body: t.Object({
         operation: t.String(),
         path: t.Union([ t.Literal('chats'), t.Literal('friends'), t.Literal('groups') ]),
@@ -59,8 +55,9 @@ sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(ClientAuthenication
             role: t.Optional(t.String())
         }))
     }),
+    query: t.Object({ key: t.String() }),
     open: async (ws) =>{
-        console.log("socket connected on chat route");
+        jetLogger.info(`user socket connected open: ${ws.data.client.details.name} ${ws.data.client.details.surname}`);
         ws.data.add(ws.data.client!.id, ws);
         try{
             const friendModel = new FriendModel();
@@ -77,11 +74,11 @@ sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(ClientAuthenication
             jetLogger.err(err.error);
         }
     },
-    close: (ws) =>{
-        console.log("socket disconnected on friends route");
+    close: (ws, code) =>{
+        jetLogger.err(`user socket disconnected closed: ${ws.data.client.details.name} ${ws.data.client.details.surname} with code: ${code}`);
         ws.data.remove(ws.data.client!.id);
     },
-    message: (ws, message) =>{
+    message: (ws, message: any) =>{
         console.log(`message received: ${message}`);
         switch(message.path){
             case "chats":
@@ -105,6 +102,16 @@ sockets.use(connectedPlugin).use(keyAuthenicationPlugin).use(ClientAuthenication
                     ws.send({ path: message.path, operation: message.operation, message: "invalid friends data inputs", status: 400 });
                 }
                 break;
+        }
+    },
+    beforeHandle: async({ client, query, accessKeyModel, status }) =>{
+        if(query.key){
+            const accesskey = await accessKeyModel.get(query.key);
+            if(!accesskey?.enabled || accesskey.projectID !== client.projectID){
+                return status(401, { message: "Access key disabled or invalid" });                
+            }
+        }else{
+            return status(401, { message: "Access key must be provided" });
         }
     }
 });

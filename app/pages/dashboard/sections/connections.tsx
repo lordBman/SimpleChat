@@ -5,7 +5,7 @@ import { AppContext, AppContextType } from "../../providers/app-provider";
 
 import { FriendsContext, MembersContext } from "simplechat_provider/src/contexts";
 import { FriendsContextType, MembersContextType } from "simplechat_provider/src/models";
-import { Details, Friend, Group, Member } from "@simplechat/shared/models";
+import { Details, Friend, FriendSearchResult, Group, GroupSearchResult, Member, SearchResult } from "@simplechat/shared/models";
 import { useCallbackRequest } from "simplechat_provider/src/request";
 import { apiClientInstance, getName } from "../../utils";
 
@@ -15,18 +15,18 @@ enum Filter{
 
 const Connections = () =>{
     const { user } = useContext(AppContext) as AppContextType;
-    const { members } = useContext(MembersContext) as MembersContextType;
+    const { members, create, loading } = useContext(MembersContext) as MembersContextType;
     const { friends } = useContext(FriendsContext) as FriendsContextType;
     
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<Array<{ user: Details, friend?: Friend } | { group: Group, member?: Member }>>([]);
+    const [results, setResults] = useState<SearchResult[]>([]);
     const [createState, setCreateState] = useState({ isOpen: false, name: "" });
     const [filter, setFilter] = useState<Filter>(Filter.all);
     
     const searchMutation = useCallbackRequest({
-        request: (variables: string)=> apiClientInstance.get(`/search?query=${variables}`),
+        request: (variables: string)=> apiClientInstance.get<SearchResult[]>(`/search?query=${variables}`),
         onDone: (data) =>{
-            setResults(data.data);
+            setResults(data);
         },
         onFail: (error) =>alert(error)
     });
@@ -38,19 +38,10 @@ const Connections = () =>{
         }
     }
 
-    const createMutation = useCallbackRequest({
-        request: (name: string)=> apiClientInstance.post(`/groups/create`, { data: { name } }),
-        onDone: (data) =>{
-            setResults(data.data);
-            close();
-        },
-        onFail: (error) =>alert(error)
-    });
-
     const onCreate = (event: React.FormEvent<HTMLFormElement>) =>{
         event.preventDefault();
-        if(createState.name.length > 0 && !createMutation.loading){
-            createMutation.start(createState.name);
+        if(createState.name.length > 0 && loading){
+            create(createState.name);
         }
     }
 
@@ -144,7 +135,7 @@ const Connections = () =>{
                     </div>
                 </div>
             ) }
-            { query.length <= 0 && filter === Filter.friends && <div id="friends-list">{ views }</div> }
+            { query.length <= 0 && <div id="friends-list">{ views }</div> }
             { searchMutation.loading && <div id="friends-search-loading">
                 <span>Loading...</span>
             </div> }

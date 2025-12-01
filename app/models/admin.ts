@@ -35,7 +35,7 @@ class AdminModel{
             const defaultOrg = await this.database.organization.findUniqueOrThrow({ where: { id: SeedResult.instance().organizationID } });
             const defaultKey = await new AccessKeyModel().default(defaultProject.id);
             if(defaultKey){
-                defaults = { key: defaultKey, projectToken: defaultProject.token, organization: defaultOrg.id };
+                defaults = { key: defaultKey, projectToken: defaultProject.token, organization: defaultOrg.name };
             }
 
             return { ...data.user, projects: init, developers: developers.map((developer)=> developer.details), defaults };

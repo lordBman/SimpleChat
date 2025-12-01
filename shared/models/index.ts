@@ -12,5 +12,7 @@ import Details from "./details";
 export type Chats = { [key: string]: Chat[] };
 
 export type FriendSearchResult = { user: Details, friend?: Friend }
+export type GroupSearchResult = { group: Group, member?: Member }
+export type SearchResult = FriendSearchResult | GroupSearchResult;
 
 export { Details, User, Chat, Group, Member, Friend, Project, AccessKey, Notification, Client, UserRoles };

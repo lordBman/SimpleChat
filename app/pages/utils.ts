@@ -7,14 +7,12 @@ export interface LooseObject {
 
 export const apiClientInstance = new APIClient("/api");
 
-export const getName = ( user: Details, response : Friend | Member):string =>{
+export const getName = (user: Details, response : Friend | Member):string =>{
     if((response as any).group){
         const init = response as Member;
-
         return init.group.name;
     }else{
         const init = response as Friend;
-
         return init.acceptor.id === user.id ? init.acceptor.name : init.requester.name;
     }
 }

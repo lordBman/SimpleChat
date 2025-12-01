@@ -82,6 +82,30 @@ class ClientModel{
             throw new Err(503, error, "error encountered when creating user");
         }
     }
+
+    async project(client: Client): Promise<Project>{
+        const project = await this.database.project.findUniqueOrThrow({ 
+            where: { id: client.projectID },
+            include: { 
+                owner: { include: { details: true } }
+            }
+        });
+        return { ...project, owner: project.owner.details };
+    }
+
+    async organization(client: Client): Promise<Organization | undefined>{
+        try{
+            if(client.organizationID){
+                const organization = await this.database.organization.findUniqueOrThrow({ 
+                    where: { id: client.organizationID }
+                });
+                return organization;
+            }
+            return undefined;
+        }catch(error){
+            throw new Err(503, error, "error encountered while getting organization details");
+        }
+    }
 }
 
 export default ClientModel;

@@ -2,7 +2,7 @@ import chatRouter from "./chat";
 import friendRouter from "./friends";
 import jetLogger from "jet-logger";
 import accessKeyRouter from "./access-keys";
-import { AdminModel, ClienitModel } from "../models";
+import { AdminModel, ClientModel } from "../models";
 import { Err } from "../config";
 import { Friend, Group, Member, Details } from "@simplechat/shared/models";
 import DeveloperModel from "../models/developer";
@@ -40,7 +40,7 @@ api.use(new Elysia().use(UserAuthenicationPlugin.get("/", async({ user, cookie: 
 
 api.use(new Elysia().use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin).get("/client", async({ project, organization, client, status, cookie: { token } }) =>{
     try{
-        const init = await new ClienitModel().get({ client, project, organization });
+        const init = await new ClientModel().get({ client, project, organization });
         return status(200, { ...init, token: token.value });
     }catch(error){
         jetLogger.err(error);

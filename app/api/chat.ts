@@ -7,7 +7,7 @@ import ClientAuthenicationPlugin from "../plugins/client-authentication";
 
 const chatRouter = new Elysia({ prefix: "/chat" }).decorate({ "chatModel": new ChatModel() });
 
-chatRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin)
+chatRouter.use(ClientAuthenicationPlugin)
 .get("/:ownerID/:id?", async({ params, body, chatModel, client, status }) =>{
     if(params.ownerID || body.groupID || body.friendID){
         try{

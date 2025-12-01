@@ -45,7 +45,7 @@ const App = () =>{
             throw Error("User is not defined");
         }
         return {
-            id: user.details.id,
+            id: user.details.id, organization: user!.defaults!.organization,
             projectToken: user!.defaults!.projectToken, accessKey: user!.defaults!.key.key, 
             name: user!.details.name, surname: user.details.surname, email: user!.details.email!
         };

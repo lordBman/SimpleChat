@@ -2,7 +2,7 @@ import { Err } from "../config";
 import DeveloperModel from "../models/developer";
 import jetLogger from "jet-logger";
 import { t, Elysia } from "elysia";
-import { ClienitModel } from "../models";
+import { ClientModel } from "../models";
 import keyAuthenicationPlugin from "../plugins/key-authentication";
 import JWTPlugin from "../plugins/jwt-plugin";
 import UserAuthenicationPlugin from "../plugins/user-authentication";
@@ -68,7 +68,7 @@ authRouter.use(new Elysia().use(UserAuthenicationPlugin.get("/me", async({ user,
 authRouter.use(new Elysia().use(keyAuthenicationPlugin).use(JWTPlugin).post("/connect", async({ encrypt, body, status, cookie: { client_token } , project, organization }) =>{
     if(body.email || body.username){
         try{
-            const client = await new ClienitModel().connect({ ...body, project: project!, organization });
+            const client = await new ClientModel().connect({ ...body, project: project!, organization });
             const value = await encrypt(client);
             client_token?.set({ value, httpOnly: true, maxAge: 7 * 86400 });
 

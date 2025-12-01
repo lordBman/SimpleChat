@@ -164,20 +164,11 @@ const ChatProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     });
 
     const order = React.useMemo(()=>{
-        if(!state.chats){
+        if(!state.chats || client === undefined){
             return [];
         }
 
-        const map = new Map(Object.entries(state.chats));
-        
-        return Array.from(map.entries()).sort((entryA, entryB)=>{
-            if(entryA[1].length > 0 && entryB[1].length > 0){
-                return entryB[1][ entryB[1].length - 1].created.toString().localeCompare(entryA[1][  entryA[1].length - 1].created.toString());
-            }else if(entryB[1].length > 0){
-                return 1;
-            }
-            return -1;
-        }).map((init)=> init[0]);
+        return client.sort();
     }, [state.chats]);
 
     const send = (message: string, targert: Friend | Member) => client?.send(message, targert);

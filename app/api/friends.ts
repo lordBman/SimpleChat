@@ -7,7 +7,7 @@ import ClientAuthenicationPlugin from "../plugins/client-authentication";
 
 const friendRouter = new Elysia({ prefix: "/friends" }).decorate({ "friendModel": new FriendModel() });
 
-friendRouter.use(keyAuthenicationPlugin).use(ClientAuthenicationPlugin)
+friendRouter.use(ClientAuthenicationPlugin)
 .get("/search", async({ status, query, client, friendModel, project, organization })=>{
     try{
         const response = await friendModel.find({ query: query.query, project: project!, organization, client: client! });

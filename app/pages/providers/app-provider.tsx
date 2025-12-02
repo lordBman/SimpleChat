@@ -1,5 +1,5 @@
-import { Friend, Member } from '@simplechat/shared/models';
-import React from 'react';
+import { Friend, Member, Project } from '@simplechat/shared/models';
+import React, { useCallback, useEffect } from 'react';
 import { useState } from 'react';
 import { useRequest } from 'simplechat_provider/src/request';
 import { apiClientInstance } from '../utils';
@@ -25,6 +25,10 @@ export type AppContextType = {
 
     makeCurrent : (response: Member | Friend) =>void
     setPage: (page: { section?: Section, main?: MainPage, params?: any }) => void;
+
+    createProject: (name: string) => Promise<void>
+    deleteProject: (id: string) => Promise<void>
+    renameProject: (id: string, name: string) => Promise<void>
 };
 
 export const AppContext = React.createContext<AppContextType | null>(null);
@@ -39,12 +43,17 @@ export const useAppContext = () => {
 const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const [current, setCurrent] = useState<Member | Friend>();
     const [pageState, setPageState] = useState<PageState>({ current: "home" });
+    const [ user, setUser ] = useState<UserState>()
 
     const makeCurrent = (response: Member | Friend)=> setCurrent(response);
 
-    const init = useRequest<UserState>({
+    const { loading, error } = useRequest<UserState>({
         fn: async () => {
-            return await apiClientInstance.get<UserState>("/");
+            const init = await apiClientInstance.get<UserState>("/");
+            if(init){
+                setUser(init);
+            }
+            return init;
         },
     });
 
@@ -55,9 +64,28 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             params: page.params,
         }));
     }
+
+    const createProject = async(name: string) => {
+        const project: Project = await apiClientInstance.post("/projects", { data: { name } });
+
+        setUser((init) =>{
+            return { ...init!, projects: [...init!.projects,  { ...project,  userCount: 0 }] };
+        })
+    }
+
+    const deleteProject = async(id: string) =>{
+
+    }
+    const renameProject = async(id: string, name: string) =>{
+
+    }
     
     return (
-        <AppContext.Provider value={{  makeCurrent, pageState, setPage,  current, user: init.data, loading: init.loading, isError: init.error, error: init.error  }}>{ children }</AppContext.Provider>
+        <AppContext.Provider value={{  
+            makeCurrent, createProject, pageState, 
+            deleteProject, renameProject, setPage,  
+            current, user, loading, isError: error, error 
+        }}>{ children }</AppContext.Provider>
     );
 }
 
@@ -67,13 +95,13 @@ interface ProviderWraperProps extends React.PropsWithChildren{
 }
 
 const ProviderWraper: React.FC<ProviderWraperProps> = ({children, Loading, Error }) =>{
-    const app = useAppContext();
+    const { loading, user, isError } = useAppContext();
 
-    if(app.loading){
+    if(loading){
         return <Loading />;
     }
 
-    if(app.isError && app.user === undefined){
+    if(isError && user === undefined){
         return <Error />;
     }
 

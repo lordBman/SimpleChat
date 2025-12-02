@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { apiClientInstance, extract } from "../utils";
 
+const _papiUrl = 'ipapi.co/json';
+
 const Signin = () =>{
     const [error, setError] = useState<any>();
 

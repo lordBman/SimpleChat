@@ -1,3 +1,5 @@
+@use "./common" as *;
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -15,7 +17,7 @@
 }
 
 .tool-bar{
-    background-color: #7269EF;
+    background-color: var(--primary);
     display: flex;
     width: 100%;
     flex-direction: row;

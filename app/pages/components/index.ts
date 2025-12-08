@@ -9,9 +9,11 @@ import ErrorPage from "./error";
 import ProjectItem from "./project-item";
 import ProjectTitle from "./project-title";
 import ProjectActions from "./project-actions";
+import CreateProject from "./create-project";
+import ProjectSection from "./project-section";
 
 export { 
     FriendResultView, FriendView, CircleLoading, Loading, ChatView, BottomNavigation, 
     BackButton, MobileHeader, DashBoard, ErrorPage, ProjectItem, ProjectTitle,
-    ProjectActions
+    ProjectActions, CreateProject, ProjectSection
 };

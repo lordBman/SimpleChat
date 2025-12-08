@@ -4,10 +4,11 @@ import { usePageContext } from "../../../providers/page-provider";
 import { OrganizationDetails, ProjectDetails } from "@simplechat/shared";
 import { useAppContext } from "../../../providers/app-provider";
 import { useRequest } from "simplechat_provider/src/request";
-import { apiClientInstance } from "../../../utils";
+import {apiClientInstance, copyToClipboard} from "../../../utils";
 import { AccessKey } from "@simplechat/shared/models";
 import Organization from "@simplechat/shared/models/organization";
-import { ProjectActions, ProjectTitle } from "../../../components";
+import { ProjectActions, ProjectSection, ProjectTitle } from "../../../components";
+import { KeyIcon, OrganizationIcon } from "../../../icons";
 
 const pageStyle: React.CSSProperties = { 
     paddingTop: "20px", 
@@ -62,43 +63,6 @@ const Stats: React.FC<React.PropsWithChildren<StatsProps>> = ({ title, count, cl
                 <div style={{ fontSize: 12, fontWeight: "bold", color: "gray" }}>{count}</div>
             </div>
         </div>
-    );
-}
-
-const KeyIcon = () =>{
-    return (
-        <span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24"><path fill="currentColor" d="M2 16c0-2.828 0-4.243.879-5.121C3.757 10 5.172 10 8 10h8c2.828 0 4.243 0 5.121.879C22 11.757 22 13.172 22 16s0 4.243-.879 5.121C20.243 22 18.828 22 16 22H8c-2.828 0-4.243 0-5.121-.879C2 20.243 2 18.828 2 16" opacity="0.5"/><path fill="currentColor" d="M12 18a2 2 0 1 0 0-4a2 2 0 0 0 0 4M6.75 8a5.25 5.25 0 0 1 10.5 0v2.004c.567.005 1.064.018 1.5.05V8a6.75 6.75 0 0 0-13.5 0v2.055a24 24 0 0 1 1.5-.051z"/></svg>
-        </span>
-    );
-}
-
-const OrganizationIcon = () =>{
-    return (
-        <span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.75 2h2c1.886 0 2.828 0 3.414.586S16.75 4.114 16.75 6v15.25h5a.75.75 0 0 1 0 1.5h-20a.75.75 0 0 1 0-1.5h5V6c0-1.886 0-2.828.586-3.414S8.864 2 10.75 2M9 12a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4A.75.75 0 0 1 9 12m0 3a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4A.75.75 0 0 1 9 15m2.75 3.25a.75.75 0 0 1 .75.75v2.25H11V19a.75.75 0 0 1 .75-.75M9.25 7a2.75 2.75 0 1 1 5.5 0a2.75 2.75 0 0 1-5.5 0" clip-rule="evenodd"/><path fill="currentColor" d="M10.75 7a1.25 1.25 0 1 1 2.5 0a1.25 1.25 0 0 1-2.5 0" opacity="0.5"/><path fill="currentColor" d="M20.913 5.889c.337.504.337 1.206.337 2.611v12.75h.5a.75.75 0 0 1 0 1.5h-20a.75.75 0 1 1 0-1.5h.5V8.5c0-1.405 0-2.107.337-2.611a2 2 0 0 1 .552-.552c.441-.295 2.537-.332 3.618-.336q-.005.437-.004.91V7.25H4.25a.75.75 0 1 0 0 1.5h2.503v1.5H4.25a.75.75 0 0 0 0 1.5h2.503v1.5H4.25a.75.75 0 0 0 0 1.5h2.503v6.5h10v-6.5h2.497a.75.75 0 1 0 0-1.5h-2.497v-1.5h2.497a.75.75 0 1 0 0-1.5h-2.497v-1.5h2.497a.75.75 0 0 0 0-1.5h-2.497V5.91q.001-.471-.004-.91c1.081.005 3.17.042 3.612.337a2 2 0 0 1 .552.552" opacity="0.5"/></svg>
-        </span>
-    );
-}
-
-interface ProjectSectionProps{
-    title: string,
-    icon: React.ReactElement
-}
-
-const ProjectSection: React.FC<React.PropsWithChildren<ProjectSectionProps>> = ({ title, icon, children }) =>{
-    return (
-        <section style={{ marginTop: "20px" }}>
-            <div style={{ position: "absolute", display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "46px", height: "46px", color: "var(--primary)", border: "solid 1px", borderRadius: "50%", borderColor: "grey", backgroundColor: "white" }}>
-                    { icon }
-                </div>
-                <h4 style={{ fontWeight: "lighter", marginBottom: "23px" }}>{title}</h4>
-            </div>
-            <div style={{ border: "1px solid #eee", padding: 12, paddingTop: "30px", borderRadius: 6, marginTop: "23px", marginLeft: "23px" }}>
-                { children }
-            </div>
-        </section>
     );
 }
 
@@ -163,8 +127,7 @@ const ProjectDetails = () => {
     const handleDeleteAccessKey = (keyId: string) => {
         if (!confirm("Delete this access key? This cannot be undone.")) return;
 
-        apiClientInstance
-            .delete(`/api/access-keys/${keyId}`)
+        apiClientInstance.delete(`/api/access-keys/${keyId}`)
             .then(() => {
                 setDetails((d) => {
                     if (!d) return d;
@@ -221,11 +184,6 @@ const ProjectDetails = () => {
             .catch(() => {});
     };
 
-    const copyToClipboard = (text?: string) => {
-        if (!text) return;
-        navigator.clipboard.writeText(text).catch(() => {});
-    };
-
     const back = () => {
         setPage({ main: "projects", params: undefined });
     };
@@ -260,7 +218,7 @@ const ProjectDetails = () => {
                                 <label style={{ display: "block", fontSize: 12, color: "#555" }}>Token</label>
                                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                     <code style={{ padding: "6px 8px", background: "#fafafa", borderRadius: 4 }}>{project.token}</code>
-                                    <span onClick={() => copyToClipboard(project.token)} style={{ cursor: "pointer" }}>
+                                    <span onClick={() => copyToClipboard(project!.token)} style={{ cursor: "pointer" }}>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
                                             <g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 11c0-2.828 0-4.243.879-5.121C7.757 5 9.172 5 12 5h3c2.828 0 4.243 0 5.121.879C21 6.757 21 8.172 21 11v5c0 2.828 0 4.243-.879 5.121C19.243 22 17.828 22 15 22h-3c-2.828 0-4.243 0-5.121-.879C6 20.243 6 18.828 6 16z"/>
                                                 <path d="M6 19a3 3 0 0 1-3-3v-6c0-3.771 0-5.657 1.172-6.828S7.229 2 11 2h4a3 3 0 0 1 3 3" opacity="0.5"/>
@@ -287,7 +245,11 @@ const ProjectDetails = () => {
             )}
 
             <ProjectSection title="Access Keys" icon={<KeyIcon />}>
-                vffbfff
+                { details && details.keys.map((key)=>(
+                    <div style={{ display: "flex" }}>
+
+                    </div>
+                )) }
             </ProjectSection>
 
             <ProjectSection title="Organizations" icon={<OrganizationIcon />}>

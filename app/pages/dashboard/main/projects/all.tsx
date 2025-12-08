@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useAppContext } from "../../../providers/app-provider";
 import ProjectItem from "../../../components/project-item";
-import CreateProject from "../../../components/create-project";
+import {CreateProject} from "../../../components";
 
 const containerStyle: React.CSSProperties = { padding: "1.2rem", display: "flex", flexDirection: "column", position: "relative", width: "100%", height: "100%" };
 const headerRow: React.CSSProperties = { display: "flex", justifyContent: "space-between", gap: 12 };

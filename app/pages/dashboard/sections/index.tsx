@@ -2,11 +2,11 @@ import Chats from "./chats";
 import Info from "./info";
 import Settings from "./settings";
 import Connections from "./connections";
-import React, { use } from "react";
-import { useAppContext } from "../../providers/app-provider";
+import React from "react";
+import { usePageContext } from "../../providers/page-provider";
 
 const Sections = () =>{
-    const { pageState } = useAppContext();
+    const { pageState } = usePageContext();
 
     return (
         <>

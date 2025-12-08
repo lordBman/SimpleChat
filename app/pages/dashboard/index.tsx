@@ -5,14 +5,16 @@ import Options from "../components/dashboard/menu/options";
 import { useMemo } from "react";
 import { ToolBarItem } from "../components/dashboard/tool-bar";
 import SimpleChatProvider from "simplechat_provider";
-import AppProviderWraper, { MainPage, Section, useAppContext } from "../providers/app-provider";
+import AppProviderWraper, { useAppContext } from "../providers/app-provider";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { SimpleChatConfig } from "@simplechat/shared";
+import PageProvider, { MainPage, Section, usePageContext } from "../providers/page-provider";
 
 
 const App = () =>{
-    const { user, pageState, setPage } = useAppContext();
+    const { user } = useAppContext();
+    const { pageState, setPage } = usePageContext();
     const [current, setCurrent] = React.useState<MainPage | Section>(pageState.section ?? pageState.current);
 
     const chosen = (id: string)=> {
@@ -95,7 +97,9 @@ const App = () =>{
 const DashBoard = () =>{
     return (
         <AppProviderWraper Loading={Loading} Error={ErrorPage}>
-            <App />
+            <PageProvider>
+                <App />
+            </PageProvider>
         </AppProviderWraper>
     );
 }

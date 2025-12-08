@@ -3,10 +3,10 @@ import Home from "./home";
 import Projects from "./projects";
 import Developers from "./developers";
 import React from "react";
-import { useAppContext } from "../../providers/app-provider";
+import { usePageContext } from "../../providers/page-provider";
 
 const Main = () =>{
-    const { pageState } = useAppContext();
+    const { pageState } = usePageContext();
 
     switch(pageState.current){
         case "chat":

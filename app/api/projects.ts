@@ -22,10 +22,10 @@ projectRouter.use(UserAuthenicationPlugin)
     }
 }, { body: t.Object({ name: t.String(), description: t.Optional(t.String()) }) })
 
-.get("/:id?", async({ body, params, user, projectModel, status }) =>{
+.get("/:id?", async({ params, user, projectModel, status }) =>{
     try{
-        if(body.id ?? params.id){
-            const response = await projectModel.get({ user: user!, projectID: body.id ?? params.id! });
+        if(params.id){
+            const response = await projectModel.get({ user: user!, projectID: params.id! });
             return status(200, response);
         }
         const response = await projectModel.all({ user: user! }); 
@@ -39,6 +39,6 @@ projectRouter.use(UserAuthenicationPlugin)
             return status(503, { message: "an internal server error occurred when getting all projects" });
         }
     }
-}, { params: t.Object({ id: t.Optional(t.String()) }), body: t.Object({ id: t.Optional(t.String()) }) });
+});
 
 export default projectRouter;

@@ -1,10 +1,10 @@
-import { useAppContext } from "../../../providers/app-provider";
+import { usePageContext } from "../../../providers/page-provider";
 import AllProjects from "./all";
 import ProjectDetails from "./details";
 import React from "react";
 
 const Projects = () =>{
-    const { pageState } = useAppContext();
+    const { pageState } = usePageContext();
     const id = pageState.params;
 
     return (

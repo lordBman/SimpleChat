@@ -1,5 +1,6 @@
 import { Details, Friend, Member } from "@simplechat/shared/models";
 import APIClient from "@simplechat/shared/api_client";
+import React, { useEffect, useState } from "react";
 
 export interface LooseObject {
     [key: string]: any
@@ -114,4 +115,17 @@ export const extract = (form: HTMLFormElement): LooseObject =>{
     });
 
     return obj;
+}
+
+const useScreenHook = (maxWidth: number | string) =>{
+    const [isScreen, setIsScreen] = useState(window.innerWidth < 600);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia(`(max-width: ${maxWidth}px)`);
+        const handler = (e: MediaQueryListEvent) => setIsScreen(e.matches);
+        mediaQuery.addEventListener("change", handler);
+        return () => mediaQuery.removeEventListener("change", handler);
+    }, [maxWidth]);
+
+    return isScreen;
 }

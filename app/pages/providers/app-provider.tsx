@@ -5,14 +5,6 @@ import { useRequest } from 'simplechat_provider/src/request';
 import { apiClientInstance } from '../utils';
 import { UserState } from '@simplechat/shared';
 
-export type MainPage = "home" | "developers" | "projects"  | "chat";
-export type Section = "chats" | "connections" | "settings" | "info";
-export type PageState = {
-    current: MainPage,
-    section?: Section,
-    params?: any
-}
-
 export type AppContextType = {
     user?: UserState
     loading: boolean;
@@ -21,10 +13,8 @@ export type AppContextType = {
 
     message?: any;
     current?: Member | Friend;
-    pageState: PageState;
 
     makeCurrent : (response: Member | Friend) =>void
-    setPage: (page: { section?: Section, main?: MainPage, params?: any }) => void;
 
     createProject: (name: string) => Promise<void>
     deleteProject: (id: string) => Promise<void>
@@ -42,7 +32,6 @@ export const useAppContext = () => {
 
 const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const [current, setCurrent] = useState<Member | Friend>();
-    const [pageState, setPageState] = useState<PageState>({ current: "home" });
     const [ user, setUser ] = useState<UserState>()
 
     const makeCurrent = (response: Member | Friend)=> setCurrent(response);
@@ -56,14 +45,6 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
             return init;
         },
     });
-
-    const setPage = (page: { section?: Section, main?: MainPage, params?: any }) =>{
-        setPageState(init => ({
-            current: page.main ?? init.current,
-            section: page.section ?? init.section,
-            params: page.params,
-        }));
-    }
 
     const createProject = async(name: string) => {
         const project: Project = await apiClientInstance.post("/projects", { data: { name } });
@@ -82,8 +63,8 @@ const AppProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     
     return (
         <AppContext.Provider value={{  
-            makeCurrent, createProject, pageState, 
-            deleteProject, renameProject, setPage,  
+            makeCurrent, createProject, 
+            deleteProject, renameProject,  
             current, user, loading, isError: error, error 
         }}>{ children }</AppContext.Provider>
     );

@@ -42,10 +42,8 @@ const copyToken = async (t: string) => {
 const ProjectItem: React.FC<{ project: Project }> = ({ project }) => {
     const { setPage } = usePageContext();
 
-    
-
     const choose = () => {
-        setPage({ main: "projects", params: project.id });
+        setPage({ main: "projects", section: "projects", params: project.id });
     }
 
     return (

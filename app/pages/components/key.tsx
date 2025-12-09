@@ -34,8 +34,8 @@ const Key: React.FC<KeyProps> = ({ title, secret }) =>{
     return (
         <div>
             <label style={{ display: "block", fontSize: 12, color: "#555" }}>{title}</label>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <code style={{ padding: "6px 8px", background: "#fafafa", borderRadius: 4 }}>{initSecret}</code>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+                <code style={{ padding: "6px 8px", background: "#f6f6f6", borderRadius: 4 }}>{initSecret}</code>
                 <span onClick={toggle} style={{ cursor: "pointer" }}>
                     { hide && (
                         <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">

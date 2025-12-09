@@ -29,7 +29,7 @@ const App = () =>{
             case "home":
             case "developers":
             case "projects":
-                setPage({ main: id as MainPage ?? "home" });
+                setPage({ main: id as MainPage ?? "home", section: "none" });
                 break;
             case "chats":
             case "connections":
@@ -57,16 +57,16 @@ const App = () =>{
         <SimpleChatProvider config={ simpleChatConfig }>
             <DashBoardView>
                 <DashBoardView.Menu initial={current} choose={chosen}>
-                    <Options>
-                        <Options.Item id="home" isMiddle icon="hugeicons--dashboard-square-02" label="Home" />
-                        <Options.Item id="developers" isMiddle icon="hugeicons--computer-programming-01" label="Developers" hide={user?.role !== "Admin"} />
-                        <Options.Item id="projects" isMiddle icon="hugeicons--code" label="Projects" />
-                        <Options.Item id="chats" isMiddle icon="fluent--chat-20-regular" label="Chats" />
-                        <Options.Item id="connections" isMiddle icon="heroicons--user-group" label="Connections" />
+                    <Options key="kchdcvhifvbhvfibvfi">
+                        <Options.Item id="home" key={"home"} isMiddle icon="hugeicons--dashboard-square-02" label="Home" />
+                        <Options.Item id="developers" key={"developers"} isMiddle icon="hugeicons--computer-programming-01" label="Developers" hide={user?.role !== "Admin"} />
+                        <Options.Item id="projects" key={"projects"} isMiddle icon="hugeicons--code" label="Projects" />
+                        <Options.Item id="chats" key={"chats"} isMiddle icon="fluent--chat-20-regular" label="Chats" />
+                        <Options.Item id="connections" key={"connections"} isMiddle icon="heroicons--user-group" label="Connections" />
                     </Options>
-                    <Options>
-                        <Options.Item id="settings" icon="et--gears" label="Settings" />
-                        <Options.Item id="info" icon="clarity--help-info-line" label="Info" />
+                    <Options key={"cmvbfjvbhfvhfivhfiv"}>
+                        <Options.Item key={"settings"} id="settings" icon="et--gears" label="Settings" />
+                        <Options.Item key={"info"} id="info" icon="clarity--help-info-line" label="Info" />
                     </Options>
                 </DashBoardView.Menu>
                 <DashBoardView.ToolBar title="Simple Chat">
@@ -74,7 +74,7 @@ const App = () =>{
                     <ToolBarItem icon="solar--bell-linear" id="notifications" choose={chosen} />
                     <ToolBarItem icon="solar--exit-outline" id="logout" choose={chosen} />
                 </DashBoardView.ToolBar>
-                <DashBoardView.Section hide={pageState.section === undefined}>
+                <DashBoardView.Section hide={pageState.section === undefined || pageState.section === "none"}>
                     <MobileHeader />
                     <Sections />
                 </DashBoardView.Section>

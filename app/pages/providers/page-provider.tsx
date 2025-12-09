@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 export type MainPage = "home" | "developers" | "projects"  | "chat";
-export type Section = "chats" | "connections" | "settings" | "info";
+export type Section = "chats" | "connections" | "settings" | "info" | "projects" | "none";
 export type PageState = {
     current: MainPage,
     section?: Section,
@@ -28,7 +28,7 @@ const fetchSavedPageState = (): PageState => {
     if(cachestorage.getItem("pageState")){
         return JSON.parse(cachestorage.getItem("pageState")!);
     }
-    return { current: "home" };
+    return { current: "home", section: "none" };
 }
 
 const savePageState = (pageState: PageState) => {

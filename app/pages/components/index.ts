@@ -11,9 +11,10 @@ import ProjectTitle from "./project-title";
 import ProjectActions from "./project-actions";
 import CreateProject from "./create-project";
 import ProjectSection from "./project-section";
+import Key from "./key";
 
 export { 
     FriendResultView, FriendView, CircleLoading, Loading, ChatView, BottomNavigation, 
     BackButton, MobileHeader, DashBoard, ErrorPage, ProjectItem, ProjectTitle,
-    ProjectActions, CreateProject, ProjectSection
+    ProjectActions, CreateProject, ProjectSection, Key
 };

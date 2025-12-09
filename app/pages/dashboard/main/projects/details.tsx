@@ -4,10 +4,10 @@ import { usePageContext } from "../../../providers/page-provider";
 import { OrganizationDetails, ProjectDetails } from "@simplechat/shared";
 import { useAppContext } from "../../../providers/app-provider";
 import { useRequest } from "simplechat_provider/src/request";
-import {apiClientInstance, copyToClipboard} from "../../../utils";
+import {apiClientInstance} from "../../../utils";
 import { AccessKey } from "@simplechat/shared/models";
 import Organization from "@simplechat/shared/models/organization";
-import { ProjectActions, ProjectSection, ProjectTitle } from "../../../components";
+import { Key, ProjectActions, ProjectSection, ProjectTitle } from "../../../components";
 import { KeyIcon, OrganizationIcon } from "../../../icons";
 
 const pageStyle: React.CSSProperties = { 
@@ -214,20 +214,8 @@ const ProjectDetails = () => {
                         </div>
 
                         <div style={{ marginTop: 12, display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "end" }}>
-                            <div>
-                                <label style={{ display: "block", fontSize: 12, color: "#555" }}>Token</label>
-                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                    <code style={{ padding: "6px 8px", background: "#fafafa", borderRadius: 4 }}>{project.token}</code>
-                                    <span onClick={() => copyToClipboard(project!.token)} style={{ cursor: "pointer" }}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
-                                            <g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 11c0-2.828 0-4.243.879-5.121C7.757 5 9.172 5 12 5h3c2.828 0 4.243 0 5.121.879C21 6.757 21 8.172 21 11v5c0 2.828 0 4.243-.879 5.121C19.243 22 17.828 22 15 22h-3c-2.828 0-4.243 0-5.121-.879C6 20.243 6 18.828 6 16z"/>
-                                                <path d="M6 19a3 3 0 0 1-3-3v-6c0-3.771 0-5.657 1.172-6.828S7.229 2 11 2h4a3 3 0 0 1 3 3" opacity="0.5"/>
-                                            </g>
-                                        </svg>
-                                    </span>
-                                </div>
-                            </div>
-                           <ProjectActions name={project.name} id={project.id} />
+                            <Key title="Token" secret={project.token} />
+                            <ProjectActions name={project.name} id={project.id} />
                         </div>
                     </section>
 
@@ -246,8 +234,17 @@ const ProjectDetails = () => {
 
             <ProjectSection title="Access Keys" icon={<KeyIcon />}>
                 { details && details.keys.map((key)=>(
-                    <div style={{ display: "flex" }}>
-
+                    <div style={{ border: "1px solid #eee", padding: 12, borderRadius: 6 }}>
+                        <div style={{ display: "flex", flexDirection: "row", gap: "10px", alignItems: "center" }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <g fill="none">
+                                    <path fill="currentColor" d="m20.314 3.686l.53-.53zm0 8.14l.53.53zm-9.86-1.769l-.53-.53zM7.362 13.15l.53.53zm3.489 3.489l-.53-.53zm3.093-3.094l-.53-.53zm-6.935.614l-.746.082zm.193 1.74l-.745.083zm.9.9l-.083.745zm1.74.193l.083-.745zm-2.404-.602l.53-.53zm.173.173l-.53.53zm3.06-7.37l-.726.186zm4.137 4.137l-.186.726zm-3.854.3a.75.75 0 0 0-1.055 1.067zm4.566-5.148a.917.917 0 0 1 0-1.297l-1.061-1.06a2.417 2.417 0 0 0 0 3.417zm1.296 0a.917.917 0 0 1-1.297 0l-1.06 1.06a2.417 2.417 0 0 0 3.417 0zm0-1.297a.917.917 0 0 1 0 1.297l1.06 1.06a2.417 2.417 0 0 0 0-3.418zm1.06-1.06a2.417 2.417 0 0 0-3.417 0l1.06 1.06a.917.917 0 0 1 1.297 0zm1.909-1.909a5.006 5.006 0 0 1 0 7.079l1.06 1.06a6.506 6.506 0 0 0 0-9.2zm1.06-1.06a6.506 6.506 0 0 0-9.2 0l1.061 1.06a5.006 5.006 0 0 1 7.079 0zm-10.92 6.37L6.831 12.62l1.06 1.06l3.094-3.093zm1.456 7.643l1.034-1.034l-1.061-1.06l-1.034 1.033zm1.034-1.034l2.06-2.06l-1.061-1.06l-2.06 2.06zm-6.152-1.894l.194 1.741l1.49-.166l-.193-1.74zm1.756 3.303l1.74.194l.166-1.491l-1.74-.193zm-1.112-.624l.174.174l1.06-1.061l-.173-.174zm1.278-.866a.07.07 0 0 1-.043-.021l-1.061 1.06c.252.253.583.412.938.451zm-1.728-.072c.039.355.198.686.45.938l1.061-1.06a.07.07 0 0 1-.02-.044zm3.863.126a.48.48 0 0 1-.395.139l-.165 1.49a1.98 1.98 0 0 0 1.621-.568zM6.831 12.62a1.98 1.98 0 0 0-.569 1.622l1.491-.166a.48.48 0 0 1 .139-.395zm4.566-3.614a5 5 0 0 1 1.308-4.79l-1.06-1.06a6.5 6.5 0 0 0-1.701 6.223zm8.387 2.289a5 5 0 0 1-4.79 1.308l-.373 1.453a6.5 6.5 0 0 0 6.224-1.7zm-5.31 2.78a.1.1 0 0 1 .044-.022a.2.2 0 0 1 .103.003l.373-1.453c-.527-.135-1.143-.026-1.581.412zm-3.489-3.488c.438-.437.547-1.054.412-1.58l-1.453.372q.014.061.003.103a.1.1 0 0 1-.023.045zm1.426 4.485l-1.458-1.442l-1.055 1.067l1.458 1.441z"/>
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-width="1" d="M2 11.99c0 4.719 0 7.078 1.466 8.544S7.29 22 12.01 22s7.078 0 8.544-1.466c1.115-1.115 1.382-2.747 1.446-5.541M9.007 2c-2.794.064-4.426.33-5.541 1.446c-.977.977-1.303 2.35-1.412 4.554"/>
+                                </g>
+                            </svg>
+                            <h4 style={{ color: "grey" }}>{key.name}</h4>
+                        </div>
+                        <Key title="Key" secret={key.key} />
                     </div>
                 )) }
             </ProjectSection>
@@ -284,7 +281,7 @@ const ProjectDetails = () => {
                                     <div>{k.enabled ? "Yes" : "No"}</div>
                                     <div style={{ display: "flex", gap: 8 }}>
                                         <button onClick={() => handleToggleAccessKey(k.id)}>{k.enabled ? "Disable" : "Enable"}</button>
-                                        <button onClick={() => copyToClipboard(k.key)}>Copy</button>
+                                        
                                         <button onClick={() => handleDeleteAccessKey(k.id)} style={{ color: "crimson" }}>
                                             Delete
                                         </button>

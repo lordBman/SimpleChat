@@ -182,14 +182,14 @@ const ProjectDetails = () => {
 
     return (
         <div style={pageStyle}>
-            <h2 style={{ fontWeight: "lighter" }}>
+            <h3 style={{ fontWeight: "lighter", marginBottom: 20 }}>
                 <span onClick={back} style={{ color: "var(--primary)", cursor: "pointer" }}>Project Details</span> | {project?.name}
-            </h2>
+            </h3>
             
             {error && <div style={{ color: "crimson", marginBottom: 8 }}>{error}</div>}
 
             {project ? (
-                <section style={{ border: "1px solid #eee", padding: 12, borderRadius: 6 }}>
+                <section style={{ border: "1px solid #eee", padding: 20, borderRadius: 6 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexDirection: "row", width: "100%" }}>
                         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
                             <span style={{ alignSelf: "center", color: "#657786", cursor: "default" }} title="Project ID">
@@ -277,7 +277,7 @@ const ProjectDetails = () => {
                                 </svg>
                             </span>
                         </div>
-                        <div style={{ marginTop: 20, display: "flex", flexDirection:"row", alignItems: "end", justifyContent: "space-between" }}>
+                        <div style={{ marginTop: 10, display: "flex", flexDirection:"row", alignItems: "end", justifyContent: "space-between" }}>
                             <div style={{ display: "flex", flexDirection: "row", gap: 20, fontSize: "14px", fontWeight: "lighter", letterSpacing: 1.4 }}>
                                 <span>Groups: {organization.groups.length ?? 0}</span>
                                 <span>Users: {organization.clients.length ?? 0}</span>

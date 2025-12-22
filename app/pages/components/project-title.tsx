@@ -1,11 +1,5 @@
 import React from "react";
-
-const formatDate = (d?: Date) => {
-    if (!d) return "—";
-
-    const date = new Date(d);
-    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
+import { formatDate } from "../utils";
 
 const titleStyle: React.CSSProperties = { fontSize: 16, fontWeight: 700, color: "#102a43" };
 const subtitleStyle: React.CSSProperties = { fontSize: 12, fontWeight: "lighter", color: "#657786" };

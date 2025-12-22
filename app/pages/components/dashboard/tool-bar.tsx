@@ -30,7 +30,7 @@ export interface ToolBarProps{
 }
 
 const ToolBar: React.FC<ToolBarProps> & { Item: React.FC<ToolBarItemProps> } = ({ title, children }) =>{
-    const current  = useMemo(()=>{
+    /*const current  = useMemo(()=>{
         const paths =  location.pathname.split('/');
 
         let currents: string[] =  [];
@@ -46,7 +46,9 @@ const ToolBar: React.FC<ToolBarProps> & { Item: React.FC<ToolBarItemProps> } = (
         }
         
         return currents;
-    }, [location.pathname]);
+    }, [location.pathname]);*/
+    
+    const current: string[] = [];
     
     return (
         <div className="tool-bar">

@@ -19,7 +19,15 @@ app.use(staticPlugin({ assets: "public/chunks", prefix: "/chunks" }));
 
 app.get("/", () => file("./public/homepage.html"));
 app.get("/signin", () => file("./public/signin.html"));
-app.get("/dashboard", () => file("./public/dashboard.html"));
+app.get("/dashboard/:path?/:sub?", async() =>{
+    const file = Bun.file("./public/dashboard.html");
+    const content = (await file.text()).replaceAll("./chunks", "/chunks");
+    return new Response(content, {
+        headers: {
+            "Content-Type": "text/html"
+        }
+    });
+});
 app.get("/docs", () => file("./public/docs.html"));
 app.get("/error", () => file("./public/error.html"));
 app.get("/logout", ({ redirect, cookie: { token } }) =>{

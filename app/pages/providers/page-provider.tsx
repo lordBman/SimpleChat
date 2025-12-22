@@ -1,5 +1,74 @@
 import React, { useState } from "react";
 
+interface PageState {
+  page: string;
+  data?: Record<string, any>;
+}
+
+class URLManager {
+  private currentState: PageState;
+
+  constructor() {
+    this.currentState = { page: 'home' };
+    this.setupEventListeners();
+  }
+
+  // Navigate to a new URL
+  navigate(url: string, title: string = '', stateData?: Partial<PageState>): void {
+    const newState: PageState = {
+      page: this.extractPageFromUrl(url),
+      data: stateData?.data
+    };
+
+    history.pushState(newState, title, url);
+    this.currentState = newState;
+    this.updatePageContent();
+  }
+
+  // Replace current URL
+  replace(url: string, title: string = '', stateData?: Partial<PageState>): void {
+    const newState: PageState = {
+      page: this.extractPageFromUrl(url),
+      data: stateData?.data
+    };
+
+    history.replaceState(newState, title, url);
+    this.currentState = newState;
+  }
+
+  // Handle browser back/forward buttons
+  private setupEventListeners(): void {
+    window.addEventListener('popstate', (event: PopStateEvent) => {
+      if (event.state) {
+        this.currentState = event.state;
+        this.updatePageContent();
+      }
+    });
+  }
+
+  private extractPageFromUrl(url: string): string {
+    const path = url.startsWith('/') ? url : new URL(url, window.location.origin).pathname;
+    return path.split('/')[1] || 'home';
+  }
+
+  private updatePageContent(): void {
+    // Update your page content based on currentState
+    console.log('Page changed to:', this.currentState.page);
+    // Add your logic to update DOM here
+  }
+}
+
+/*// Usage
+//const urlManager = new URLManager();
+
+// Navigate to about page
+urlManager.navigate('/about', 'About Us', { 
+  data: { userId: 123 } 
+});
+
+// Replace current URL
+urlManager.replace('/contact', 'Contact Page');*/
+
 export type MainPage = "home" | "developers" | "projects"  | "chat";
 export type Section = "chats" | "connections" | "settings" | "info" | "projects" | "none";
 export type PageState = {
@@ -50,6 +119,7 @@ const PageProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
             return newState;
         });
+        history.pushState(page.params, "", `/dashboard/${page.main ?? pageState.current}${page.section ? `/${page.section}` : ""}${page.params ? `/${page.params}` : ""}`);
     }
     
     return (

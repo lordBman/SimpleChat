@@ -60,6 +60,13 @@ export const formatDay = (date: Date) =>{
     return `${day}th`;
 }
 
+export const formatDate = (d?: Date) => {
+    if (!d) return "—";
+
+    const date = new Date(d);
+    return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
 export const formatTime = (date: Date) =>{
     const now = new Date();
 

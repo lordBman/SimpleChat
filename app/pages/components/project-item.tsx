@@ -1,6 +1,5 @@
 import { Project } from "@simplechat/shared/models";
 import React from "react";
-import { useAppContext } from "../providers/app-provider";
 import { usePageContext } from "../providers/page-provider";
 import ProjectTitle from "./project-title";
 import ProjectActions from "./project-actions";
@@ -23,22 +22,6 @@ const badgeStyle: React.CSSProperties = {
     position: "absolute",
 };
 
-const maskToken = (t: string) => {
-    if (!t) return "—";
-    if (t.length <= 12) return t;
-    return `${t.slice(0, 6)}…${t.slice(-4)}`;
-};
-
-const copyToken = async (t: string) => {
-    if (!t) return;
-    try {
-        await navigator.clipboard.writeText(t);
-        // optional: show a small feedback; omitted to keep file small
-    } catch (err) {
-        console.error("copy failed", err);
-    }
-};
-
 const ProjectItem: React.FC<{ project: Project }> = ({ project }) => {
     const { setPage } = usePageContext();
 
@@ -56,9 +39,9 @@ const ProjectItem: React.FC<{ project: Project }> = ({ project }) => {
                 </span>
                 {project.default && <div style={badgeStyle}>Default</div>}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", flex: 1 }}>
                 <ProjectTitle name={project.name} created={project.created} />
-                <ProjectActions name={project.name} id={project.id} orientation="vertical" />
+                <ProjectActions name={project.name} id={project.id} orientation="vertical" isDefault={project.default} />
             </div>
         </div>
     );

@@ -14,7 +14,7 @@ class ProjectModel{
                 data: { name: data.name, ownerID: data.user.id, },
             });
         
-            const key = await this.database.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true } });
+            const key = await this.database.accessKey.create({ data: { projectID: project.id, name: "default", key: uuid(), enabled: true, default: true } });
 
             return { ...project, owner: data.user.details, keys: [key] };
         }catch(error){

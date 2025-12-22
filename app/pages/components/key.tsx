@@ -24,7 +24,7 @@ const Key: React.FC<KeyProps> = ({ title, secret }) =>{
             return init + secret.substring(index);
         }
         return secret;
-    }, [hide]);
+    }, [hide, secret]);
 
     const toggle = () => setHide((init) => {
         return !init;

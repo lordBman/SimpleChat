@@ -8,10 +8,10 @@ interface ProjectListItemProps{
 }
 
 const ProjectListItem: React.FC<ProjectListItemProps> = ({ project }) =>{
-    const { pageState, setPage } = usePageContext();
+    const { pageState, navigate } = usePageContext();
 
     const clicked = () =>{
-        setPage({ main: "projects", section: "projects", params: project.id });
+        navigate(`Projects | ${project.name}`, `/projects/${project.id}`);
     }
 
     const backgroundColor = pageState.params === project.id ? "white" : undefined;

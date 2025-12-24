@@ -11,10 +11,9 @@ import ReactDOM from "react-dom/client";
 import { SimpleChatConfig } from "@simplechat/shared";
 import PageProvider, { MainPage, Section, usePageContext } from "../providers/page-provider";
 
-
 const App = () =>{
     const { user } = useAppContext();
-    const { pageState, setPage } = usePageContext();
+    const { pageState, navigate } = usePageContext();
     const [current, setCurrent] = React.useState<MainPage | Section>(pageState.section ?? pageState.current);
 
     const chosen = (id: string)=> {
@@ -24,21 +23,7 @@ const App = () =>{
         }
 
         setCurrent(id as MainPage | Section);
-
-        switch(id){
-            case "home":
-            case "developers":
-            case "projects":
-                setPage({ main: id as MainPage ?? "home", section: "none" });
-                break;
-            case "chats":
-            case "connections":
-                setPage({ section: id as Section, main: "chat" });
-            case "settings":
-            case "info":
-                setPage({ section: id as Section });
-                break;
-        }
+        navigate("", `/${id}`);
     };
 
 
@@ -92,7 +77,6 @@ const App = () =>{
         </SimpleChatProvider>
     );
 }
-
 
 const DashBoard = () =>{
     return (

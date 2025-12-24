@@ -23,10 +23,10 @@ const badgeStyle: React.CSSProperties = {
 };
 
 const ProjectItem: React.FC<{ project: Project }> = ({ project }) => {
-    const { setPage } = usePageContext();
+    const { navigate } = usePageContext();
 
     const choose = () => {
-        setPage({ main: "projects", section: "projects", params: project.id });
+        navigate(`Projects | ${project.name}`, `/projects/${project.id}`);
     }
 
     return (

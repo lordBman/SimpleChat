@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import CreateProject from "./create-project";
+import CreateProject from "./create-forms/create-project";
 import { useAppContext } from "../providers/app-provider";
 
 const headerRow: React.CSSProperties = { display: "flex", justifyContent: "space-between" };

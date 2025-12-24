@@ -9,7 +9,7 @@ const Main = () =>{
     const { pageState } = usePageContext();
 
     switch(pageState.current){
-        case "chat":
+        case "chats":
             return <Chat />
         case "projects":
             return <Projects />

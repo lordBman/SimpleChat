@@ -1,86 +1,41 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-interface PageState {
-  page: string;
-  data?: Record<string, any>;
-}
-
-class URLManager {
-  private currentState: PageState;
-
-  constructor() {
-    this.currentState = { page: 'home' };
-    this.setupEventListeners();
-  }
-
-  // Navigate to a new URL
-  navigate(url: string, title: string = '', stateData?: Partial<PageState>): void {
-    const newState: PageState = {
-      page: this.extractPageFromUrl(url),
-      data: stateData?.data
-    };
-
-    history.pushState(newState, title, url);
-    this.currentState = newState;
-    this.updatePageContent();
-  }
-
-  // Replace current URL
-  replace(url: string, title: string = '', stateData?: Partial<PageState>): void {
-    const newState: PageState = {
-      page: this.extractPageFromUrl(url),
-      data: stateData?.data
-    };
-
-    history.replaceState(newState, title, url);
-    this.currentState = newState;
-  }
-
-  // Handle browser back/forward buttons
-  private setupEventListeners(): void {
-    window.addEventListener('popstate', (event: PopStateEvent) => {
-      if (event.state) {
-        this.currentState = event.state;
-        this.updatePageContent();
-      }
-    });
-  }
-
-  private extractPageFromUrl(url: string): string {
-    const path = url.startsWith('/') ? url : new URL(url, window.location.origin).pathname;
-    return path.split('/')[1] || 'home';
-  }
-
-  private updatePageContent(): void {
-    // Update your page content based on currentState
-    console.log('Page changed to:', this.currentState.page);
-    // Add your logic to update DOM here
-  }
-}
-
-/*// Usage
-//const urlManager = new URLManager();
-
-// Navigate to about page
-urlManager.navigate('/about', 'About Us', { 
-  data: { userId: 123 } 
-});
-
-// Replace current URL
-urlManager.replace('/contact', 'Contact Page');*/
-
-export type MainPage = "home" | "developers" | "projects"  | "chat";
-export type Section = "chats" | "connections" | "settings" | "info" | "projects" | "none";
+export type MainPage = "home" | "developers" | "projects"  | "chats";
+export type Section = MainPage | "connections" | "settings" | "info" | "none";
 export type PageState = {
     current: MainPage,
     section?: Section,
     params?: any
 }
 
+const extract = (url: string, previous: MainPage): [string, PageState] =>{
+    const path = url.replace("/dashboard/", "/");
+    const paths = path.split("/").filter((value) => value !== "");
+
+    console.log(paths);
+
+    let section: Section = "none";
+    if(paths.length > 1 || paths[0] === "chats" || paths[0] === "connections"){
+        section = paths[0] as Section;
+    }
+
+    const params = paths.length >= 2 ? paths[1] : undefined;
+    let current: MainPage = paths[0] as MainPage;
+    console.log(current);
+    switch(paths[0]){
+        case "connections":
+            current = "chats";
+            break;
+    }
+
+    return [`/dashboard${path}`, { current, section, params }];
+}
+
 export type PageContextType = {
     pageState: PageState;
 
-    setPage: (page: { section?: Section, main?: MainPage, params?: any }) => void;
+    navigate: (title: string, url: string) => void;
+    replace: (title: string, url: string) => void;
 };
 
 export const PageContext = React.createContext<PageContextType | null>(null);
@@ -106,24 +61,35 @@ const savePageState = (pageState: PageState) => {
 }
 
 const PageProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-    const [pageState, setPageState] = useState<PageState>(fetchSavedPageState());
+    const [pageState, setPageState] = useState<PageState>(extract(location.pathname, "home")[1]);
 
-    const setPage = (page: { section?: Section, main?: MainPage, params?: any }) =>{
-        setPageState(init => {
-            const newState = {
-                current: page.main ?? init.current,
-                section: page.section ?? init.section,
-                params: page.params,
-            };
-            savePageState(newState);
-
-            return newState;
+    useEffect(()=>{
+        window.addEventListener('popstate', (event: PopStateEvent) => {
+            if (event.state) {
+                event.preventDefault();
+                setPageState(event.state);
+            }
         });
-        history.pushState(page.params, "", `/dashboard/${page.main ?? pageState.current}${page.section ? `/${page.section}` : ""}${page.params ? `/${page.params}` : ""}`);
+    });
+
+    const value: PageContextType = {
+        pageState,
+        navigate(title, url) {
+            const [path, state] = extract(url, pageState.current);
+
+            history.pushState(state, title, path);
+            setPageState(state);
+        },
+        replace(title, url) {
+            const [path, state] = extract(url, pageState.current);
+
+            history.replaceState(state, title, path);
+            setPageState(state);
+        },
     }
     
     return (
-        <PageContext.Provider value={{ pageState, setPage }}>
+        <PageContext.Provider value={value}>
             {children}
         </PageContext.Provider>
     );

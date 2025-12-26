@@ -58,7 +58,7 @@ const Stats: React.FC<React.PropsWithChildren<StatsProps>> = ({ title, count, cl
 
 const ProjectDetails = () => {
     const { user } = useAppContext();
-    const { pageState, setPage } = usePageContext();
+    const { pageState, navigate } = usePageContext();
     const id = pageState.params || "unknown";
     const project = user!.projects.find((p) => p.id === id) || null;
 
@@ -159,7 +159,7 @@ const ProjectDetails = () => {
     };
 
     const back = () => {
-        setPage({ main: "projects", params: undefined, section: "none" });
+        navigate("Projects", "/projects");
     };
 
     if (loading && !project) return <div>Loading project...</div>;

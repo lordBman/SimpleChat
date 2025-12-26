@@ -11,7 +11,7 @@ interface ProjectActionsProps {
 
 const ProjectActions: React.FC<ProjectActionsProps> = ({ orientation, name, id, isDefault }) =>{
     const { deleteProject, renameProject } = useAppContext();
-    const { setPage } = usePageContext();
+    const { navigate } = usePageContext();
 
     const finalOrientation = orientation || "horizontal";
 
@@ -20,7 +20,7 @@ const ProjectActions: React.FC<ProjectActionsProps> = ({ orientation, name, id, 
         if (ok){
             try {
                 await deleteProject(id).then(()=>{
-                    setPage({ main: "projects", params: undefined });
+                    navigate("Projects", "/projects");
                 });    
             } catch (err) {
                 console.error(err);

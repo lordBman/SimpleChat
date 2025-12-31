@@ -1,8 +1,9 @@
 import React from "react";
+import { SlideInTabDemo } from "../../components/project-create";
 
 const Home = () =>{
     return (
-        <div>Home</div>
+        <SlideInTabDemo />
     );
 }
 

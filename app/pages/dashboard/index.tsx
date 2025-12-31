@@ -10,22 +10,25 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { SimpleChatConfig } from "@simplechat/shared";
 import PageProvider, { MainPage, Section, usePageContext } from "../providers/page-provider";
+import { MultiProvider, SlidersProvider } from "../providers";
+import Notifications from "../sliders/notifications";
+import { useSlidersContext } from "../providers/slider-provider";
 
 const App = () =>{
     const { user } = useAppContext();
+    const { currentSlide, openSlide } = useSlidersContext();
     const { pageState, navigate } = usePageContext();
     const [current, setCurrent] = React.useState<MainPage | Section>(pageState.section ?? pageState.current);
 
     const chosen = (id: string)=> {
-        if(id === "logout"){
-            window.location.href = "/logout";
-            return;
-        }
-
         setCurrent(id as MainPage | Section);
         navigate("", `/${id}`);
     };
 
+    const openNotifications = () => openSlide("notifications");
+    const logout = () => {
+        window.location.href = "/logout";
+    }
 
     const simpleChatConfig: SimpleChatConfig | undefined = useMemo(()=>{
         if(!user || !user.defaults){
@@ -56,8 +59,8 @@ const App = () =>{
                 </DashBoardView.Menu>
                 <DashBoardView.ToolBar title="Simple Chat">
                     <ToolBarItem id="settings/user" icon="guidance--user-1" label={`Hi, ${user?.details.name}`} choose={chosen} />
-                    <ToolBarItem icon="solar--bell-linear" id="notifications" choose={chosen} />
-                    <ToolBarItem icon="solar--exit-outline" id="logout" choose={chosen} />
+                    <ToolBarItem icon="solar--bell-linear" id="notifications" choose={openNotifications} />
+                    <ToolBarItem icon="solar--exit-outline" id="logout" choose={logout} />
                 </DashBoardView.ToolBar>
                 <DashBoardView.Section hide={pageState.section === undefined || pageState.section === "none"}>
                     <MobileHeader />
@@ -74,6 +77,7 @@ const App = () =>{
                     <BottomNavigation.Item id="settings" icon="et--gears" label="Settings" />
                 </DashBoardView.Bottom>
             </DashBoardView>
+            <Notifications isOpen={currentSlide === "notifications"} />
         </SimpleChatProvider>
     );
 }
@@ -81,9 +85,9 @@ const App = () =>{
 const DashBoard = () =>{
     return (
         <AppProviderWraper Loading={Loading} Error={ErrorPage}>
-            <PageProvider>
+            <MultiProvider providers={[PageProvider, SlidersProvider]}>
                 <App />
-            </PageProvider>
+            </MultiProvider>
         </AppProviderWraper>
     );
 }

@@ -14,9 +14,11 @@ import ProjectSection from "./project-section";
 import Key from "./key";
 import ProjectListItem from "./project-list-item";
 import ProjectsHeader from "./projects-header";
+import SlideInTab from "../sliders/slidein-tab";
 
 export { 
     FriendResultView, FriendView, CircleLoading, Loading, ChatView, BottomNavigation, 
     BackButton, MobileHeader, DashBoard, ErrorPage, ProjectItem, ProjectTitle,
-    ProjectActions, CreateProject, ProjectSection, Key, ProjectListItem, ProjectsHeader
+    ProjectActions, CreateProject, ProjectSection, Key, ProjectListItem, ProjectsHeader,
+    SlideInTab
 };

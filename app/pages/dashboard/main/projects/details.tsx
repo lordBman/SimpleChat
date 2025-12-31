@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 
 import { usePageContext } from "../../../providers/page-provider";
 import { OrganizationDetails, ProjectDetails } from "@simplechat/shared";
-import { useAppContext } from "../../../providers/app-provider";
 import { useCallbackRequest, useRequest } from "simplechat_provider/src/request";
 import {apiClientInstance, copyToClipboard} from "../../../utils";
-import { AccessKey } from "@simplechat/shared/models";
+import { AccessKey, Project } from "@simplechat/shared/models";
 import Organization from "@simplechat/shared/models/organization";
 import { Key, ProjectActions, ProjectSection, ProjectTitle } from "../../../components";
 import { KeyIcon, OrganizationIcon } from "../../../icons";
+import CreateKey from "../../../sliders/create-key";
+import { useSlidersContext } from "../../../providers/slider-provider";
+import { CreateOrganization } from "../../../sliders";
 
 const pageStyle: React.CSSProperties = { 
     paddingTop: "20px", 
@@ -56,25 +58,27 @@ const Stats: React.FC<React.PropsWithChildren<StatsProps>> = ({ title, count, cl
     );
 }
 
-const ProjectDetails = () => {
-    const { user } = useAppContext();
-    const { pageState, navigate } = usePageContext();
-    const id = pageState.params || "unknown";
-    const project = user!.projects.find((p) => p.id === id) || null;
+interface ProjectDetailsProps {
+    project: Project
+}
 
-    const [addingKeyName, setAddingKeyName] = useState("");
-    const [addingOrgName, setAddingOrgName] = useState("");
+const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
+    const { currentSlide, openSlide } = useSlidersContext();
+    const { navigate } = usePageContext();
+
     const [details, setDetails] = useState<ProjectDetails | null>(null);
 
-    const { loading, error, start } = useCallbackRequest<ProjectDetails, void>({
-        request: async () => {
-            const d = await apiClientInstance.get<ProjectDetails>(`/projects/${project?.id}`);
-            setDetails(d);
-            return d;
+    const { loading, start, error  } = useCallbackRequest<ProjectDetails, void>({
+        request: async () =>{
+            const res = await apiClientInstance.get<ProjectDetails>(`/projects/${project?.id}`);
+            if(res){
+                setDetails(res);
+            }
+            return res;
         }
     });
 
-    useEffect(() => start(), [project]);
+    useEffect(start, [project]);
 
     const orgGroupCount = (org: OrganizationDetails) => {
         if (typeof (org as any).groupCount === "number") return (org as any).groupCount;
@@ -82,20 +86,12 @@ const ProjectDetails = () => {
         return 0;
     };
 
-    // -- Access key actions --
-    const handleAddAccessKey = (e?: React.FormEvent) => {
-        e?.preventDefault();
-        if (!addingKeyName.trim()) return;
+    const openCreateKey = () => openSlide("createKey");
 
-        apiClientInstance.post<{ name: string }, AccessKey>(`/api/projects/${project?.id}/access-keys`, { data: { name: addingKeyName.trim() } })
-            .then((accessKey: AccessKey) => {
-                setDetails((d) => {
-                    if (!d) return d;
-                    return { ...d, keys: [...d.keys, accessKey] };
-                });
-                setAddingKeyName("");
-            })
-            .catch(() => {});
+    const addAccessKey = (key: AccessKey) => {
+        setDetails((init) => {
+            return { ...init!, keys: [ ...init?.keys ?? [], key ] };
+        });
     };
 
     const handleDeleteAccessKey = (keyId: string) => {
@@ -124,22 +120,12 @@ const ProjectDetails = () => {
     };
 
     // -- Organization actions --
-    const handleAddOrg = (e?: React.FormEvent) => {
-        e?.preventDefault();
-        if (!addingOrgName.trim()) return;
-
-        apiClientInstance
-            .post<{}, OrganizationDetails>(`/api/projects/organizations`, {
-                data: { name: addingOrgName.trim(), projectId: project?.id }
-            })
-            .then((created: OrganizationDetails) => {
-                setDetails((d) => {
-                    if (!d) return d;
-                    return { ...d, organizations: [...d.organizations, created] };
-                });
-                setAddingOrgName("");
-            })
-            .catch(() => {});
+    const openCreateOrganization = () => openSlide("createOrganization");
+    const addOrganization = (created: OrganizationDetails) => {
+        setDetails((d) => {
+            if (!d) return d;
+            return { ...d, organizations: [...d.organizations, created] };
+        });
     };
 
     const handleDeleteOrg = (orgId: string) => {
@@ -187,7 +173,7 @@ const ProjectDetails = () => {
                     </div>
                     <div style={{ marginTop: 12, display: "flex", flexDirection: "row", alignItems: "center", gap: 20, fontSize: "14px", fontWeight: "lighter", letterSpacing: 1.4 }}>
                         <span>Groups: {details?.groups.length ?? 0}</span>
-                        <span>Users: {project.userCount}</span>
+                        <span>Users: {details?.clients.length ?? 0}</span>
                     </div>
                     <div style={{ marginTop: 12, display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "end" }}>
                         <Key title="Token" secret={project.token} />
@@ -198,7 +184,7 @@ const ProjectDetails = () => {
                 <div>Project not found</div>
             )}
 
-            <ProjectSection title="Access Keys" icon={<KeyIcon />}>
+            <ProjectSection title="Access Keys" icon={<KeyIcon />} add={openCreateKey}>
                 { details && details.keys.length > 0 && details.keys.map((key)=>(
                     <div style={{ border: "1px solid #eee", padding: 12, borderRadius: 6 }}>
                         <div style={{ display: "flex", flexDirection:"row", alignItems: "center", justifyContent: "space-between" }}>
@@ -246,7 +232,7 @@ const ProjectDetails = () => {
                 ) }
             </ProjectSection>
 
-            <ProjectSection title="Organizations" icon={<OrganizationIcon />}>
+            <ProjectSection title="Organizations" icon={<OrganizationIcon />} add={openCreateOrganization}>
                 { details && details.organizations.length === 0 && (
                     <div style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "center" }}>
                         <span>No Oganizations created</span>
@@ -284,6 +270,8 @@ const ProjectDetails = () => {
                     </div>
                 )) }
             </ProjectSection>
+            <CreateKey isOpen={currentSlide === "createKey"} done={addAccessKey} />
+            <CreateOrganization isOpen={currentSlide === "createOrganization"} done={addOrganization} />
         </div>
     );
 };

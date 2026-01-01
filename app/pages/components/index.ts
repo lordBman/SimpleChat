@@ -15,10 +15,13 @@ import Key from "./key";
 import ProjectListItem from "./project-list-item";
 import ProjectsHeader from "./projects-header";
 import SlideInTab from "../sliders/slidein-tab";
+import Badge from "./badge";
+import AccessKeyView from "./access-key-view";
+import OrganizationView from "./organization-view";
 
 export { 
     FriendResultView, FriendView, CircleLoading, Loading, ChatView, BottomNavigation, 
     BackButton, MobileHeader, DashBoard, ErrorPage, ProjectItem, ProjectTitle,
     ProjectActions, CreateProject, ProjectSection, Key, ProjectListItem, ProjectsHeader,
-    SlideInTab
+    SlideInTab, Badge, AccessKeyView, OrganizationView
 };

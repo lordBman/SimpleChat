@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export type SliderOptions = "createKey" | "notifications" | "createOrganization" | "none";
+export type SliderOptions = "createKey" | "deleteKey" | "notifications" | "createOrganization" | "deleteOrganization" | "none";
 
 export interface SlidersContextType {
     openSlide: (option: SliderOptions) => void;
